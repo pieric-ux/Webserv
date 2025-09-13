@@ -27,8 +27,8 @@ SRCES = webserv.c \
 
 OBJS_SRCES = $(addprefix $(OBJDIR)/, $(SRCES:.cpp=.o))
 
-# Default rule: make all is equivalent to make libft.a and compile the program
-all: $(LIBFT) $(NAME)
+# Default rule: make all and compile the program
+all: $(NAME)
 
 debug: CFLAGS = $(DEBUG_FLAGS)
 
