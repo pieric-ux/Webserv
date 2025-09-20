@@ -11,10 +11,10 @@ OBJDIR = objs
 
 # Compiler and flags
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -Wshadow -MMD -MP
+CXXFLAGS = -Wall -Wextra -Werror -Wshadow -MMD -MP -std=c++98
 DEBUG_FLAGS = -g3 -fno-omit-frame-pointer -fstack-protector-all
 
-INCLUDES = -I includes
+INCLUDES = -I includes -I abnf/includes -I common/includes
 
 # vpath to specify where to find the .cpp files
 vpath %.cpp \
@@ -30,7 +30,7 @@ OBJS_SRCES = $(addprefix $(OBJDIR)/, $(SRCES:.cpp=.o))
 # Default rule: make all and compile the program
 all: $(NAME)
 
-debug: CFLAGS = $(DEBUG_FLAGS)
+debug: CXXFLAGS = $(DEBUG_FLAGS)
 
 # Rebuild with debug flags
 debug: re
