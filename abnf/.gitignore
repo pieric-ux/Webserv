@@ -1,0 +1,10 @@
+.cache
+.DS_Store
+compile_commands.json
+/objs/
+abnf
+/.vscode/
+abnf.memgraph
+valgrind.log
+*.o
+*.d
