@@ -69,6 +69,29 @@ DIR *Directory::getDir() const
 
 /**
  * @brief 
+ *
+ * @param filename 
+ * @return 
+ */
+void	Directory::create(const std::string &filename)
+{
+	struct stat info;
+	
+	if (stat(filename.c_str(), &info) == 0)
+	{
+		if (info.st_mode & S_IFDIR)
+			return ;
+		else
+			throw std::runtime_error("`" + filename + "` exists but i note a directory");
+	}
+		
+	if (mkdir(filename.c_str(), 0777) != 0)
+		throw std::runtime_error("Unable to create directory `" + filename + "`: " << std::strerror(errno));
+	return ;
+}
+
+/**
+ * @brief 
  */
 DirectoryIterator::DirectoryIterator() : dir(NULL), entry(NULL) {}
 

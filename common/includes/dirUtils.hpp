@@ -27,13 +27,13 @@ class Directory
 
 		DIR *getDir() const;
 
+		static void create(const std::string &filename);
 
 	private:
-		Directory(const Directory &rhs);
-		Directory &operator=(const Directory &rhs);
-
 		DIR *dir;
 
+		Directory(const Directory &rhs);
+		Directory &operator=(const Directory &rhs);
 };
 
 class DirectoryIterator
@@ -52,7 +52,6 @@ class DirectoryIterator
 		bool operator!=(const DirectoryIterator &rhs) const;
 
 	private:
-
 		Directory *dir;
 		struct dirent *entry;
 };
