@@ -61,6 +61,7 @@ $(OBJDIR)/%.o: %.cpp
 # Rule to compile the final executable
 $(NAME): $(OBJS_SRCES)
 	$(CXX) $(CXXFLAGS) $(OBJS_SRCES) -o $(NAME)
+	# ar -rcs $(NAME) $(OBJS_SRCES)
 
 # Rule to clean up object files
 clean:
