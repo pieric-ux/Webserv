@@ -2,9 +2,9 @@
 .DS_Store
 compile_commands.json
 /objs/
-/ft_printf/libftprintf.a
-/libft/libft.a
 webserv
 /.vscode/
 webserv.memgraph
 valgrind.log
+*.o
+*.d

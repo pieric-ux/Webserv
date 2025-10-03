@@ -9,12 +9,19 @@ NAME = webserv
 SRCDIR = srcs
 OBJDIR = objs
 
+# Libraries directories
+LOGGERDIR = logger
+COMMONDIR = common
+ABNFDIR = abnf
+
 # Compiler and flags
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -Wshadow -MMD -MP
+CXXFLAGS = -Wall -Wextra -Werror -Wshadow -MMD -MP -std=c++98
 DEBUG_FLAGS = -g3 -fno-omit-frame-pointer -fstack-protector-all
 
-INCLUDES = -I includes
+INCLUDES = -I includes -I $(ABNFDIR)/includes -I $(LOGGERDIR)/includes -I $(COMMONDIR)/includes
+
+LIBS = -L $(ABNFDIR) -labnf -L $(COMMONDIR) -lcommon -L $(LOGGERDIR) -llogger
 
 # vpath to specify where to find the .cpp files
 vpath %.cpp \
@@ -23,14 +30,24 @@ vpath %.cpp \
 	$(SRCDIR)/http \
 
 # Sources and object files
-SRCES = webserv.c \
+SRCES = main.cpp
 
 OBJS_SRCES = $(addprefix $(OBJDIR)/, $(SRCES:.cpp=.o))
 
-# Default rule: make all is equivalent to make libft.a and compile the program
-all: $(LIBFT) $(NAME)
+# Default rule: make all and compile the program
+all: $(NAME)
 
-debug: CFLAGS = $(DEBUG_FLAGS)
+# Build each library
+$(LOGGERDIR)/liblogger.a:
+	$(MAKE) -C $(LOGGERDIR)
+
+$(COMMONDIR)/libcommon.a: $(LOGGERDIR)/liblogger.a
+	$(MAKE) -C $(COMMONDIR)
+
+$(ABNFDIR)/libabnf.a: $(COMMONDIR)/libcommon.a $(LOGGERDIR)/liblogger.a
+	$(MAKE) -C $(ABNFDIR)
+
+debug: CXXFLAGS = $(DEBUG_FLAGS)
 
 # Rebuild with debug flags
 debug: re
@@ -50,22 +67,24 @@ endif
 # Compile each .cpp file to .o
 $(OBJDIR)/%.o: %.cpp
 	@mkdir -p $(OBJDIR)
-	@echo "Compiling $<..."
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 # Rule to compile the final executable
-$(NAME): $(OBJS_SRCES)
-	$(CC) $(CFLAGS) $(OBJS_SRCES) -o $(NAME)
+$(NAME): $(OBJS_SRCES) $(LOGGERDIR)/liblogger.a $(COMMONDIR)/libcommon.a $(ABNFDIR)/libabnf.a
+	$(CXX) $(CXXFLAGS) $(OBJS_SRCES) $(LIBS) -o $(NAME)
 
 # Rule to clean up object files
 clean:
-	@echo "Cleaning object files..."
+	@$(MAKE) clean -C $(LOGGERDIR)
+	@$(MAKE) clean -C $(COMMONDIR)
+	@$(MAKE) clean -C $(ABNFDIR)
 	rm -rf $(OBJDIR)
 
 # Rule to clean up object files and executable
 fclean: clean
-	@echo "Cleaning executable $(NAME)..."
+	@$(MAKE) fclean -C $(LOGGERDIR)
+	@$(MAKE) fclean -C $(COMMONDIR)
+	@$(MAKE) fclean -C $(ABNFDIR)
 	rm -f $(NAME)
 
 # Rule to recompile everything
