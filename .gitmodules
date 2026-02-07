@@ -1,0 +1,9 @@
+[submodule "libs/common"]
+	path = libs/common
+	url = git@github.com:pieric-ux/Cpp-common.git
+[submodule "libs/logger"]
+	path = libs/logger
+	url = git@github.com:pieric-ux/Log42.git
+[submodule "libs/parser"]
+	path = libs/parser
+	url = git@github.com:pieric-ux/ParserAbnf.git
