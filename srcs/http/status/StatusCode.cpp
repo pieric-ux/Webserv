@@ -2,11 +2,13 @@
 
 /**
 * @file StatusCode.cpp
-* @brief
+* @brief [TODO:description]
 */
 
 #include <webserv/StatusCode.hpp>
 
+namespace http 
+{
 namespace status
 {
 
@@ -22,7 +24,7 @@ StatusCode::StatusCode() : _code(0), _msg(), _description() {}
  * @param msg [TODO:parameter]
  * @param description [TODO:parameter]
  */
-StatusCode::StatusCode(unsigned short code, std::string msg, std::string description) : _code(code), _msg(msg), _description(description) {}
+StatusCode::StatusCode(const unsigned short code, const std::string msg, const std::string description) : _code(code), _msg(msg), _description(description) {}
 
 /**
  * @brief [TODO:description]
@@ -58,7 +60,7 @@ StatusCode &StatusCode::operator=(const StatusCode &rhs)
  *
  * @return [TODO:return]
  */
-int StatusCode::getCode()
+int StatusCode::getCode() const
 {
 	return (_code);
 }
@@ -68,7 +70,7 @@ int StatusCode::getCode()
  *
  * @return [TODO:return]
  */
-std::string StatusCode::getMessage()
+std::string StatusCode::getMessage() const
 {
 	return (_msg);
 }
@@ -78,9 +80,10 @@ std::string StatusCode::getMessage()
  *
  * @return [TODO:return]
  */
-std::string StatusCode::getDescription()
+std::string StatusCode::getDescription() const
 {
 	return (_description);
 }
 
 } // !status
+} // !http

@@ -5,12 +5,14 @@
 
 /**
 * @file StatusCodeRegistry.hpp
-* @brief
+* @brief [TODO:description]
 */
 
 #include <webserv/StatusCode.hpp>
 #include <map>
 
+namespace http
+{
 namespace status
 {
 
@@ -24,7 +26,7 @@ class StatusCodeRegistry
 {
 	public:
 		static StatusCodeRegistry &getInstance();
-		StatusCode getStatusCode(unsigned short code);
+		StatusCode getStatusCode(const unsigned short code) const;
 
 	private:
 		std::map<unsigned short, StatusCode> _statusCodes;
@@ -36,5 +38,6 @@ class StatusCodeRegistry
 };
 
 } // !status
+} // !http
 
 #endif

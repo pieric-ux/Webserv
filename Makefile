@@ -31,10 +31,12 @@ vpath %.cpp \
 	$(SRCDIR) \
 	$(SRCDIR)/core \
 	$(SRCDIR)/http \
+	$(SRCDIR)/http/headers \
 	$(SRCDIR)/http/status \
 
 # Sources and object files
 SRCES = main.cpp \
+		Headers.cpp HeadersRegistry.cpp \
 		StatusCode.cpp StatusCodeRegistry.cpp
 
 OBJS_SRCES = $(addprefix $(OBJDIR)/, $(SRCES:.cpp=.o))
