@@ -10,9 +10,12 @@ SRCDIR = srcs
 OBJDIR = objs
 
 # Libraries directories
-LOGGERDIR = logger
-COMMONDIR = common
-ABNFDIR = abnf
+COMMON_PATH ?= libs/common
+LOGGER_PATH ?= libs/logger
+ABNF_PATH ?= libs/parser
+COMMONDIR = $(COMMON_PATH)
+LOGGERDIR = $(LOGGER_PATH)
+ABNFDIR = $(ABNF_PATH)
 
 # Compiler and flags
 CXX = c++
@@ -21,7 +24,7 @@ DEBUG_FLAGS = -g3 -fno-omit-frame-pointer -fstack-protector-all
 
 INCLUDES = -I includes -I $(ABNFDIR)/includes -I $(LOGGERDIR)/includes -I $(COMMONDIR)/includes
 
-LIBS = -L $(ABNFDIR) -labnf -L $(COMMONDIR) -lcommon -L $(LOGGERDIR) -llogger
+LIBS = -L $(ABNFDIR) -labnf -L $(COMMONDIR) -lcommon -L $(LOGGERDIR) -llog42
 
 # vpath to specify where to find the .cpp files
 vpath %.cpp \
@@ -38,14 +41,12 @@ OBJS_SRCES = $(addprefix $(OBJDIR)/, $(SRCES:.cpp=.o))
 all: $(NAME)
 
 # Build each library
-$(LOGGERDIR)/liblogger.a:
-	$(MAKE) -C $(LOGGERDIR)
-
-$(COMMONDIR)/libcommon.a: $(LOGGERDIR)/liblogger.a
+$(COMMONDIR)/libcommon.a:
 	$(MAKE) -C $(COMMONDIR)
-
-$(ABNFDIR)/libabnf.a: $(COMMONDIR)/libcommon.a $(LOGGERDIR)/liblogger.a
-	$(MAKE) -C $(ABNFDIR)
+$(LOGGERDIR)/liblog42.a:
+	$(MAKE) -C $(LOGGERDIR) COMMON_PATH=$(abspath $(COMMONDIR))
+$(ABNFDIR)/libabnf.a:
+	$(MAKE) -C $(ABNFDIR) COMMON_PATH=$(abspath $(COMMONDIR)) LOGGER_PATH=$(abspath $(LOGGERDIR))
 
 debug: CXXFLAGS = $(DEBUG_FLAGS)
 
@@ -70,21 +71,21 @@ $(OBJDIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 # Rule to compile the final executable
-$(NAME): $(OBJS_SRCES) $(LOGGERDIR)/liblogger.a $(COMMONDIR)/libcommon.a $(ABNFDIR)/libabnf.a
+$(NAME): $(OBJS_SRCES) $(LOGGERDIR)/liblog42.a $(COMMONDIR)/libcommon.a $(ABNFDIR)/libabnf.a
 	$(CXX) $(CXXFLAGS) $(OBJS_SRCES) $(LIBS) -o $(NAME)
 
 # Rule to clean up object files
 clean:
-	@$(MAKE) clean -C $(LOGGERDIR)
-	@$(MAKE) clean -C $(COMMONDIR)
+	@$(MAKE) clean -C $(abspath $(COMMONDIR))
+	@$(MAKE) clean -C $(abspath $(LOGGERDIR)) COMMON_PATH=$(abspath $(COMMONDIR))
 	@$(MAKE) clean -C $(ABNFDIR)
 	rm -rf $(OBJDIR)
 
 # Rule to clean up object files and executable
 fclean: clean
-	@$(MAKE) fclean -C $(LOGGERDIR)
-	@$(MAKE) fclean -C $(COMMONDIR)
-	@$(MAKE) fclean -C $(ABNFDIR)
+	@$(MAKE) fclean -C $(abspath $(COMMONDIR))
+	@$(MAKE) fclean -C $(abspath $(LOGGERDIR)) COMMON_PATH=$(abspath $(COMMONDIR))
+	@$(MAKE) fclean -C $(abspath $(ABNFDIR)) COMMON_PATH=$(abspath $(COMMONDIR)) LOGGER_PATH=$(abspath $(LOGGERDIR))
 	rm -f $(NAME)
 
 # Rule to recompile everything
