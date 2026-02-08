@@ -360,26 +360,7 @@ HeadersRegistry::HeadersRegistry()
 /**
  * @brief [TODO:description]
  */
-HeadersRegistry::~HeadersRegistry()
-{
-}
-
-/**
- * @brief [TODO:description]
- */
-HeadersRegistry::HeadersRegistry(const HeadersRegistry &rhs)
-{
-	(void)rhs;
-}
-
-/**
- * @brief [TODO:description]
- */
-HeadersRegistry &HeadersRegistry::operator=(const HeadersRegistry &rhs)
-{
-	(void)rhs;
-	return *this;
-}
+HeadersRegistry::~HeadersRegistry() {}
 
 /**
  * @brief [TODO:description]
@@ -387,7 +368,7 @@ HeadersRegistry &HeadersRegistry::operator=(const HeadersRegistry &rhs)
 HeadersRegistry &HeadersRegistry::getInstance()
 {
 	static HeadersRegistry instance;
-	return instance;
+	return (instance);
 }
 
 /**

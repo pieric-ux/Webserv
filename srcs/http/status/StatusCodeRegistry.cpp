@@ -102,7 +102,19 @@ StatusCodeRegistry::~StatusCodeRegistry() {}
 /**
  * @brief [TODO:description]
  *
+ * @return [TODO:return]
+ */
+StatusCodeRegistry &StatusCodeRegistry::getInstance()
+{
+	static StatusCodeRegistry instance;
+	return (instance);
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @param code [TODO:parameter]
+ * @return [TODO:return]
  */
 StatusCode StatusCodeRegistry::getStatusCode(const unsigned short code) const
 {
