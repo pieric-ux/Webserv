@@ -1,0 +1,49 @@
+@startuml
+!theme blueprint
+skinparam defaultTextAlignment center
+skinparam activityTextAlignment center
+skinparam noteTextAlignment center
+
+title Activity Diagram for Webserv 
+
+| ServerFactory |
+start
+	if (Configuration file exists?) then (yes)
+	:Load configuration;
+	else (no)
+	:Log error;
+	end
+	endif
+
+	if (Configuration valid?) then (yes)
+		repeat
+		:Parse configuration;
+		:Create ServerConfig;
+		:Create server instances;
+		repeat while (More server configs?) is (yes)
+	else (no)
+		:Log error;
+		end
+	endif
+
+| Server |
+	while (Server running?) is (yes)
+	:Receive client requests;
+
+	if (New client Connection?) then (yes)
+		| ClientHandler |
+		:Create ClientHandler;
+	else (no)
+		| RequestHandler |
+		:Create RequestHandler;
+	endif
+
+		| Server |
+	if (Client ready for response?) then (yes)
+		| ResponseHandler |
+		:Create ResponseHandler;
+	endif
+| Server |
+	endwhile
+	end
+@enduml
