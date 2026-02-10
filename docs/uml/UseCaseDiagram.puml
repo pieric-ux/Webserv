@@ -1,0 +1,34 @@
+@startuml
+
+title Use Case Diagram for Webserv
+
+	actor Client as client
+	actor Admin as admin
+	actor CGI as cgi
+
+package Webserv {
+
+	usecase "Fetch data (GET)" as get
+	usecase "Submit data (POST)" as post
+	usecase "Delete data (DELETE)" as delete
+
+	usecase "Start / Stop server" as serve
+	usecase "Load config file" as config
+
+	usecase "Execute dynamic resource" as execute
+
+	client -- get
+	client -- post
+	client -- delete
+
+	admin -- serve
+	admin -- config
+
+	cgi -- execute
+
+	execute <..> get : << extend >>
+	execute <..> post : << extend >>
+	execute ..> delete
+}
+
+@enduml
