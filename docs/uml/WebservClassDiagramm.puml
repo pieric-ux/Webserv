@@ -1,0 +1,248 @@
+@startuml webserv
+
+!theme blueprint
+
+skinparam IconPrivate {
+  Color #FF0000
+
+  BackgroundColor #FF0000
+}
+skinparam IconPublic {
+  Color #00FF00
+  BackgroundColor #00FF00
+}
+skinparam IconProtected {
+  Color #ff7f00
+  BackgroundColor #ff7f00
+}
+
+title Class Diagram for Webserv 
+
+namespace webserv.status {
+
+	class "StatusCode" as StatusCode {
+		- _code : int
+		- _message : string
+		- _description : string
+		--
+		+ StatusCode()
+		+ StatusCode(code : int, message : string, description : string)
+		+ getCode() : int
+		+ getMessage() : string
+		+ getDescription() : string
+	}
+
+	class "StatusCodeRegistry" as StatusCodeRegistry <<singleton>> {
+		- _statusCodes : map<int, StatusCode>
+		--
+		- StatusCodeRegistry()
+  		+ {static} getInstance() : StatusCodeRegistry
+		+ getStatusCode(code : int) : StatusCode
+	}
+
+	StatusCode ..> StatusCodeRegistry : uses
+}
+
+namespace webserv.headers {
+
+	class "HTTPHeader" as HTTPHeader {
+		- _name : string
+		- _value : string
+		--
+		+ HTTPHeader(name : string, value : string)
+		+ getName() : string
+		+ getValue() : string
+	}
+
+	class "RequestHeader" as RequestHeader {
+
+	}
+
+	class "ResponseHeader" as ResponseHeader {
+
+	}
+
+	class "HeaderRegistry" as HeaderRegistry <<singleton>> {
+		- _headers : vector<HTTPHeader>
+		--
+		+ HeaderRegistry()
+  		+ {static} getInstance() : HeaderRegistry
+		+ getHeader(name : string) : HTTPHeader
+	}
+
+	HTTPHeader ..> HeaderRegistry : uses
+}
+
+namespace webserv.client {
+
+	class "Request" as Request  {
+		- _method : string
+		- _version : string
+		- _headers : vector<HTTPHeader>
+		- _body : string
+		--
+		+ Request()
+	}
+
+	class "Response" as Response {
+		- _version : string
+		- _statusCode : StatusCode
+		- _headers : vector<HTTPHeader>
+		- _body : string
+		--
+		+ Response()
+	}
+
+	class "Client" as Client {
+		- _id : int
+		- _socket : TcpClient
+		- _addrStorage : sockaddr_storage
+		- _status : e_StatusClient
+		- _bufferRequest : string
+		- _bufferResponse : string
+		- _request : Request
+		- _response : Response
+		--
+		+ Client(socket : TcpClient)
+		+ appendBuffer(buffer : string) : void
+		+ clearBuffer() : void
+		+ updateStatus(status : e_StatusClient) : void
+		+ getStatus() : e_StatusClient
+	}
+
+	enum "e_StatusClient" as e_StatusClient {
+		E_CONNECT
+		E_REQ_READY
+		E_RES_READY
+	}
+
+	Client ..> Request : uses
+	Client ..> Response : uses
+}
+
+namespace webserv.handler {
+
+	class "ClientHandler" as ClientHandler
+	{
+		- _clients : map<int, Client>
+		--
+		+ ClientHandler()
+		+ addClient(client : Client)
+		+ removeClient(client : Client)
+		+ updateClient(id : int)
+		+ getClient(id : int)
+		+ getAllClients() : map<int, Client>
+		+ processClients() : void
+	}
+
+	class "RequestHandler" as RequestHandler {
+		--
+		+ RequestHandler(client : Client)
+	}
+
+	class "ResponseHandler" as ResponseHandler {
+		--
+		+ ResponseHandler(client : Client)
+	}
+}
+
+namespace webserv.parser {
+
+	class "Parser" as parser {
+		- _abnfParser : Abnf
+		--
+		+ Parser()
+		+ parseConfig(buffer : string) : vector<ServerConfig>
+		+ parseRequest(buffer : string) : Request
+	}
+
+}
+
+namespace webserv.config {
+
+	class "ErrorPage" as ErrorPage {
+		- _codes : vector<StatusCode>
+		- _path : string
+		--
+		+ ErrorPage(codes : vector<StatusCode>, path : string)
+	}
+
+	enum "e_Method" as e_Method {
+		GET
+		POST
+		DELETE
+	}
+
+	class "ServerConfig" as ServerConfig {
+		- _listen : int
+		- _serverName : string
+		- _location : string
+		- _uploadPath : string
+		- _root : string
+		- _index : string
+		- _errorPage : vector<ErrorPage>
+		- _methods : vector<e_Method>
+		- _clientMaxBodySize : size_t
+		- _enableDirListing : bool
+		- _enableUpload : bool
+		--
+		+ ServerConfig()
+	}
+	ServerConfig ..> e_Method : uses
+}
+
+namespace webserv.cgi {
+
+
+}
+namespace webserv {
+
+	class "ServerFactory" as ServerFactory <<singleton>> {
+		- _configPath : string
+		- _serverConfigs : vector<ServerConfig>
+		- _servers : vector<Server>
+		- _abnfParser : Abnf
+		- _loader : common::loader::Loader
+		--
+		- ServerFactory()
+  		+ {static} getInstance() : ServerFactory
+		- loadConfig() : vector<ServerConfig>
+		- createServer(ServerConfig) : void
+	}
+
+	class "Server" as Server {
+		- _socket4 : TcpServer
+		- _socket6 : TcpServer
+		- _addrinfo4 : Addrinfo
+		- _addrinfo6 : Addrinfo
+		- _clientHandler : ClientHandler
+		- _ioMultiplexer : IEventIO
+		- _serverConfig : ServerConfig
+		--
+		+ Server(config : ServerConfig)
+		+ loop() : void
+		- connectClient() : void
+		- disconnectClient() : void
+		- receiveRequest() : void
+		- sendResponse() : void
+	}
+
+
+	e_StatusClient ..> Client : uses
+
+	ServerConfig ..> ErrorPage : uses
+	ServerFactory --> Server : creates
+	ServerFactory --> ServerConfig : creates
+	ClientHandler *-- Client : manages
+	RequestHandler --> Client : processes
+	ResponseHandler --> Client : generates
+
+	Server --> ClientHandler : uses
+
+	Request ..> HTTPHeader : uses
+	Response ..> HTTPHeader : uses
+	Response ..> StatusCode : uses
+}
+
+
+@enduml
