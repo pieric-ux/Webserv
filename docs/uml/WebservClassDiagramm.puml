@@ -1,4 +1,4 @@
-@startuml webserv
+@startuml webserv_class
 
 !theme blueprint
 
@@ -17,6 +17,26 @@ skinparam IconProtected {
 }
 
 title Class Diagram for Webserv 
+
+namespace webserv.headers {
+
+	class "HTTPHeader" as HTTPHeader {
+		- _name : string
+		- _value : string
+		--
+		+ HTTPHeader(name : string, value : string)
+		+ getName() : string
+		+ getValue() : string
+	}
+
+	class "HeaderRegistry" as HeaderRegistry <<singleton>> {
+		- _headers : vector<HTTPHeader>
+		--
+		+ HeaderRegistry()
+  		+ {static} getInstance() : HeaderRegistry
+		+ getHeader(name : string) : HTTPHeader
+	}
+}
 
 namespace webserv.status {
 
@@ -39,126 +59,236 @@ namespace webserv.status {
   		+ {static} getInstance() : StatusCodeRegistry
 		+ getStatusCode(code : int) : StatusCode
 	}
-
-	StatusCode ..> StatusCodeRegistry : uses
 }
 
-namespace webserv.headers {
+namespace webserv.types {
 
-	class "HTTPHeader" as HTTPHeader {
-		- _name : string
-		- _value : string
+	class "TypesRegistry" as TypesRegistry <<singleton>> {
+		- _types: map<string, string>
 		--
-		+ HTTPHeader(name : string, value : string)
-		+ getName() : string
-		+ getValue() : string
+		- TypesRegistry()
+  		+ {static} getInstance() : TypesRegistry
+		+ getMimeType(extension : string) : string
+		+ loadFromFile(filePath : string) : void
+		+ addMimeType(extension : string, mimeType : string) : void
 	}
-
-	class "RequestHeader" as RequestHeader {
-
-	}
-
-	class "ResponseHeader" as ResponseHeader {
-
-	}
-
-	class "HeaderRegistry" as HeaderRegistry <<singleton>> {
-		- _headers : vector<HTTPHeader>
-		--
-		+ HeaderRegistry()
-  		+ {static} getInstance() : HeaderRegistry
-		+ getHeader(name : string) : HTTPHeader
-	}
-
-	HTTPHeader ..> HeaderRegistry : uses
 }
 
 namespace webserv.client {
 
+	enum "e_RequestFlags" as e_RequestFlags {
+		E_REQ_REQUEST_LINE 1 << 0
+		E_REQ_HEADERS_VALIDATED 1 << 1
+		E_REQ_BODY_STARTED 1 << 2
+	}
+
 	class "Request" as Request  {
-		- _method : string
-		- _version : string
-		- _headers : vector<HTTPHeader>
-		- _body : string
+		- _method : e_Method
+		- _requestTarget : string
+		- _httpVersion : string
+		- _headers : vector<list<HTTPHeader>>
+		- _body : vector<unsigned char>
+		- _tmpBodyFilePath : string
+		- _flags : e_RequestFlags
 		--
 		+ Request()
+		+ getMethod() : e_Method
+		+ getRequestTarget() : string
+		+ getHttpVersion() : string
+		+ getHeaders() : vector<list<HTTPHeader>>
+		+ getBody() : vector<unsigned char>
+		+ getTmpBodyFilePath() : string
+		+ getFlags() : e_RequestFlags
+		+ setFlags(flags : e_RequestFlags) : void
 	}
 
 	class "Response" as Response {
-		- _version : string
+		- _httpVersion : string
 		- _statusCode : StatusCode
 		- _headers : vector<HTTPHeader>
-		- _body : string
+		- _body : vector<unsigned char>
 		--
 		+ Response()
 	}
 
+	class "HTTPError" as HTTPError <<exception>> {
+		- _statusCode : StatusCode
+		--
+		+ HTTPError(statusCode : StatusCode)
+		+ getStatusCode() : StatusCode
+		+ what() : string
+	}
+
 	class "Client" as Client {
 		- _id : int
-		- _socket : TcpClient
+		- _socket : common::core::net::TcpClient
 		- _addrStorage : sockaddr_storage
-		- _status : e_StatusClient
-		- _bufferRequest : string
-		- _bufferResponse : string
-		- _request : Request
-		- _response : Response
+		- _flags : e_ClientFlags
+		- _executionHandler : ExecutionHandler
+		- _requestHandler : RequestHandler
+		- _serverConfig : ServerConfig
+		- _HTTPError : HTTPError
+		- _lastActivityTime : int
 		--
-		+ Client(socket : TcpClient)
-		+ appendBuffer(buffer : string) : void
-		+ clearBuffer() : void
-		+ updateStatus(status : e_StatusClient) : void
-		+ getStatus() : e_StatusClient
+		+ Client(socket : common::core::net::TcpClient, serverConfig : ServerConfig)
+		+ getFlags() : e_ClientFlags
+		+ setFlags(flags : e_ClientFlags) : void
+		+ getHTTPError() : HTTPError
+		+ setHTTPError(error : HTTPError) : void
+		+ getRequestHandler() : RequestHandler
+		+ getServerConfig() : ServerConfig
+		+ prepareExecution(requestHandler : RequestHandler, responseHandler : ResponseHandler, serverConfig : ServerConfig) : void
+		+ prepareHeaders(buffer : string) : void
+		+ prepareBody(buffer : string) : void
+		+ prepareResponse() : void
 	}
 
-	enum "e_StatusClient" as e_StatusClient {
-		E_CONNECT
-		E_REQ_READY
-		E_RES_READY
+	enum "e_ClientFlags" as e_ClientFlags {
+		E_CLI_REQUEST_FINISH 1 << 0
+		E_CLI_ERR_PARSING 1 << 1
 	}
-
-	Client ..> Request : uses
-	Client ..> Response : uses
 }
 
 namespace webserv.handler {
 
+	enum "e_ReceiveDataStatus" as e_ReceiveDataStatus {
+		E_REQUEST
+		E_DISCONNECTED
+	}
+
 	class "ClientHandler" as ClientHandler
 	{
 		- _clients : map<int, Client>
+		- _ioMultiplexer : common::core::io::IEventIO
 		--
-		+ ClientHandler()
+		+ ClientHandler(ioMultiplexer : common::core::io::IEventIO)
 		+ addClient(client : Client)
 		+ removeClient(client : Client)
-		+ updateClient(id : int)
-		+ getClient(id : int)
-		+ getAllClients() : map<int, Client>
-		+ processClients() : void
+		+ processClients(ioMultiplexer : IEventIO) : void
+		- receiveData(client : Client) : e_ReceiveDataStatus
+		- disconnectClient(client : Client) : void
 	}
 
 	class "RequestHandler" as RequestHandler {
+		- _request : Request
+		- _bufferRequest : vector<unsigned char>
+		- _parser : Parser
 		--
-		+ RequestHandler(client : Client)
+		+ RequestHandler()
+		+ getRequest() : Request
+		+ setRequest(request : Request) : void
+		+ appendToBufferRequest(buffer : string) : void
+		+ clearBufferRequest() : void
+		+ getParser() : Parser
+		+ getBodyReceived() : int
+		+ parseRequestLineFromBuffer() : void
+		+ parseHeadersFromBuffer() : void
+		+ parseBodyFromBuffer(serverConfig : ServerConfig) : void
+		+ validateHeaders(serverConfig : ServerConfig) : void
 	}
 
 	class "ResponseHandler" as ResponseHandler {
+		- _response : Response
 		--
-		+ ResponseHandler(client : Client)
+		+ ResponseHandler()
+		+ getResponse() : Response
+		+ setResponse(response : Response) : void
+	}
+
+	enum "e_ExecutionHandlerFlags" as e_ExecutionHandlerFlags {
+		E_EXEC_FILE_OPENED 1 << 0
+		E_EXEC_FILE_COMPLETE 1 << 1
+		E_EXEC_CREATED 1 << 2
+		E_EXEC_NOCONTENT 1 << 3
+	}
+
+	class "ExecutionHandler" as ExecutionHandler {
+		- _fd : int
+		- _flags : e_ExecutionFlags
+		- _bodyReceived : int
+		--
+		+ ExecutionHandler()
+		+ getFd() : int
+		+ setFd(fd : int) : void
+		+ getFlags() : e_ExecutionFlags
+		+ setFlags(flags : e_ExecutionFlags) : void
+		+ execute(request : Request, response : Response, serverConfig : ServerConfig) : void
+		+ executeCGI(request : Request, serverConfig : ServerConfig) : void
+		+ executeRequest(request : Request, response : Response, serverConfig : ServerConfig) : void
+		- executeHEADorGET(request : Request, response : Response, locationConfig : LocationConfig) : void
+		- executePOST(request : Request, response : Response, locationConfig : LocationConfig) : void
+		- executeDELETE(request : Request, response : Response, locationConfig : LocationConfig) : void
+		- openFile(request : Request, locationConfig : LocationConfig) : int
+		- readChunk(fd : int, response : Response) : void
+		- getFileSize(fd : int) : int
+		- getFileExtension(requestTarget : string) : string
+		- generateAutoindexHTML(dirPath : string) : string
+		- isFile(requestTarget : string) : bool
+		- isFileExisting(requestTarget : string) : bool
+		- deleteFile(filePath : string) : void
+		- deleteDirectory(dirPath : string) : void
 	}
 }
 
 namespace webserv.parser {
 
-	class "Parser" as parser {
-		- _abnfParser : Abnf
-		--
-		+ Parser()
-		+ parseConfig(buffer : string) : vector<ServerConfig>
-		+ parseRequest(buffer : string) : Request
+	enum "e_ParserFlags" as e_ParserFlags {
+		E_PARS_HOST 1 << 0
+		E_PARS_CONNECTION 1 << 1
+		E_PARS_CONTENT_LENGTH 1 << 2
+		E_PARS_CONTENT_TYPE 1 << 3
+		E_PARS_CONTENT_ENCODING 1 << 4
+		E_PARS_EXPECT 1 << 5
+		E_PARS_CLRF 1 << 6
 	}
 
+	class "Parser" as Parser {
+		- {static} _abnfParser : abnf::Abnf
+		- _flags : e_ParserFlags
+		--
+		+ Parser()
+		+ getFlags() : e_ParserFlags
+		+ setFlags(flags : e_ParserFlags) : void
+		+ parseConfig(buffer : string) : HTTPConfig
+		+ isIPv6Address(address : string) : bool
+		+ parseRequestLine(bufferRequest : string) : void
+		+ parseHost(bufferRequest : string) : HTTPHeader
+		+ parseHeaders(bufferRequest : string) : vector<HTTPHeader>
+	}
 }
 
 namespace webserv.config {
+
+	enum "e_Method" as e_Method {
+		GET
+		HEAD
+		POST
+		DELETE
+	}
+
+	enum "e_Modifier" as e_Modifier {
+		PREFIX
+		EXACT
+		PREFIX_PRIORITY
+	}
+
+	class "Listen" as Listen <<struct>> {
+		+ address : string
+		+ port : int
+		+ defaultServer : bool
+		+ backlog : int
+		+ rcvbuf : int
+		+ sndbuf : int
+		+ bind : bool
+		+ ipv6only : bool
+		+ reuseport : bool
+		+ so_keepalive : bool
+	}
+
+	class "Return" as Return <<struct>> {
+		+ statusCode : StatusCode
+		+ url : string
+	}
 
 	class "ErrorPage" as ErrorPage {
 		- _codes : vector<StatusCode>
@@ -167,82 +297,246 @@ namespace webserv.config {
 		+ ErrorPage(codes : vector<StatusCode>, path : string)
 	}
 
-	enum "e_Method" as e_Method {
-		GET
-		POST
-		DELETE
+	class "HTTPConfig" as HTTPConfig <<singleton>> {
+		- _clientMaxBodySize : int
+		- _clientBodyPath : string
+		- _createFullPutPath : bool
+		- _davAccess : string
+		- _davMethods : vector<e_Method>
+		- _defaultType : string
+		- _errorPage : vector<ErrorPage>
+		- _keepAliveTimeout : int
+		- _root : string
+		- _serverConfigs : vector<ServerConfig>
+		- _types : map<string, string>
+		- _enableCGI : bool
+		- _cgiExtensions : map<string, string>
+		--
+		- HTTPConfig()
+		+ {static} getInstance() : HTTPConfig
+		+ getClientMaxBodySize() : int
+		+ getClientBodyPath() : string
+		+ getCreateFullPutPath() : bool
+		+ getDavAccess() : string
+		+ getDavMethods() : vector<e_Method>
+		+ getDefaultType() : string
+		+ getErrorPage() : vector<ErrorPage>
+		+ getKeepAliveTimeout() : int
+		+ getRoot() : string
+		+ getServerConfigs() : vector<ServerConfig>
+		+ getTypes() : map<string, string>
+		+ getEnableCGI() : bool
+		+ getCgiExtensions() : map<string, string>
 	}
 
 	class "ServerConfig" as ServerConfig {
-		- _listen : int
-		- _serverName : string
-		- _location : string
-		- _uploadPath : string
-		- _root : string
-		- _index : string
+		- _clientMaxBodySize : int
+		- _clientBodyPath : string
+		- _clientMaxRequestLineSize : int
+		- _createFullPutPath : bool
+		- _davAccess : string
+		- _davMethods : vector<e_Method>
+		- _defaultType : string
 		- _errorPage : vector<ErrorPage>
-		- _methods : vector<e_Method>
-		- _clientMaxBodySize : size_t
-		- _enableDirListing : bool
-		- _enableUpload : bool
+		- _keepAliveTimeout : int
+		- _listen : vector<Listen>
+		- _locationConfigs : vector<LocationConfig>
+		- _root : string
+		- _serverName : vector<string>
+		- _types : map<string, string>
+		- _enableCGI : bool
+		- _cgiExtensions : map<string, string>
 		--
 		+ ServerConfig()
+		+ getClientMaxBodySize() : int
+		+ getClientBodyPath() : string
+		+ getClientMaxRequestLineSize() : int
+		+ getCreateFullPutPath() : bool
+		+ getDavAccess() : string
+		+ getDavMethods() : vector<e_Method>
+		+ getDefaultType() : string
+		+ getErrorPage() : vector<ErrorPage>
+		+ getKeepAliveTimeout() : int
+		+ getListen() : vector<Listen>
+		+ getLocationConfigs() : vector<LocationConfig>
+		+ getRoot() : string
+		+ getServerName() : vector<string>
+		+ getTypes() : map<string, string>
+		+ getEnableCGI() : bool
+		+ getCgiExtensions() : map<string, string>
+		+ findLocationConfig(requestTarget : string) : LocationConfig
 	}
-	ServerConfig ..> e_Method : uses
+
+	class "LocationConfig" as LocationConfig {
+		- _autoindex : bool
+		- _clientMaxBodySize : int
+		- _clientBodyPath : string
+		- _createFullPutPath : bool
+		- _davAccess : string
+		- _davMethods : vector<e_Method>
+		- _defaultType : string
+		- _errorPage : vector<ErrorPage>
+		- _index : vector<string>
+		- _keepAliveTimeout : int
+		- _allowedMethods : vector<e_Method>
+		- _root : string
+		- _types : map<string, string>
+		- _uri : string
+		- _modifier : e_Modifier
+		- _redirect : Return
+		- _enableCGI : bool
+		- _cgiExtensions : map<string, string>
+		--
+		+ LocationConfig()
+		+ getAutoindex() : bool
+		+ getClientMaxBodySize() : int
+		+ getClientBodyPath() : string
+		+ getCreateFullPutPath() : bool
+		+ getDavAccess() : string
+		+ getDavMethods() : vector<e_Method>
+		+ getDefaultType() : string
+		+ getErrorPage() : vector<ErrorPage>
+		+ getIndex() : vector<string>
+		+ getKeepAliveTimeout() : int
+		+ getAllowedMethods() : vector<e_Method>
+		+ getRoot() : string
+		+ getTypes() : map<string, string>
+		+ getUri() : string
+		+ getModifier() : e_Modifier
+		+ getRedirect() : Return
+		+ getEnableCGI() : bool
+		+ getCgiExtensions() : map<string, string>
+	}
 }
 
 namespace webserv.cgi {
 
 
 }
+
 namespace webserv {
 
-	class "ServerFactory" as ServerFactory <<singleton>> {
+	class "HTTPServer" as HTTPServer <<singleton>> {
+		- _logger : log42::logger::Logger
+		- _abnf : abnf::Abnf
 		- _configPath : string
-		- _serverConfigs : vector<ServerConfig>
-		- _servers : vector<Server>
-		- _abnfParser : Abnf
-		- _loader : common::loader::Loader
-		--
-		- ServerFactory()
-  		+ {static} getInstance() : ServerFactory
-		- loadConfig() : vector<ServerConfig>
-		- createServer(ServerConfig) : void
-	}
-
-	class "Server" as Server {
-		- _socket4 : TcpServer
-		- _socket6 : TcpServer
-		- _addrinfo4 : Addrinfo
-		- _addrinfo6 : Addrinfo
+		- _parser : Parser
+		- _httpConfig : HTTPConfig
+		- _ServerFactory : ServerFactory
+		- _Servers : vector<Server>
+		- _ioMultiplexer : common::core::io::IEventIO
 		- _clientHandler : ClientHandler
-		- _ioMultiplexer : IEventIO
-		- _serverConfig : ServerConfig
+		- _statusCodeRegistry : StatusCodeRegistry
+		- _typesRegistry : TypesRegistry
+		- _headerRegistry : HeaderRegistry
 		--
-		+ Server(config : ServerConfig)
-		+ loop() : void
+		- HTTPServer()
+  		+ {static} getInstance() : HTTPServer
+		+ running() : bool
+		- loadConfig() : HTTPConfig
 		- connectClient() : void
-		- disconnectClient() : void
-		- receiveRequest() : void
 		- sendResponse() : void
 	}
 
+	class "ServerFactory" as ServerFactory {
+		- _httpConfig : HTTPConfig
+		--
+		+ ServerFactory(httpConfig : HTTPConfig)
+		+ createServers() : vector<Server>
+	}
 
-	e_StatusClient ..> Client : uses
+	class "Server" as Server {
+		- _socket4 : common::core::net::TcpServer
+		- _socket6 : common::core::net::TcpServer
+		- _addrinfo4 : common::core::net::Addrinfo
+		- _addrinfo6 : common::core::net::Addrinfo
+		- _config : ServerConfig
+		- _parser : Parser
+		--
+		+ Server(config : ServerConfig)
+	}
 
-	ServerConfig ..> ErrorPage : uses
-	ServerFactory --> Server : creates
-	ServerFactory --> ServerConfig : creates
-	ClientHandler *-- Client : manages
-	RequestHandler --> Client : processes
-	ResponseHandler --> Client : generates
+	Client "1" *-- "1" ExecutionHandler
+	Client "1" *-- "1" RequestHandler
+	Client "1" *-- "1" ResponseHandler
+	Client "1" *-- "1" HTTPError
+	Client --> ServerConfig : uses
+	Client ..> e_ClientFlags : uses
 
-	Server --> ClientHandler : uses
+	ClientHandler "1" *-- "0..*" Client
+	ClientHandler ..> e_ReceiveDataStatus : uses
+
+	ErrorPage "1" *-- "1..*" StatusCode
+
+	ExecutionHandler ..> e_ExecutionHandlerFlags : uses
+	
+	HTTPConfig "1" *-- "0..*" ErrorPage
+	HTTPConfig "1" *-- "1..*" ServerConfig
+	
+	HTTPHeader ..> HeaderRegistry : uses
+	
+	HTTPServer "1" *-- "1" ClientHandler
+	HTTPServer "1" *-- "1" HeaderRegistry
+	HTTPServer "1" *-- "1" HTTPConfig
+	HTTPServer "1" *-- "1" Parser
+	HTTPServer "1" *-- "1..*" Server
+	HTTPServer "1" *-- "1" ServerFactory
+	HTTPServer "1" *-- "1" StatusCodeRegistry
+	HTTPServer "1" *-- "1" TypesRegistry
+
+	LocationConfig "1" *-- "0..*" ErrorPage
+	LocationConfig "1" *-- "0..1" Return
+	LocationConfig ..> e_Method : uses
+	LocationConfig ..> e_Modifier : uses
+
+	Parser ..> Request : creates
+	Parser ..> HTTPConfig : creates
+	Parser ..> e_ParserFlags : uses
+
+	ServerConfig "1" *-- "0..*" ErrorPage
+	ServerConfig "1" *-- "1..*" Listen
+	ServerConfig "1" *-- "0..*" LocationConfig
+
+	ServerFactory ..> Server : creates
+	ServerFactory ..> HTTPConfig: uses
+
+	Server "1" *-- "1" Parser
+	Server "1" --> "1" ServerConfig : configures
+
+	StatusCode ..> StatusCodeRegistry : uses
 
 	Request ..> HTTPHeader : uses
+	Request ..> e_RequestFlags : uses
+
+	RequestHandler "1" *-- "1" Request
+	RequestHandler "1" *-- "1" Parser
+
 	Response ..> HTTPHeader : uses
 	Response ..> StatusCode : uses
+	Response ..> TypesRegistry : uses
+
+	ResponseHandler "1" *-- "1" Response
+
+	Return ..> StatusCode : uses
 }
 
+	Client "1" *-- "1" common.core.net.TcpClient
+
+	ClientHandler ..> common.core.io.IEventIO : uses
+
+	Parser ..> abnf.Abnf : uses
+	
+	HTTPServer "1" *-- "1" log42.logger.Logger
+	HTTPServer "1" *-- "1" abnf.Abnf
+	HTTPServer "1" *-- "1" common.core.io.IEventIO
+	HTTPServer ..> common.loader.Loader : uses
+
+	Server "1" *-- "1..2" common.core.net.TcpServer
+	Server "1" *-- "1..2" common.core.net.Addrinfo
+
+	ExecutionHandler ..> common.core.utils.Directory : uses
+	ExecutionHandler ..> common.core.utils.DirectoryIterator : uses
+
+	HTTPError --|> std.exception : inherits
 
 @enduml
