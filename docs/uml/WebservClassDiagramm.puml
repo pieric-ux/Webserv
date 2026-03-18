@@ -86,20 +86,30 @@ namespace webserv.client {
 		- _method : e_Method
 		- _requestTarget : string
 		- _httpVersion : string
+		- _absolutePath : string
 		- _headers : vector<list<HTTPHeader>>
 		- _body : vector<unsigned char>
-		- _tmpBodyFilePath : string
 		- _flags : e_RequestFlags
 		--
 		+ Request()
 		+ getMethod() : e_Method
+		+ setMethod(method : e_Method) : void
 		+ getRequestTarget() : string
+		+ setRequestTarget(requestTarget : string) : void
 		+ getHttpVersion() : string
+		+ setHttpVersion(httpVersion : string) : void
+		+ getAbsolutePath() : string
+		+ setAbsolutePath(absolutePath : string) : void
 		+ getHeaders() : vector<list<HTTPHeader>>
+		+ setHeaders(headers : vector<list<HTTPHeader>>) : void
 		+ getBody() : vector<unsigned char>
-		+ getTmpBodyFilePath() : string
+		+ setBody(body : vector<unsigned char>) : void
 		+ getFlags() : e_RequestFlags
 		+ setFlags(flags : e_RequestFlags) : void
+	}
+
+	enum "e_ResponseFlags" as e_ResponseFlags {
+		E_RESP_HEADERS_SENT 1 << 0
 	}
 
 	class "Response" as Response {
@@ -107,6 +117,7 @@ namespace webserv.client {
 		- _statusCode : StatusCode
 		- _headers : vector<HTTPHeader>
 		- _body : vector<unsigned char>
+		- _flags : e_ResponseFlags
 		--
 		+ Response()
 	}
@@ -116,6 +127,7 @@ namespace webserv.client {
 		--
 		+ HTTPError(statusCode : StatusCode)
 		+ getStatusCode() : StatusCode
+		+ setStatusCode(statusCode : StatusCode) : void
 		+ what() : string
 	}
 
@@ -124,6 +136,7 @@ namespace webserv.client {
 		- _socket : common::core::net::TcpClient
 		- _addrStorage : sockaddr_storage
 		- _flags : e_ClientFlags
+		- _status : e_ReceiveDataStatus
 		- _executionHandler : ExecutionHandler
 		- _requestHandler : RequestHandler
 		- _serverConfig : ServerConfig
@@ -133,28 +146,33 @@ namespace webserv.client {
 		+ Client(socket : common::core::net::TcpClient, serverConfig : ServerConfig)
 		+ getFlags() : e_ClientFlags
 		+ setFlags(flags : e_ClientFlags) : void
-		+ getHTTPError() : HTTPError
-		+ setHTTPError(error : HTTPError) : void
+		+ getExecutionHandler() : ExecutionHandler
 		+ getRequestHandler() : RequestHandler
+		+ getHTTPError() : HTTPError
 		+ getServerConfig() : ServerConfig
+		+ getLastActivityTime() : int
+		+ setLastActivityTime(time : int) : void
+		+ setHTTPError(error : HTTPError) : void
+		+ prepareHeadersRequest(buffer : string) : void
+		+ prepareBodyRequest(buffer : string) : void
 		+ prepareExecution(requestHandler : RequestHandler, responseHandler : ResponseHandler, serverConfig : ServerConfig) : void
-		+ prepareHeaders(buffer : string) : void
-		+ prepareBody(buffer : string) : void
-		+ prepareResponse() : void
+		+ prepareHeadersResponse() : void
+		+ prepareBodyResponse() : void
+		+ receiveData() : e_ReceiveDataStatus
+		+ sendData() : void
+	}
+
+	enum "e_ReceiveDataStatus" as e_ReceiveDataStatus {
+		E_DISCONNECTED
+		E_CLI_REQUEST
 	}
 
 	enum "e_ClientFlags" as e_ClientFlags {
-		E_CLI_REQUEST_FINISH 1 << 0
-		E_CLI_ERR_PARSING 1 << 1
+		E_CLI_ERR_PARSING 1 << 0
 	}
 }
 
 namespace webserv.handler {
-
-	enum "e_ReceiveDataStatus" as e_ReceiveDataStatus {
-		E_REQUEST
-		E_DISCONNECTED
-	}
 
 	class "ClientHandler" as ClientHandler
 	{
@@ -165,8 +183,6 @@ namespace webserv.handler {
 		+ addClient(client : Client)
 		+ removeClient(client : Client)
 		+ processClients(ioMultiplexer : IEventIO) : void
-		- receiveData(client : Client) : e_ReceiveDataStatus
-		- disconnectClient(client : Client) : void
 	}
 
 	class "RequestHandler" as RequestHandler {
@@ -181,23 +197,28 @@ namespace webserv.handler {
 		+ clearBufferRequest() : void
 		+ getParser() : Parser
 		+ getBodyReceived() : int
-		+ parseRequestLineFromBuffer() : void
-		+ parseHeadersFromBuffer() : void
-		+ parseBodyFromBuffer(serverConfig : ServerConfig) : void
+		+ parseHeadersFromBufferRequest() : void
 		+ validateHeaders(serverConfig : ServerConfig) : void
+		+ parseBodyFromBuffer(serverConfig : ServerConfig) : void
+		+ buildAbsolutPath(requestTarget : string, locationConfig : LocationConfig) : void
 	}
 
 	class "ResponseHandler" as ResponseHandler {
 		- _response : Response
+		- _bufferResponse : vector<unsigned char>
 		--
 		+ ResponseHandler()
 		+ getResponse() : Response
 		+ setResponse(response : Response) : void
+		+ appendToBufferResponse(buffer : string) : void
+		+ clearBufferResponse() : void
+		+ buildStatusLine(httpVersion : string, statusCode : StatusCode, reasonPhrase : string) : void
+		+ buildHeaders(request : Request) : void
 	}
 
 	enum "e_ExecutionHandlerFlags" as e_ExecutionHandlerFlags {
 		E_EXEC_FILE_OPENED 1 << 0
-		E_EXEC_FILE_COMPLETE 1 << 1
+		E_EXEC_COMPLETE 1 << 1
 		E_EXEC_CREATED 1 << 2
 		E_EXEC_NOCONTENT 1 << 3
 	}
@@ -212,6 +233,8 @@ namespace webserv.handler {
 		+ setFd(fd : int) : void
 		+ getFlags() : e_ExecutionFlags
 		+ setFlags(flags : e_ExecutionFlags) : void
+		+ getBodyReceived() : int
+		+ setBodyReceived(bodyReceived : int) : void
 		+ execute(request : Request, response : Response, serverConfig : ServerConfig) : void
 		+ executeCGI(request : Request, serverConfig : ServerConfig) : void
 		+ executeRequest(request : Request, response : Response, serverConfig : ServerConfig) : void
@@ -220,6 +243,7 @@ namespace webserv.handler {
 		- executeDELETE(request : Request, response : Response, locationConfig : LocationConfig) : void
 		- openFile(request : Request, locationConfig : LocationConfig) : int
 		- readChunk(fd : int, response : Response) : void
+		- writeChunk(fd : int, request : Request) : void
 		- getFileSize(fd : int) : int
 		- getFileExtension(requestTarget : string) : string
 		- generateAutoindexHTML(dirPath : string) : string
@@ -252,7 +276,6 @@ namespace webserv.parser {
 		+ parseConfig(buffer : string) : HTTPConfig
 		+ isIPv6Address(address : string) : bool
 		+ parseRequestLine(bufferRequest : string) : void
-		+ parseHost(bufferRequest : string) : HTTPHeader
 		+ parseHeaders(bufferRequest : string) : vector<HTTPHeader>
 	}
 }
@@ -299,8 +322,8 @@ namespace webserv.config {
 
 	class "HTTPConfig" as HTTPConfig <<singleton>> {
 		- _clientMaxBodySize : int
-		- _clientBodyPath : string
 		- _createFullPutPath : bool
+		- _davPutPath : string
 		- _davAccess : string
 		- _davMethods : vector<e_Method>
 		- _defaultType : string
@@ -315,8 +338,8 @@ namespace webserv.config {
 		- HTTPConfig()
 		+ {static} getInstance() : HTTPConfig
 		+ getClientMaxBodySize() : int
-		+ getClientBodyPath() : string
 		+ getCreateFullPutPath() : bool
+		+ getDavPutPath() : string
 		+ getDavAccess() : string
 		+ getDavMethods() : vector<e_Method>
 		+ getDefaultType() : string
@@ -331,9 +354,8 @@ namespace webserv.config {
 
 	class "ServerConfig" as ServerConfig {
 		- _clientMaxBodySize : int
-		- _clientBodyPath : string
-		- _clientMaxRequestLineSize : int
 		- _createFullPutPath : bool
+		- _davPutPath : string
 		- _davAccess : string
 		- _davMethods : vector<e_Method>
 		- _defaultType : string
@@ -349,9 +371,9 @@ namespace webserv.config {
 		--
 		+ ServerConfig()
 		+ getClientMaxBodySize() : int
-		+ getClientBodyPath() : string
 		+ getClientMaxRequestLineSize() : int
 		+ getCreateFullPutPath() : bool
+		+ getDavPutPath() : string
 		+ getDavAccess() : string
 		+ getDavMethods() : vector<e_Method>
 		+ getDefaultType() : string
@@ -370,8 +392,8 @@ namespace webserv.config {
 	class "LocationConfig" as LocationConfig {
 		- _autoindex : bool
 		- _clientMaxBodySize : int
-		- _clientBodyPath : string
 		- _createFullPutPath : bool
+		- _davPutPath : string
 		- _davAccess : string
 		- _davMethods : vector<e_Method>
 		- _defaultType : string
@@ -390,8 +412,8 @@ namespace webserv.config {
 		+ LocationConfig()
 		+ getAutoindex() : bool
 		+ getClientMaxBodySize() : int
-		+ getClientBodyPath() : string
 		+ getCreateFullPutPath() : bool
+		+ getDavPutPath() : string
 		+ getDavAccess() : string
 		+ getDavMethods() : vector<e_Method>
 		+ getDefaultType() : string
@@ -435,14 +457,12 @@ namespace webserv {
 		+ running() : bool
 		- loadConfig() : HTTPConfig
 		- connectClient() : void
-		- sendResponse() : void
 	}
 
 	class "ServerFactory" as ServerFactory {
 		- _httpConfig : HTTPConfig
 		--
 		+ ServerFactory(httpConfig : HTTPConfig)
-		+ createServers() : vector<Server>
 	}
 
 	class "Server" as Server {
@@ -462,9 +482,9 @@ namespace webserv {
 	Client "1" *-- "1" HTTPError
 	Client --> ServerConfig : uses
 	Client ..> e_ClientFlags : uses
+	Client ..> e_ReceiveDataStatus : uses
 
 	ClientHandler "1" *-- "0..*" Client
-	ClientHandler ..> e_ReceiveDataStatus : uses
 
 	ErrorPage "1" *-- "1..*" StatusCode
 

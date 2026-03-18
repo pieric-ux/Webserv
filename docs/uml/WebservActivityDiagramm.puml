@@ -14,10 +14,10 @@ title Activity Diagram for Webserv
 | __Server__ |
 | __ClientHandler__ |
 | __Client__ |
+| __ResponseHandler__ |
 | __RequestHandler__ |
 | __Parser__ |
-| __ResponseHandler__ |
-| __CGI__ |
+| __CGIHandler__ |
 | __ExecutionHandler__ |
 
 | __HTTPServer__ |
@@ -104,35 +104,33 @@ start
 		| __ClientHandler__ |
 		:Call `processClients(ioMultiplexer)`;
 		while (For each `Client`) is (yes)
+			| __Client__ |
 			if (`lastActivityTime` > `keepAliveTimeout`) then (yes)
-					:Remove `TcpClient` from `ioMultiplexer`;
-					:Call `removeClient(client)`;
+					:Call `setFlags(E_CLI_DISCONNECTED)`;
 			else (no)
 			endif
-			if (`E_IN` is set for `TcpClient`) then (yes)
+			| __ClientHandler__ |
+			if (`E_IN` is set for `TcpClient` OR `bufferRequest` is not empty) then (yes)
+				| __Client__ |
 				:Update `lastActivityTime`;
 				if (`E_CLI_ERR_PARSING is set`) then (yes)
+					| __ClientHandler__ |
 					:continue;
 					detach
+					| __Client__ |
 				else (no)
 					:Call `receiveData(client)`;
-					if (EOF received?) then (yes)
-						| __Client__ |
-						:Call `setFlags(E_CLI_REQUEST_FINISH)`;
-						| __ClientHandler__ |
-					else (no)
-					endif
 				endif
+				| __ClientHandler__ |
 				if (`e_ReceiveDataStatus`?) then (E_DISCONNECTED)
-					:Remove `TcpClient` from `ioMultiplexer`;
 					:Call `removeClient(client)`;
 				else (E_REQUEST)
 					| __Client__ |
 					if (`E_REQ_HEADERS_VALIDATED` is set) then (no)
-						:Try `prepareHeaders(buffer)`;
+						:Try `prepareHeadersRequest(buffer)`;
 						| __RequestHandler__ |
 						:Call `appendToBufferRequest(buffer)`;
-						:Call `parseHeadersFromBuffer()`;
+						:Call `parseHeadersFromBufferRequest()`;
 						if (`E_REQ_REQUEST_LINE` is set) then (no)
 							:Use `Parser` to check `Request-Line` presence and validity;
 							| __Parser__ |
@@ -193,7 +191,7 @@ start
 						| __RequestHandler__ |
 						:Use `Parser` to check others headers presence and validity;
 						| __Parser__ |	
-						:Call `parseHeaders(bufferRequest, method)`;
+						:Call `parseHeaders(bufferRequest)`;
 						:Use ABNF to parse headers;
 						if (`Host` header is present?) then (yes)
 							if (`E_PARS_HOST` is set) then (yes)
@@ -318,6 +316,7 @@ start
 						:Call `validateHeaders(serverConfig)`;
 						if (`E_PARS_CLRF` is set AND `E_REQ_HEADERS_VALIDATED` is NOT set) then (yes)
 							:Call `findLocationConfig(requestTarget)`;
+							:Call `buildAbsolutPath(requestTarget, LocationConfig)`;
 							if (`method` is allowed in `LocationConfig`) then (no)
 								:Throw HTTPError(405);
 								#red:(E)
@@ -371,8 +370,8 @@ start
 					else (yes)
 					endif
 					| __Client__ |
-					if (`E_REQ_HEADERS_VALIDATED` and `method` is `POST` or `DELETE`) then (yes)
-						:Try `prepareBody(buffer)`;
+					if (`E_REQ_HEADERS_VALIDATED` is set and `method` is `POST` or `DELETE`) then (yes)
+						:Try `prepareBodyRequest(buffer)`;
 						| __RequestHandler__ |
 						:Call `appendToBufferRequest(buffer)`;
 						:Call `parseBodyFromBuffer(serverConfig)`;
@@ -394,16 +393,129 @@ start
 						:Call `findLocationConfig(requestTarget)`;
 						:Call `executeRequest(requestHandler, responseHandler, LocationConfig)`;
 						if (`enableCGI` is set in `LocationConfig` AND `cgiExtensions` contains `requestTarget` extension) then (yes)
-							if (`method` is `POST`) then (yes)
-								:Send `bufferRequest` body to CGI process stdin;
+							if (`method` is `POST` or `DELETE`) then (yes)
+								if (`bodyReceived` < `Content-Length`) then (yes)
+									:Send `bufferRequest` to CGI process stdin;
+								else (no)
+									:Call `setFlags(E_EXEC_COMPLETE)`;
+								endif
 							else (no)
+								if (`method` is `GET`) then (yes)
+									:Call `setFlags(E_EXEC_COMPLETE)`;
+								else (no)
+									:Throw HTTPError(405);
+									#red:(E)
+									detach
+								endif
 							endif
-							if (`E_CLI_REQUEST_FINISH` is set) then(yes)
-									:Call `executeCGI(request, LocationConfig)`;
-									| __CGI__ |
-									:TODO;
+							if (`E_EXEC_COMPLETE` is set) then (yes)
+								:Call `executeCGI(request, LocationConfig)`;
+								| __CGIHandler__ |
+								:Initialize meta-variables;
+								:Call `setCGIEnvironmentVariables(request, LocationConfig)`;
+								:Set X_* extension environment variables if required;
+								:Set protocol-specific environment variables if required;
+								if (content-length header exists?) then (yes)
+									:Set CONTENT_LENGTH environment variable;
+								else (no)
+									:Set CONTENT_LENGTH to empty or not set;
+								endif
+								if (media-type header exists?) then (yes)
+									:Set CONTENT_TYPE environment variable;
+								else (no)
+									:Set CONTENT_TYPE to empty or not set;
+								endif
+								:Set GATEWAY_INTERFACE environment variable to CGI/1.1;
+								if (script URI contains query-string) then (yes)
+									:Set QUERY_STRING environment variable;
+									:Call `setQueryStringEnvironmentVariable(request, LocationConfig)`;
+								else (no)
+									:Set QUERY_STRING to empty or not set;
+								endif
+								:Set REMOTE_ADDR environment variable;
+								:Set REMOTE_HOST environment variable;
+								:Set REMOTE_IDENT environment variable;
+								:Set REMOTE_USER environment variable;
+								:Set REQUEST_METHOD environment variable;
+								:Set SCRIPT_NAME environment variable;
+								:Set SERVER_NAME environment variable;
+								:Set SERVER_PORT environment variable;
+								:Set SERVER_PROTOCOL environment variable;
+								:Set SERVER_SOFTWARE environment variable;
+								:Set other protocol specific environment variables if required;									
+								if (REQUEST_METHOD is GET) then (yes)
+									:Prepare for GET (no body);
+								else if (REQUEST_METHOD is POST) then (yes)
+									:Prepare for POST (body expected);
+								else if (REQUEST_METHOD is HEAD) then (yes)
+									:Prepare for HEAD (no body, response without body);
+								else if (REQUEST_METHOD is DELETE) then (yes)
+									:Prepare for DELETE (body optional);
+								else if (REQUEST_METHOD is PUT) then (yes)
+									:Prepare for PUT (body expected);
+								else 
+									:Throw HTTPError(501);
+									#red:(E)
+									detach
+								endif
+								:Call `executeCGIScript()` with CGI script path and environment variables;
+								:Call `fork()` to execute CGI script;
+								if (Fork failed?) then (yes)
+									:Throw HTTPError(500);
+									#red:(E)
+									detach
+								else (no)
+								:Prepare `dup()` for CGI script stdin, stdout and stderr redirection;
+								:Call `execve()` to execute CGI script;
+								:Set CGIStartTime to current time;
+									if (CGI script is running) then (yes)
+										if (Request has body to send to CGI script) then (yes)
+											:Call `writeChunkToCGI()` to send body chunk to CGI script;
+											if (wr > 0) then (yes)
+												:Update `bodySentToCGI`;
+											else (no)
+												:Throw HTTPError(500);
+												#red:(E)
+												detach
+											endif
+										else (no)
+										endif
+											if (CGI script has output to send) then (yes)
+												:Call `readChunkFromCGI()` to read CGI script output;
+												if (rd > 0) then (yes)
+													:Append `buffer` to `CGIOutput`;
+												else (no)
+													if (`CGIOutput` is empty and current time > CGIStartTime + Timeout) then (yes)
+														:Throw HTTPError(504);
+														#red:(E)
+														detach
+													else (no)
+													endif
+												endif
+											else (no)
+											endif
+									else (no)
+									endif
+								endif
+								if (CGI script exited with success?) then (yes)
+									:Set flag to `E_EXEC_CGI_COMPLETE`;
+									:Parse `CGIOutput` to separate headers and body;
+									:Validate CGI headers;
+									if (Valid CGI headers?) then (yes)
+										:Extract CGI headers;
+										:Append CGI body to `responseBody`;
+									else (no)
+										:Throw HTTPError(502);
+										#red:(E)
+										detach
+									endif
+								else (no)
+									:Throw HTTPError(502);
+									#red:(E)
+									detach
+								endif
 							else (no)
-							endif
+                            endif
 							| __ExecutionHandler__ |
 						else (no)
 							switch (`method`)
@@ -436,7 +548,7 @@ start
 											if (rd > 0) then (yes)
 												:Append `buffer` to `body`;
 											else if (EOF reached?) then (yes)
-												:Call `setFlags(E_EXEC_FILE_COMPLETE)`;
+												:Call `setFlags(E_EXEC_COMPLETE)`;
 											else (no)
 												:Throw HTTPError(500);
 												#red:(E)
@@ -477,7 +589,7 @@ start
 													if (rd > 0) then (yes)
 														:Append `buffer` to `body`;
 													else if (EOF reached?) then (yes)
-														:Call `setFlags(E_EXEC_FILE_COMPLETE)`;
+														:Call `setFlags(E_EXEC_COMPLETE)`;
 													else (no)
 														:Throw HTTPError(500);
 														#red:(E)
@@ -555,7 +667,7 @@ start
 															detach
 														endif
 													else (no)
-														:Call `setFlags(E_EXEC_FILE_COMPLETE)`;
+														:Call `setFlags(E_EXEC_COMPLETE)`;
 													endif
 												else if (EACCESS) then (yes)
 													:Throw HTTPError(500);
@@ -581,7 +693,7 @@ start
 																	detach
 																endif
 															else (no)
-																:Call `setFlags(E_EXEC_FILE_COMPLETE)`;
+																:Call `setFlags(E_EXEC_COMPLETE)`;
 															endif
 														else (no)
 															:Throw HTTPError(500);
@@ -660,12 +772,47 @@ start
 					else (no)
 					endif
 					| __Client__ |
-					if (`E_CLI_REQUEST_FINISH` is set AND `E_REQ_HEADERS` is NOT set) then (yes)
-						:Throw HTTPError(400);
-						#red:(E)
-						detach
+					if (E_REQ_HEADERS_VALIDATED is set AND E_RESP_HEADERS_SENT is NOT set) then (no)
+						:Try `prepareHeadersResponse()`;
+						| __ResponseHandler__ |
+						:Call `buildStatusLine(httpVersion, statusCode, reasonPhrase)`;
+							:Append `status-line` to `bufferResponse`;
+						:Call `buildHeaders(request)`;
+							:Add `Server` header with server software name and version;
+							:Add `Date` header with current date;
+							if (`E_PARS_CONNECTION` is set) then (yes)
+								:Add `Connection` header with same value as in request;
+							else (no)
+								if (`httpVersion` is "1.1") then (yes)
+									:Add `Connection: keep-alive` header;
+								else (no)
+									:Add `Connection: close` header;
+								endif
+							endif
+							:TODO others headers;
+							:Append headers to `bufferResponse`;
+								:Add final CRLF after headers;
+					else (yes)
+					endif
+					| __Client__ |
+					if (E_RESP_HEADERS_SENT is set AND `body` is not empty) then (yes)
+						:Try `prepareBodyResponse()`;
+						| __ResponseHandler__ |
+						:Append `body` to `bufferResponse`;
 					else (no)
 					endif
+				endif
+			else (no)
+			endif
+			| __ClientHandler__ |
+			if (`E_OUT` is set for `TcpClient`) then (yes)
+				| __Client__ |
+				if (`E_RESP_HEADERS_SENT` is set) then (yes)
+				
+				else (no)
+					:Call `sendData()` with `bufferResponse`;
+					:Call `clearBufferResponse()`;
+					:Call `setFlags(E_RESP_HEADERS_SENT)`;
 				endif
 			else (no)
 			endif
@@ -681,5 +828,3 @@ start
 	detach
 
 @enduml
-
-TODO: Header `Connection` is `close` -> prepare response with header `Connection: close` and mark connection to close after response
