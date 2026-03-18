@@ -23,10 +23,14 @@ namespace webserv.headers {
 	class "HTTPHeader" as HTTPHeader {
 		- _name : string
 		- _value : string
+		- _description : string
 		--
-		+ HTTPHeader(name : string, value : string)
+		+ HTTPHeader(name : string, description : string)
+		+ HTTPHeader(name : string, value : string, description : string)
 		+ getName() : string
 		+ getValue() : string
+		+ setValue(value : string) : void
+		+ getDescription() : string
 	}
 
 	class "HeaderRegistry" as HeaderRegistry <<singleton>> {

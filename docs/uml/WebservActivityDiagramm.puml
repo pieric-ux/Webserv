@@ -393,129 +393,118 @@ start
 						:Call `findLocationConfig(requestTarget)`;
 						:Call `executeRequest(requestHandler, responseHandler, LocationConfig)`;
 						if (`enableCGI` is set in `LocationConfig` AND `cgiExtensions` contains `requestTarget` extension) then (yes)
-							if (`method` is `POST` or `DELETE`) then (yes)
-								if (`bodyReceived` < `Content-Length`) then (yes)
+							if (`method` is `POST` or 'PUT' or `DELETE`) then (yes)
 									:Send `bufferRequest` to CGI process stdin;
-								else (no)
-									:Call `setFlags(E_EXEC_COMPLETE)`;
-								endif
 							else (no)
-								if (`method` is `GET`) then (yes)
-									:Call `setFlags(E_EXEC_COMPLETE)`;
-								else (no)
+								if (`method` is `GET` or `HEAD`) then (no)
 									:Throw HTTPError(405);
 									#red:(E)
 									detach
+								else (yes)
 								endif
 							endif
-							if (`E_EXEC_COMPLETE` is set) then (yes)
-								:Call `executeCGI(request, LocationConfig)`;
-								| __CGIHandler__ |
-								:Initialize meta-variables;
-								:Call `setCGIEnvironmentVariables(request, LocationConfig)`;
-								:Set X_* extension environment variables if required;
-								:Set protocol-specific environment variables if required;
-								if (content-length header exists?) then (yes)
-									:Set CONTENT_LENGTH environment variable;
-								else (no)
-									:Set CONTENT_LENGTH to empty or not set;
-								endif
-								if (media-type header exists?) then (yes)
-									:Set CONTENT_TYPE environment variable;
-								else (no)
-									:Set CONTENT_TYPE to empty or not set;
-								endif
-								:Set GATEWAY_INTERFACE environment variable to CGI/1.1;
-								if (script URI contains query-string) then (yes)
-									:Set QUERY_STRING environment variable;
-									:Call `setQueryStringEnvironmentVariable(request, LocationConfig)`;
-								else (no)
-									:Set QUERY_STRING to empty or not set;
-								endif
-								:Set REMOTE_ADDR environment variable;
-								:Set REMOTE_HOST environment variable;
-								:Set REMOTE_IDENT environment variable;
-								:Set REMOTE_USER environment variable;
-								:Set REQUEST_METHOD environment variable;
-								:Set SCRIPT_NAME environment variable;
-								:Set SERVER_NAME environment variable;
-								:Set SERVER_PORT environment variable;
-								:Set SERVER_PROTOCOL environment variable;
-								:Set SERVER_SOFTWARE environment variable;
-								:Set other protocol specific environment variables if required;									
-								if (REQUEST_METHOD is GET) then (yes)
-									:Prepare for GET (no body);
-								else if (REQUEST_METHOD is POST) then (yes)
-									:Prepare for POST (body expected);
-								else if (REQUEST_METHOD is HEAD) then (yes)
-									:Prepare for HEAD (no body, response without body);
-								else if (REQUEST_METHOD is DELETE) then (yes)
-									:Prepare for DELETE (body optional);
-								else if (REQUEST_METHOD is PUT) then (yes)
-									:Prepare for PUT (body expected);
-								else 
-									:Throw HTTPError(501);
-									#red:(E)
-									detach
-								endif
-								:Call `executeCGIScript()` with CGI script path and environment variables;
-								:Call `fork()` to execute CGI script;
-								if (Fork failed?) then (yes)
-									:Throw HTTPError(500);
-									#red:(E)
-									detach
-								else (no)
-								:Prepare `dup()` for CGI script stdin, stdout and stderr redirection;
-								:Call `execve()` to execute CGI script;
-								:Set CGIStartTime to current time;
-									if (CGI script is running) then (yes)
-										if (Request has body to send to CGI script) then (yes)
-											:Call `writeChunkToCGI()` to send body chunk to CGI script;
-											if (wr > 0) then (yes)
-												:Update `bodySentToCGI`;
-											else (no)
-												:Throw HTTPError(500);
+							:Call `executeCGI(request, LocationConfig)`;
+							| __CGIHandler__ |
+							:Initialize meta-variables;
+							:Call `setCGIEnvironmentVariables(request, LocationConfig)`;
+							:Set X_* extension environment variables if required;
+							:Set protocol-specific environment variables if required;
+							if (content-length header exists?) then (yes)
+								:Set CONTENT_LENGTH environment variable;
+							else (no)
+								:Set CONTENT_LENGTH to empty or not set;
+							endif
+							if (media-type header exists?) then (yes)
+								:Set CONTENT_TYPE environment variable;
+							else (no)
+								:Set CONTENT_TYPE to empty or not set;
+							endif
+							:Set GATEWAY_INTERFACE environment variable to CGI/1.1;
+							if (script URI contains query-string) then (yes)
+								:Set QUERY_STRING environment variable;
+								:Call `setQueryStringEnvironmentVariable(request, LocationConfig)`;
+							else (no)
+								:Set QUERY_STRING to empty or not set;
+							endif
+							:Set CONNECTION environment variable;
+							:Set REMOTE_ADDR environment variable;
+							:Set REMOTE_HOST environment variable;
+							:Set REMOTE_IDENT environment variable;
+							:Set REMOTE_USER environment variable;
+							:Set REQUEST_METHOD environment variable;
+							:Set SCRIPT_NAME environment variable;
+							:Set SERVER_NAME environment variable;
+							:Set SERVER_PORT environment variable;
+							:Set SERVER_PROTOCOL environment variable;
+							:Set SERVER_SOFTWARE environment variable;							
+							if (REQUEST_METHOD is GET) then (yes)
+								:Prepare for GET (no body);
+							else if (REQUEST_METHOD is POST) then (yes)
+								:Prepare for POST (body expected);
+							else if (REQUEST_METHOD is HEAD) then (yes)
+								:Prepare for HEAD (no body, response without body);
+							else if (REQUEST_METHOD is DELETE) then (yes)
+								:Prepare for DELETE (body optional);
+							else if (REQUEST_METHOD is PUT) then (yes)
+								:Prepare for PUT (body expected);
+							else 
+								:Throw HTTPError(501);
+								#red:(E)
+								detach
+							endif
+							:Call `executeCGIScript()` with CGI script path and environment variables;
+							:Call `fork()` to execute CGI script;
+							if (Fork failed?) then (yes)
+								:Throw HTTPError(500);
+								#red:(E)
+								detach
+							else (no)
+							:Prepare `dup()` and `pipe()` for CGI script stdin, stdout and stderr redirection;
+							:Call `execve()` to execute CGI script;
+							:Set CGIStartTime to current time;
+								if (CGI script is running) then (yes)
+									if (Request has body to send to CGI script) then (yes)
+										:Call `writeChunkToCGI()` to send body chunk to CGI script;
+										if (wr > 0) then (yes)
+											:Update `bodySentToCGI`;
+										else (no)
+											:Throw HTTPError(500);
+											#red:(E)
+											detach
+										endif
+									else (no)
+									endif
+										:Call `readChunkFromCGI()` to read CGI script output;
+										if (rd > 0) then (yes)
+											:Append `buffer` to `CGIOutput`;
+										else (no)
+											if (`CGIOutput` is empty and current time > CGIStartTime + Timeout) then (yes)
+												:Throw HTTPError(504);
 												#red:(E)
 												detach
-											endif
-										else (no)
-										endif
-											if (CGI script has output to send) then (yes)
-												:Call `readChunkFromCGI()` to read CGI script output;
-												if (rd > 0) then (yes)
-													:Append `buffer` to `CGIOutput`;
-												else (no)
-													if (`CGIOutput` is empty and current time > CGIStartTime + Timeout) then (yes)
-														:Throw HTTPError(504);
-														#red:(E)
-														detach
-													else (no)
-													endif
-												endif
 											else (no)
 											endif
-									else (no)
-									endif
+										endif
+								else (no)
 								endif
-								if (CGI script exited with success?) then (yes)
-									:Set flag to `E_EXEC_CGI_COMPLETE`;
-									:Parse `CGIOutput` to separate headers and body;
-									:Validate CGI headers;
-									if (Valid CGI headers?) then (yes)
-										:Extract CGI headers;
-										:Append CGI body to `responseBody`;
-									else (no)
-										:Throw HTTPError(502);
-										#red:(E)
-										detach
-									endif
+							endif
+							if (CGI script exited with success?) then (yes)
+								:Set flag to `E_EXEC_CGI_COMPLETE`;
+								:Parse `CGIOutput` to separate headers and body;
+								:Validate CGI headers;
+								if (Valid CGI headers?) then (yes)
+									:Extract CGI headers;
+									:Append CGI body to `responseBody`;
 								else (no)
 									:Throw HTTPError(502);
 									#red:(E)
 									detach
 								endif
 							else (no)
-                            endif
+								:Throw HTTPError(502);
+								#red:(E)
+								detach
+							endif
 							| __ExecutionHandler__ |
 						else (no)
 							switch (`method`)
@@ -775,6 +764,13 @@ start
 					if (E_REQ_HEADERS_VALIDATED is set AND E_RESP_HEADERS_SENT is NOT set) then (no)
 						:Try `prepareHeadersResponse()`;
 						| __ResponseHandler__ |
+						if (E_EXEC_CREATED) then (yes)
+							:statusCode = 201;
+						else if (E_EXEC_NOCONTENT) then (yes)
+							:statusCode = 204;
+						else
+							:statusCode = 200;
+						endif
 						:Call `buildStatusLine(httpVersion, statusCode, reasonPhrase)`;
 							:Append `status-line` to `bufferResponse`;
 						:Call `buildHeaders(request)`;
@@ -789,8 +785,7 @@ start
 									:Add `Connection: close` header;
 								endif
 							endif
-							:TODO others headers;
-							:Append headers to `bufferResponse`;
+							:Append all headers to `bufferResponse`;
 								:Add final CRLF after headers;
 					else (yes)
 					endif
@@ -807,12 +802,15 @@ start
 			| __ClientHandler__ |
 			if (`E_OUT` is set for `TcpClient`) then (yes)
 				| __Client__ |
-				if (`E_RESP_HEADERS_SENT` is set) then (yes)
-				
-				else (no)
-					:Call `sendData()` with `bufferResponse`;
-					:Call `clearBufferResponse()`;
+				:Call `sendData()` with `bufferResponse`;
+				if (`E_RESP_HEADERS_SENT is NOT set) then (yes)
 					:Call `setFlags(E_RESP_HEADERS_SENT)`;
+				else (no)
+				endif
+				if (`E_EXEC_COMPLETE` is set) then (yes)
+					:Call `resetAllFlags()`;
+					:Call `clearBufferResponse()`;
+				else (no)
 				endif
 			else (no)
 			endif
