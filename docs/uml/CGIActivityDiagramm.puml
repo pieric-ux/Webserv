@@ -1,0 +1,112 @@
+@startuml webserv_activity
+
+!theme blueprint
+!pragma useVerticalIf on
+skinparam DefaultTextAlignment center
+skinparam ActivityTextAlignment center
+skinparam NoteTextAlignment center
+skinparam ConditionEndStyle hline
+
+title Activity Diagram for CGI
+
+| CGI |
+| CGI Handler |
+
+start
+	| CGI Handler |
+	:Receive HTTP Request;
+	:Parse Request;
+
+	if (Request does not pass access controls?) then (yes)
+		:Reject request (do not execute CGI script);
+		stop
+	endif
+
+	:Initialize meta-variables;
+	if (extension meta-variables required?) then (yes)
+		:Set X_* extension environment variables;
+	endif
+	if (protocol-specific meta-variables required?) then (yes)
+		:Set protocol-specific environment variables;
+	endif
+
+	:Distinguish between NULL and unset meta-variables;
+
+partition "fork()" {
+    :Build CGI Request: set meta-variables;
+
+    if (content-length header exists?) then (yes)
+        :Set CONTENT_LENGTH environment variable;
+    else (no)
+        :Set CONTENT_LENGTH to empty or not set;
+    endif
+    if (media-type header exists?) then (yes)
+        :Set CONTENT_TYPE environment variable;
+    else (no)
+        :Set CONTENT_TYPE to empty or not set;
+    endif
+    :Set GATEWAY_INTERFACE environment variable to CGI/1.1;
+    if (script URI contains query-string) then (yes)
+        :Set QUERY_STRING environment variable;
+    else (no)
+        :Set QUERY_STRING to empty;
+    endif
+    :Set REMOTE_ADDR environment variable;
+    :Set REMOTE_HOST environment variable;
+    :Set REMOTE_IDENT environment variable;
+    :Set REMOTE_USER environment variable;
+    :Set REQUEST_METHOD environment variable;
+
+    if (REQUEST_METHOD is GET) then (yes)
+        :Prepare for GET (no body);
+    else if (REQUEST_METHOD is POST) then (yes)
+        :Prepare for POST (body expected);
+    else if (REQUEST_METHOD is HEAD) then (yes)
+        :Prepare for HEAD (no body, response without body);
+    else if (REQUEST_METHOD is DELETE) then (yes)
+        :Prepare for DELETE (body optional);
+    else 
+        stop
+    endif
+    :Set SCRIPT_NAME environment variable;
+    :Set SERVER_NAME environment variable;
+    :Set SERVER_PORT environment variable;
+    :Set SERVER_PROTOCOL environment variable;
+    :Set SERVER_SOFTWARE environment variable;
+    :Set other protocol specific environment variables;
+
+	partition "CGI Script Execution" {
+    :Execute CGI Script;
+
+    :Ensure stateless processing (no persistent state between requests);
+
+    :Initialize buffering for input/output;
+
+    while (CGI script is running) is (yes)
+        if (Request has body to send?) then (yes)
+            :Write request body to CGI script's standard input;
+            if (body is fully written?) then (yes)
+                :Close CGI script's standard input;
+            endif
+        endif
+        :Read CGI script's standard output;
+        :Parse CGI script's output headers (Content-Type, Status, Location, ...);
+        :Parse extension headers (X-*, protocol-specific);
+        :Parse CGI script's response body;
+    end while
+
+    if (CGI script interrupted or abnormal termination?) then (yes)
+        :Handle interruption (cleanup, log, error response);
+    endif
+
+    if (CGI script error or abnormal termination?) then (yes)
+        :Handle error (log, send error response, cleanup);
+    endif
+	}
+}
+	:Send HTTP response to client;
+
+end
+
+
+@enduml
