@@ -124,6 +124,17 @@ namespace webserv.client {
 		- _flags : e_ResponseFlags
 		--
 		+ Response()
+		+ getHttpVersion() : string
+		+ setHttpVersion(httpVersion : string) : void
+		+ getStatusCode() : StatusCode
+		+ setStatusCode(statusCode : StatusCode) : void
+		+ getHeaders() : vector<list<HTTPHeader>>
+		+ setHeaders(headers : vector<list<HTTPHeader>>) : void
+		+ getBody() : vector<unsigned char>
+		+ setBody(body : vector<unsigned char>) : void
+		+ getFlags() : e_RequestFlags
+		+ setFlags(flags : e_RequestFlags) : void
+
 	}
 
 	class "HTTPError" as HTTPError <<exception>> {
@@ -147,21 +158,23 @@ namespace webserv.client {
 		- _HTTPError : HTTPError
 		- _lastActivityTime : int
 		--
+		- prepareHeadersRequest(buffer : string) : void
+		- prepareBodyRequest(buffer : string) : void
+		- prepareExecution(requestHandler : RequestHandler, responseHandler : ResponseHandler, serverConfig : ServerConfig) : void
+		- prepareHeadersResponse() : void
+		- prepareBodyResponse() : void
 		+ Client(socket : common::core::net::TcpClient, serverConfig : ServerConfig)
 		+ getFlags() : e_ClientFlags
 		+ setFlags(flags : e_ClientFlags) : void
+		+ getStatus() : e_ReceiveDataStatus
+		+ setStatus() : e_ReceiveDataStatus
 		+ getExecutionHandler() : ExecutionHandler
 		+ getRequestHandler() : RequestHandler
-		+ getHTTPError() : HTTPError
 		+ getServerConfig() : ServerConfig
+		+ getHTTPError() : HTTPError
+		+ setHTTPError(error : HTTPError) : void
 		+ getLastActivityTime() : int
 		+ setLastActivityTime(time : int) : void
-		+ setHTTPError(error : HTTPError) : void
-		+ prepareHeadersRequest(buffer : string) : void
-		+ prepareBodyRequest(buffer : string) : void
-		+ prepareExecution(requestHandler : RequestHandler, responseHandler : ResponseHandler, serverConfig : ServerConfig) : void
-		+ prepareHeadersResponse() : void
-		+ prepareBodyResponse() : void
 		+ receiveData() : e_ReceiveDataStatus
 		+ sendData() : void
 	}
@@ -194,6 +207,10 @@ namespace webserv.handler {
 		- _bufferRequest : vector<unsigned char>
 		- _parser : Parser
 		--
+		- parseHeadersFromBufferRequest() : void
+		- validateHeaders(serverConfig : ServerConfig) : void
+		- parseBodyFromBuffer(serverConfig : ServerConfig) : void
+		- buildAbsolutPath(requestTarget : string, locationConfig : LocationConfig) : void
 		+ RequestHandler()
 		+ getRequest() : Request
 		+ setRequest(request : Request) : void
@@ -201,23 +218,19 @@ namespace webserv.handler {
 		+ clearBufferRequest() : void
 		+ getParser() : Parser
 		+ getBodyReceived() : int
-		+ parseHeadersFromBufferRequest() : void
-		+ validateHeaders(serverConfig : ServerConfig) : void
-		+ parseBodyFromBuffer(serverConfig : ServerConfig) : void
-		+ buildAbsolutPath(requestTarget : string, locationConfig : LocationConfig) : void
 	}
 
 	class "ResponseHandler" as ResponseHandler {
 		- _response : Response
 		- _bufferResponse : vector<unsigned char>
 		--
+		- buildStatusLine(httpVersion : string, statusCode : StatusCode, reasonPhrase : string) : void
+		- buildHeaders(request : Request) : void
 		+ ResponseHandler()
 		+ getResponse() : Response
 		+ setResponse(response : Response) : void
 		+ appendToBufferResponse(buffer : string) : void
 		+ clearBufferResponse() : void
-		+ buildStatusLine(httpVersion : string, statusCode : StatusCode, reasonPhrase : string) : void
-		+ buildHeaders(request : Request) : void
 	}
 
 	enum "e_ExecutionHandlerFlags" as e_ExecutionHandlerFlags {
@@ -229,16 +242,16 @@ namespace webserv.handler {
 
 	class "ExecutionHandler" as ExecutionHandler {
 		- _fd : int
-		- _flags : e_ExecutionFlags
 		- _bodyReceived : int
+		- _flags : e_ExecutionFlags
 		--
 		+ ExecutionHandler()
 		+ getFd() : int
 		+ setFd(fd : int) : void
-		+ getFlags() : e_ExecutionFlags
-		+ setFlags(flags : e_ExecutionFlags) : void
 		+ getBodyReceived() : int
 		+ setBodyReceived(bodyReceived : int) : void
+		+ getFlags() : e_ExecutionFlags
+		+ setFlags(flags : e_ExecutionFlags) : void
 		+ execute(request : Request, response : Response, serverConfig : ServerConfig) : void
 		+ executeCGI(request : Request, serverConfig : ServerConfig) : void
 		+ executeRequest(request : Request, response : Response, serverConfig : ServerConfig) : void
@@ -290,6 +303,7 @@ namespace webserv.config {
 		GET
 		HEAD
 		POST
+		PUT
 		DELETE
 	}
 
@@ -375,7 +389,6 @@ namespace webserv.config {
 		--
 		+ ServerConfig()
 		+ getClientMaxBodySize() : int
-		+ getClientMaxRequestLineSize() : int
 		+ getCreateFullPutPath() : bool
 		+ getDavPutPath() : string
 		+ getDavAccess() : string
@@ -429,6 +442,7 @@ namespace webserv.config {
 		+ getTypes() : map<string, string>
 		+ getUri() : string
 		+ getModifier() : e_Modifier
+		+ setModifier(modifier : e_Modifier) : void
 		+ getRedirect() : Return
 		+ getEnableCGI() : bool
 		+ getCgiExtensions() : map<string, string>
@@ -443,8 +457,8 @@ namespace webserv.cgi {
 namespace webserv {
 
 	class "HTTPServer" as HTTPServer <<singleton>> {
-		- _logger : log42::logger::Logger
 		- _abnf : abnf::Abnf
+		- _logger : log42::logger::Logger
 		- _configPath : string
 		- _parser : Parser
 		- _httpConfig : HTTPConfig

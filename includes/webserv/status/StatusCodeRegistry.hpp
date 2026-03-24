@@ -1,14 +1,14 @@
 // TODO: don't forget header
 
-#ifndef WEBSERV_STATUSCODEREGISTRY_HPP
-#define WEBSERV_STATUSCODEREGISTRY_HPP
+#ifndef WEBSERV_STATUS_STATUSCODEREGISTRY_HPP
+#define WEBSERV_STATUS_STATUSCODEREGISTRY_HPP
 
 /**
 * @file StatusCodeRegistry.hpp
 * @brief [TODO:description]
 */
 
-#include <webserv/StatusCode.hpp>
+#include <webserv/status/StatusCode.hpp>
 #include <map>
 
 namespace http
@@ -25,11 +25,11 @@ namespace status
 class StatusCodeRegistry
 {
 	public:
-		static StatusCodeRegistry &getInstance();
-		StatusCode getStatusCode(const unsigned short code) const;
+		static StatusCodeRegistry				&getInstance();
+		StatusCode								getStatusCode(const unsigned short code) const;
 
 	private:
-		std::map<unsigned short, StatusCode> _statusCodes;
+		std::map<unsigned short, StatusCode>	_statusCodes;
 
 		StatusCodeRegistry();
 		~StatusCodeRegistry();
@@ -40,4 +40,4 @@ class StatusCodeRegistry
 } // !status
 } // !http
 
-#endif
+#endif // !WEBSERV_STATUS_STATUSCODEREGISTRY_HPP

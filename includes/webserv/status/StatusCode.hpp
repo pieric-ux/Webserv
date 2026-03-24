@@ -1,7 +1,7 @@
 // TODO: don't forget header
 
-#ifndef WEBSERV_STATUSCODE_HPP
-#define WEBSERV_STATUSCODE_HPP
+#ifndef WEBSERV_STATUS_STATUSCODE_HPP
+#define WEBSERV_STATUS_STATUSCODE_HPP
 
 /**
 * @file StatusCode.hpp
@@ -29,17 +29,17 @@ class StatusCode
 		StatusCode(const StatusCode &rhs);
 		StatusCode &operator=(const StatusCode &rhs);
 
-		int			getCode() const;
-		std::string	getMessage() const;
-		std::string	getDescription() const;
+		int				getCode() const;
+		std::string		getMessage() const;
+		std::string		getDescription() const;
 
 	private:
-		unsigned short		_code;
-		std::string			_msg;
-		std::string			_description;
+		unsigned short	_code;
+		std::string		_msg;
+		std::string		_description;
 };
 
 } // !status
 } // !http
 
-#endif
+#endif // !WEBSERV_STATUS_STATUSCODE_HPP

@@ -1,7 +1,7 @@
 // TODO: don't forget header
 
-#ifndef WEBSERV_HTTPHEADERS_HPP
-#define WEBSERV_HTTPHEADERS_HPP
+#ifndef WEBSERV_HEADERS_HTTPHEADERS_HPP
+#define WEBSERV_HEADERS_HTTPHEADERS_HPP
 
 /**
 * @file HTTPHeaders.hpp
@@ -40,4 +40,4 @@ class HTTPHeader
 } // !HTTPheaders
 } // !http
 
-#endif
+#endif // !WEBSERV_HEADERS_HTTPHEADERS_HPP

@@ -5,7 +5,7 @@
 * @brief [TODO:description]
 */
 
-#include "webserv/HTTPHeader.hpp"
+#include "webserv/headers/HTTPHeader.hpp"
 #include <string>
 
 namespace http
