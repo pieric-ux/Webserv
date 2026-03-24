@@ -47,7 +47,7 @@ class Parser
 		std::vector<HTTPHeader>	parseHeaders(const std::string &bufferRequest);
 
 	private:
-		static abnf::Abnf		_abnf;
+		static abnf::Abnf		&_abnf;
 		e_ParserFlags			_flags;
 };
 
