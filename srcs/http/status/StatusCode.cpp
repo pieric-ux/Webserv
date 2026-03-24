@@ -5,7 +5,7 @@
 * @brief [TODO:description]
 */
 
-#include <webserv/StatusCode.hpp>
+#include <webserv/status/StatusCode.hpp>
 
 namespace http 
 {

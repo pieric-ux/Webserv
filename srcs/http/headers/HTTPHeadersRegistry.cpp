@@ -5,7 +5,7 @@
 * @brief [TODO:description]
 */
 
-#include <webserv/HTTPHeadersRegistry.hpp>
+#include <webserv/headers/HTTPHeadersRegistry.hpp>
 #include <algorithm>
 #include <cctype>
 

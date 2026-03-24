@@ -36,7 +36,7 @@ vpath %.cpp \
 
 # Sources and object files
 SRCES = main.cpp \
-		Headers.cpp HeadersRegistry.cpp \
+		HTTPHeader.cpp HTTPHeadersRegistry.cpp \
 		StatusCode.cpp StatusCodeRegistry.cpp
 
 OBJS_SRCES = $(addprefix $(OBJDIR)/, $(SRCES:.cpp=.o))

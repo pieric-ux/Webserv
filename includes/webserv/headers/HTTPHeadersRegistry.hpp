@@ -1,14 +1,14 @@
 // TODO: don't forget header
 
-#ifndef WEBSERV_HTTPHEADERSREGISTRY_HPP
-#define WEBSERV_HTTPHEADERSREGISTRY_HPP
+#ifndef WEBSERV_HEADERS_HTTPHEADERSREGISTRY_HPP
+#define WEBSERV_HEADERS_HTTPHEADERSREGISTRY_HPP
 
 /**
 * @file HTTPHeadersRegistry.hpp
 * @brief [TODO:description]
 */
 
-#include <webserv/HTTPHeader.hpp>
+#include <webserv/headers/HTTPHeader.hpp>
 #include <string>
 #include <map>
 
@@ -42,4 +42,4 @@ class HTTPHeadersRegistry
 } // !HTTPheaders
 } // !http
 
-#endif
+#endif // !WEBSERV_HEADERS_HTTPHEADERSREGISTRY_HPP
