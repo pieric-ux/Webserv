@@ -1,0 +1,828 @@
+@startuml webserv_activity
+
+!theme blueprint
+!pragma useVerticalIf on
+skinparam DefaultTextAlignment center
+skinparam ActivityTextAlignment center
+skinparam NoteTextAlignment center
+skinparam ConditionEndStyle hline
+
+title Activity Diagram for Webserv 
+
+| __HTTPServer__ |
+| __ServerFactory__ |
+| __Server__ |
+| __ClientHandler__ |
+| __Client__ |
+| __ResponseHandler__ |
+| __RequestHandler__ |
+| __Parser__ |
+| __CGIHandler__ |
+| __ExecutionHandler__ |
+
+| __HTTPServer__ |
+start
+	:Create `Logger`;
+	:Create `Abnf`;
+	:Create `HeaderRegistry`;
+	:Create `StatusCodeRegistry`;
+	:Create `TypesRegistry`;
+	:Create `Parser`;
+	if (Configuration file exists?) then (no)
+		:Log error;
+		end
+	else (yes)
+	:Call `loadConfig()`;
+	endif
+	| __Parser__ |
+	:Call `parseConfig()`;
+	:Create `HTTPConfig`;
+	while (For each `ServerConfig` in `HTTPConfig`) is (yes)
+		if (Configuration valid?) then (no)
+			:Log error;
+			end
+		else (yes)
+			:Create `ServerConfig`;
+			while (For each `LocationConfig` in `ServerConfig`) is (yes)
+				:Create `LocationConfig`;
+			endwhile
+		endif
+	endwhile
+	if (At least one valid `ServerConfig`?) then (yes)
+	else (no)
+		:Log error;
+		end
+	endif
+	| __HTTPServer__ |
+	: Create 'ServerFactory' with `HTTPConfig`;
+	| __ServerFactory__ |
+	while (For each `ServerConfig` in `HTTPConfig`) is (yes)
+	:Create `Server` with `ServerConfig`;
+		| __Server__ |
+		:Create `Parser`;
+		while (For each `Listen` in `ServerConfig`) is (yes)
+			:Call `getListen()` to get `address` and `port`;
+			| __Parser__ |
+			:Call `isIPv6Address(address)`;
+			| __Server__ |
+			if (Address is IPV6?) then (yes)
+				:Create `socket6` and `addrinfo6`;
+				:Apply options with `setsockopt()`;
+			else (no)
+				:Create `socket4` and `addrinfo4`;
+				:Apply options with `setsockopt()`;
+			endif
+		endwhile
+	endwhile
+	| __HTTPServer__ |
+	:Create `ioMultiplexer`;
+	:Create `ClientHandler` with `ioMultiplexer`;
+	while (For each `Server`) is (yes)
+		while (For each `TcpServer` in `Server`) is (yes)
+			:Add `TcpServer` to `ioMultiplexer`;
+		endwhile
+	endwhile (no)
+	while (HTTPServer is `running()`?) is (yes)
+		while (For each `TcpServer` in `ioMultiplexer`) is (yes)
+			if (`E_IN` is set for `TcpServer`) then (yes)
+				:Call `connectClient()`;
+				| __ClientHandler__ |
+				:Create `Client` with `TcpClient` and `ServerConfig`;
+					| __Client__ |
+					:Create `RequestHandler`;
+					| __RequestHandler__ |
+						:Create `Parser`;
+					| __Client__ |
+					:Create `ResponseHandler`;
+				| __ClientHandler__ |
+				:Call `addClient(client)`;
+				| __HTTPServer__ |
+				:Add `TcpClient` to `ioMultiplexer`;
+			else (no)
+			endif
+		endwhile (no)
+		| __ClientHandler__ |
+		:Call `processClients(ioMultiplexer)`;
+		while (For each `Client`) is (yes)
+			| __Client__ |
+			if (`lastActivityTime` > `keepAliveTimeout`) then (yes)
+					:Call `setFlags(E_CLI_DISCONNECTED)`;
+			else (no)
+			endif
+			| __ClientHandler__ |
+			if (`E_IN` is set for `TcpClient` OR `bufferRequest` is not empty) then (yes)
+				| __Client__ |
+				:Update `lastActivityTime`;
+				if (`E_CLI_ERR_PARSING is set`) then (yes)
+					| __ClientHandler__ |
+					:continue;
+					detach
+					| __Client__ |
+				else (no)
+					:Call `receiveData(client)`;
+				endif
+				| __ClientHandler__ |
+				if (`e_ReceiveDataStatus`?) then (E_DISCONNECTED)
+					:Call `removeClient(client)`;
+				else (E_REQUEST)
+					| __Client__ |
+					if (`E_REQ_HEADERS_VALIDATED` is set) then (no)
+						:Try `prepareHeadersRequest(buffer)`;
+						| __RequestHandler__ |
+						:Call `appendToBufferRequest(buffer)`;
+						:Call `parseHeadersFromBufferRequest()`;
+						if (`E_REQ_REQUEST_LINE` is set) then (no)
+							:Use `Parser` to check `Request-Line` presence and validity;
+							| __Parser__ |
+							floating note: During the headers parsing,\nthe bufferResquest is cleared\nfor each line parsed.\n\nOnly the stash is kept to handle\nthe case where a line is split\nbetween two `receiveData()` calls.
+							:Call `parseRequestLine()`;
+							:Use ABNF to parse `method` token;
+							if (Valid method?) then (no)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (yes)
+								if (Method is implemented?) then (no)
+									:Throw HTTPError(501);
+									#red:(E)
+									detach
+								else (yes)
+								: Extract `method`;
+								endif
+							endif
+							:Use ABNF to parse `requestTarget` token;
+							if (Valid requestTarget?) then (no)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (yes)
+								if (RequestTarget is too long?) then (yes)
+									:Throw HTTPError(414);
+									#red:(E)
+									detach
+								else (no)
+								:Extract `requestTarget`;
+								endif
+							endif
+							:Use ABNF to parse `httpVersion` token;
+							if (Valid httpVersion?) then (no)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (yes)
+								if (httpVersion is supported?) then (no)
+									:Throw HTTPError(505);
+									#red:(E)
+									detach
+								else (yes)
+								:Extract `httpVersion`;
+								endif
+							endif
+							if (RequestLine is too long? (> 8Ko)) then (yes)
+								:Throw HTTPError(414);
+								#red:(E)
+								detach
+							else (no)
+							endif
+							| __RequestHandler__ |
+							:Call `setFlags(E_REQ_REQUEST_LINE)`;
+						else (yes)
+						endif
+						| __RequestHandler__ |
+						:Use `Parser` to check others headers presence and validity;
+						| __Parser__ |	
+						:Call `parseHeaders(bufferRequest)`;
+						:Use ABNF to parse headers;
+						if (`Host` header is present?) then (yes)
+							if (`E_PARS_HOST` is set) then (yes)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (no)
+								if (Valid `Host` header?) then (no)
+									:Throw HTTPError(400);
+									#red:(E)
+									detach
+								else (yes)
+								:Extract `Host` header;
+								:Call `setFlags(E_PARS_HOST)`;
+								endif
+							endif
+						else (no)	
+						endif
+						if (`Connection` header is present?) then (yes)
+							if (Valid `Connection` header?) then (no)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (yes)
+								if (`E_PARS_CONNECTION` is set) then (yes)
+									:Append `connection-option` to existing `Connection` header;
+								else (no)
+									:Extract `Connection` header;
+									:Call `setFlags(E_PARS_CONNECTION)`;
+								endif
+							endif
+						else (no)
+						endif
+						if (`Content-Length` header is present?) then (yes)
+							if (`E_PARS_CONTENT_LENGTH` is set) then (yes)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (no)
+								if (Valid `Content-Length` header?) then (no)
+									:Throw HTTPError(400);
+									#red:(E)
+									detach
+								else (yes)
+									:Extract `Content-Length` header;
+									:Call `setFlags(E_PARS_CONTENT_LENGTH)`;
+								endif
+							endif
+						else (no)
+						endif
+						if (`Content-Type` header is present?) then (yes)
+							if (`E_PARS_CONTENT_TYPE` is set) then (yes)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (no)
+								if (Valid `Content-Type` header?) then (no)
+									:Throw HTTPError(400);
+									#red:(E)
+									detach
+								else (yes)
+								:Extract `Content-Type` header;
+								:Call `setFlags(E_PARS_CONTENT_TYPE)`;
+								endif
+							endif
+						else (no)
+						endif
+						if (`Content-Encoding` header is present?) then (yes)
+							if (Valid `Content-Encoding` header?) then (no)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (yes)
+								if (`E_PARS_CONTENT_ENCODING` is set) then (yes)
+									:Append `content-coding` to existing `Content-Encoding` header;
+								else (no)
+									:Extract `Content-Encoding` header;
+									:Call `setFlags(E_PARS_CONTENT_ENCODING)`;
+								endif
+							endif
+						else (no)
+						endif
+						if (`Expect` header is present?) then (yes)
+							if (Valid `Expect` header?) then (no)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (yes)
+								if (`E_PARS_EXPECT` is set) then (yes)
+									:Append `expectation` to existing `Expect` header;
+								else (no)
+									:Extract `Expect` header;
+									:Call `setFlags(E_PARS_EXPECT)`;
+								endif
+							endif
+						else (no)
+						endif
+						if (`Transfer-Encoding` header is present?) then (yes)
+								:Throw HTTPError(501);
+								#red:(E)
+								detach
+						else (no)
+						endif
+						if (`Range` header is present?) then (yes)
+								:Throw HTTPError(501);
+								#red:(E)
+								detach
+						else (no)
+						endif
+						if (Valid others headers?) then (no)
+							:Throw HTTPError(400);
+							#red:(E)
+							detach
+						else (yes)
+							:Extract others headers;
+						endif
+						if (CLRF CLRF is present?) then (yes)
+							:Call `setFlags(E_CLRF)`;
+						else (no)
+						endif
+						| __RequestHandler__ |
+						:Call `validateHeaders(serverConfig)`;
+						if (`E_PARS_CLRF` is set AND `E_REQ_HEADERS_VALIDATED` is NOT set) then (yes)
+							:Call `findLocationConfig(requestTarget)`;
+							:Call `buildAbsolutPath(requestTarget, LocationConfig)`;
+							if (`method` is allowed in `LocationConfig`) then (no)
+								:Throw HTTPError(405);
+								#red:(E)
+								detach
+							else (yes)
+							endif
+							if (`E_PARS_HOST` is set) then (no)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (yes)
+							endif
+							if (`method` is `POST` or `DELETE`) then (yes)
+								if (`E_PARS_CONTENT_LENGTH` is set) then (no)
+									:Throw HTTPError(411);
+									#red:(E)
+									detach
+								else (yes)
+								endif
+								if (`E_PARS_CONTENT_TYPE` is set) then (yes)
+									if (`media-type` is `mutlipart/form-data`) then (yes)
+										:Throw HTTPError(501);
+										#red:(E)
+										detach
+									else (no)
+										if (`media-type` is allowed in `LocationConfig`) then (no)
+											:Throw HTTPError(415);
+											#red:(E)
+											detach
+										else (yes)
+										endif
+									endif
+								else (no)
+									:Assume "application/octet-stream" as `Content-Type`;
+									:Set `E_PARS_CONTENT_TYPE` flag;
+								endif
+								if (`E_PARS_CONTENT_ENCODING` is set) then (yes)
+									if (`content-coding` is allowed in `LocationConfig`) then (no)
+										:Throw HTTPError(415);
+										#red:(E)
+										detach
+									else (yes)
+									endif
+								else (no)
+								endif
+							else (no)
+							endif
+							:Call `setFlags(E_REQ_HEADERS_VALIDATED)`;
+						else(no)
+						endif
+					else (yes)
+					endif
+					| __Client__ |
+					if (`E_REQ_HEADERS_VALIDATED` is set and `method` is `POST` or `DELETE`) then (yes)
+						:Try `prepareBodyRequest(buffer)`;
+						| __RequestHandler__ |
+						:Call `appendToBufferRequest(buffer)`;
+						:Call `parseBodyFromBuffer(serverConfig)`;
+						:Call `findLocationConfig(requestTarget)`;
+						if (`Content-Length` > `clientMaxBodySize`) then (yes)
+							:Throw HTTPError(413);
+							#red:(E)
+							detach
+						else (no)
+						:Call `setFlags(E_REQ_BODY_STARTED)`;
+						endif
+					else (no)
+					endif
+					| __Client__ |
+					if (`E_REQ_HEADERS_VALIDATED` is set) then(yes)
+						:Try `prepareExecution(requestHandler, responseHandler, serverConfig)`;
+						| __ExecutionHandler__ |
+						:Call `execute(requestHandler, responseHandler, serverConfig)`;
+						:Call `findLocationConfig(requestTarget)`;
+						:Call `executeRequest(requestHandler, responseHandler, LocationConfig)`;
+						if (`enableCGI` is set in `LocationConfig` AND `cgiExtensions` contains `requestTarget` extension) then (yes)
+							if (`method` is `POST` or 'PUT' or `DELETE`) then (yes)
+									:Send `bufferRequest` to CGI process stdin;
+							else (no)
+								if (`method` is `GET` or `HEAD`) then (no)
+									:Throw HTTPError(405);
+									#red:(E)
+									detach
+								else (yes)
+								endif
+							endif
+							:Call `executeCGI(request, LocationConfig)`;
+							| __CGIHandler__ |
+							:Initialize meta-variables;
+							:Call `setCGIEnvironmentVariables(request, LocationConfig)`;
+							:Set X_* extension environment variables if required;
+							:Set protocol-specific environment variables if required;
+							if (content-length header exists?) then (yes)
+								:Set CONTENT_LENGTH environment variable;
+							else (no)
+								:Set CONTENT_LENGTH to empty or not set;
+							endif
+							if (media-type header exists?) then (yes)
+								:Set CONTENT_TYPE environment variable;
+							else (no)
+								:Set CONTENT_TYPE to empty or not set;
+							endif
+							:Set GATEWAY_INTERFACE environment variable to CGI/1.1;
+							if (script URI contains query-string) then (yes)
+								:Set QUERY_STRING environment variable;
+								:Call `setQueryStringEnvironmentVariable(request, LocationConfig)`;
+							else (no)
+								:Set QUERY_STRING to empty or not set;
+							endif
+							:Set CONNECTION environment variable;
+							:Set REMOTE_ADDR environment variable;
+							:Set REMOTE_HOST environment variable;
+							:Set REMOTE_IDENT environment variable;
+							:Set REMOTE_USER environment variable;
+							:Set REQUEST_METHOD environment variable;
+							:Set SCRIPT_NAME environment variable;
+							:Set SERVER_NAME environment variable;
+							:Set SERVER_PORT environment variable;
+							:Set SERVER_PROTOCOL environment variable;
+							:Set SERVER_SOFTWARE environment variable;							
+							if (REQUEST_METHOD is GET) then (yes)
+								:Prepare for GET (no body);
+							else if (REQUEST_METHOD is POST) then (yes)
+								:Prepare for POST (body expected);
+							else if (REQUEST_METHOD is HEAD) then (yes)
+								:Prepare for HEAD (no body, response without body);
+							else if (REQUEST_METHOD is DELETE) then (yes)
+								:Prepare for DELETE (body optional);
+							else if (REQUEST_METHOD is PUT) then (yes)
+								:Prepare for PUT (body expected);
+							else 
+								:Throw HTTPError(501);
+								#red:(E)
+								detach
+							endif
+							:Call `executeCGIScript()` with CGI script path and environment variables;
+							:Call `fork()` to execute CGI script;
+							if (Fork failed?) then (yes)
+								:Throw HTTPError(500);
+								#red:(E)
+								detach
+							else (no)
+							:Prepare `dup()` and `pipe()` for CGI script stdin, stdout and stderr redirection;
+							:Call `execve()` to execute CGI script;
+							:Set CGIStartTime to current time;
+								if (CGI script is running) then (yes)
+									if (Request has body to send to CGI script) then (yes)
+										:Call `writeChunkToCGI()` to send body chunk to CGI script;
+										if (wr > 0) then (yes)
+											:Update `bodySentToCGI`;
+										else (no)
+											:Throw HTTPError(500);
+											#red:(E)
+											detach
+										endif
+									else (no)
+									endif
+										:Call `readChunkFromCGI()` to read CGI script output;
+										if (rd > 0) then (yes)
+											:Append `buffer` to `CGIOutput`;
+										else (no)
+											if (`CGIOutput` is empty and current time > CGIStartTime + Timeout) then (yes)
+												:Throw HTTPError(504);
+												#red:(E)
+												detach
+											else (no)
+											endif
+										endif
+								else (no)
+								endif
+							endif
+							if (CGI script exited with success?) then (yes)
+								:Set flag to `E_EXEC_CGI_COMPLETE`;
+								:Parse `CGIOutput` to separate headers and body;
+								:Validate CGI headers;
+								if (Valid CGI headers?) then (yes)
+									:Extract CGI headers;
+									:Append CGI body to `responseBody`;
+								else (no)
+									:Throw HTTPError(502);
+									#red:(E)
+									detach
+								endif
+							else (no)
+								:Throw HTTPError(502);
+								#red:(E)
+								detach
+							endif
+							| __ExecutionHandler__ |
+						else (no)
+							switch (`method`)
+								case (`HEAD` or `GET`)
+									:Call `executeHEADorGET(request, response, LocationConfig)`;
+									if (isFile(requestTarget)) then (yes)
+										if (`E_EXEC_FILE_OPENED` is set) then (no)
+											:Call `openFile(request, LocationConfig)`;
+											if (fd > 0) then (yes)
+												:Call `setFlags(E_EXEC_FILE_OPENED)`;
+												:Call `getFileSize(fd)` to set `Content-Length` header in `response`;
+												:Call `getFileExtension(requestTarget)` to set `Content-Type` header in `response`;
+											else if (EACCESS) then (yes)
+												:Throw HTTPError(403);
+												#red:(E)
+												detach
+											else if (ENOENT) then (yes)
+												:Throw HTTPError(404);
+												#red:(E)
+												detach
+											else (no)
+												:Throw HTTPError(500);
+												#red:(E)
+												detach
+											endif
+										else (yes)
+										endif
+										if (`method` is `GET`) then (yes)
+											:Call `readChunk(fd, response)`;
+											if (rd > 0) then (yes)
+												:Append `buffer` to `body`;
+											else if (EOF reached?) then (yes)
+												:Call `setFlags(E_EXEC_COMPLETE)`;
+											else (no)
+												:Throw HTTPError(500);
+												#red:(E)
+												detach
+											endif
+										else (no)
+										endif
+									else (no)
+										if (`requestTarget` is a directory without end `/`) then (yes)
+											:Throw HTTPError(301);
+											#red:(E)
+											detach
+										else (no)
+											if ('index' file is present in directory) then (yes)
+												if (`E_EXEC_FILE_OPENED` is set) then (no)
+													:Call `openFile(request, LocationConfig)`;
+													if (fd > 0) then (yes)
+														:Call `setFlags(E_EXEC_FILE_OPENED)`;
+														:Call `getFileSize(fd)` to set `Content-Length` header in `response`;
+														:Call `getFileExtension(requestTarget)` to set `Content-Type` header in `response`;
+													else if (EACCESS) then (yes)
+														:Throw HTTPError(403);
+														#red:(E)
+														detach
+													else if (ENOENT) then (yes)
+														:Throw HTTPError(404);
+														#red:(E)
+														detach
+													else (no)
+														:Throw HTTPError(500);
+														#red:(E)
+														detach
+													endif
+												else (yes)
+												endif
+												if (`method` is `GET`) then (yes)
+													:Call `readChunk(fd, response)`;
+													if (rd > 0) then (yes)
+														:Append `buffer` to `body`;
+													else if (EOF reached?) then (yes)
+														:Call `setFlags(E_EXEC_COMPLETE)`;
+													else (no)
+														:Throw HTTPError(500);
+														#red:(E)
+														detach
+													endif
+												else (no)
+												endif
+											else (no)
+												if (`autoindex` is set in `LocationConfig`) then (yes)
+													:Call `generateAutoindexHTML(requestTarget)`;
+													floating note: Uses Directory and DirectoryIterator\nfrom common lib to iterate entries.
+													:Append `htmlString` to `body`;
+													:Set `Content-Length` with `htmlString` length;
+													:Set `Content-Type: text/html; charset=utf-8`;
+												else (no)
+													:Throw HTTPError(403);
+													#red:(E)
+													detach
+												endif
+											endif
+										endif
+									endif
+								case (`POST`)
+									:Call `executePOST(request, LocationConfig)`;
+									if (isFile(requestTarget)) then (yes)
+										:Call `isFileExisting(requestTarget)`;
+										if (file exists?) then (yes)
+											:Throw HTTPError(405);
+											#red:(E)
+											detach
+										else (no)
+											:Throw HTTPError(404);
+											#red:(E)
+											detach
+										endif
+									else (no)
+										if (`requestTarget` is root) then (yes)
+											:Throw HTTPError(403);
+											#red:(E)
+											detach
+										else (no)
+											if (`requesetTarget` is a directory whithout end `/`) then (yes)
+												:Throw HTTPError(301);
+												#red:(E)
+												detach
+											else (no)
+												if (`index` file is present in directory) then (yes)
+													:Throw HTTPError(403);
+													#red:(E)
+													detach
+												else (no)
+													:Throw HTTPError(405);
+													#red:(E)
+													detach
+												endif
+											endif
+										endif
+									endif
+								case (`PUT`)
+									:Call `executePUT(request, LocationConfig)`;
+									if (`davMethods` is set in `LocationConfig`) then (yes)
+										if (isFile(requestTarget)) then (yes)
+											if (`E_EXEC_FILE_OPENED` is set) then (no)
+												:Call `openFile(request, LocationConfig)` with `O_TRUNC` flag;
+												if (fd > 0) then (yes)
+													:Call `setFlags(E_EXEC_FILE_OPENED)`;
+													:Call `setFlags(E_EXEC_NOCONTENT)`;
+													if (`bodyReceived` < `Content-Length`) then (yes)
+														:Call `writeChunk(fd, request)`;
+														if (wr > 0) then (yes)
+															:Update `bodyReceived`;
+														else (no)
+															:Throw HTTPError(500);
+															#red:(E)
+															detach
+														endif
+													else (no)
+														:Call `setFlags(E_EXEC_COMPLETE)`;
+													endif
+												else if (EACCESS) then (yes)
+													:Throw HTTPError(500);
+													#red:(E)
+													detach
+												else if (ENOENT) then (no)
+													:Throw HTTPError(500);
+													#red:(E)
+													detach
+												else (yes)
+													if (`createFullPutPath` is set in `LocationConfig`) then (yes)
+														:Call `openFile(request, LocationConfig)` with `O_CREAT` flag;
+														if (fd > 0) then (yes)
+															:Call `setFlags(E_EXEC_FILE_OPENED)`;
+															:Call `setFlags(E_EXEC_CREATED)`;
+															if (`bodyReceived` < `Content-Length`) then (yes)
+																:Call `writeChunk(fd, request)`;
+																if (wr > 0) then (yes)
+																	:Update `bodyReceived`;
+																else (no)
+																	:Throw HTTPError(500);
+																	#red:(E)
+																	detach
+																endif
+															else (no)
+																:Call `setFlags(E_EXEC_COMPLETE)`;
+															endif
+														else (no)
+															:Throw HTTPError(500);
+															#red:(E)
+															detach
+														endif
+													else (no)
+														:Throw HTTPError(500);
+														#red:(E)
+														detach
+													endif
+												endif
+											else (yes)
+											endif
+										else (no)
+											:Throw HTTPError(409);
+											#red:(E)
+											detach
+										endif
+									else (no)
+										:Throw HTTPError(405);
+										#red:(E)
+										detach
+									endif
+								case (`DELETE`)
+									:Call `executeDELETE(request, LocationConfig)`;
+									if (`davMethods` is set in `LocationConfig`) then (yes)
+										if (`Content-Length` header is present and not null) then (yes)
+											:Throw HTTPError(415);
+											#red:(E)
+											detach
+										else (no)
+										endif
+										if (isFile(requestTarget)) then (yes)
+											:Call `deleteFile(filePath)`;
+											if (successfully deleted?) then (yes)
+												:Call `setFlags(E_EXEC_NOCONTENT)`;
+											else if (EACCESS) then (yes)
+												:Throw HTTPError(403);
+												#red:(E)
+												detach
+											else if (ENOENT) then (yes)
+												:Throw HTTPError(404);
+												#red:(E)
+												detach
+											else (no)
+												:Throw HTTPError(500);
+												#red:(E)
+												detach
+											endif
+										else (no)
+											:Call `deleteDirectory(dirPath)`;
+											if (successfully deleted?) then (yes)
+												:Call `setFlags(E_EXEC_NOCONTENT)`;
+											else if (EACCESS) then (yes)
+												:Throw HTTPError(403);
+												#red:(E)
+												detach
+											else if (ENOENT) then (yes)
+												:Throw HTTPError(404);
+												#red:(E)
+												detach
+											else (no)
+												:Throw HTTPError(500);
+												#red:(E)
+												detach
+											endif
+										endif
+									else (no)
+										:Throw HTTPError(405);
+										#red:(E)
+										detach
+									endif
+							endswitch
+						endif
+					else (no)
+					endif
+					| __Client__ |
+					if (E_REQ_HEADERS_VALIDATED is set AND E_RESP_HEADERS_SENT is NOT set) then (no)
+						:Try `prepareHeadersResponse()`;
+						| __ResponseHandler__ |
+						if (E_EXEC_CREATED) then (yes)
+							:statusCode = 201;
+						else if (E_EXEC_NOCONTENT) then (yes)
+							:statusCode = 204;
+						else
+							:statusCode = 200;
+						endif
+						:Call `buildStatusLine(httpVersion, statusCode, reasonPhrase)`;
+							:Append `status-line` to `bufferResponse`;
+						:Call `buildHeaders(request)`;
+							:Add `Server` header with server software name and version;
+							:Add `Date` header with current date;
+							if (`E_PARS_CONNECTION` is set) then (yes)
+								:Add `Connection` header with same value as in request;
+							else (no)
+								if (`httpVersion` is "1.1") then (yes)
+									:Add `Connection: keep-alive` header;
+								else (no)
+									:Add `Connection: close` header;
+								endif
+							endif
+							:Append all headers to `bufferResponse`;
+								:Add final CRLF after headers;
+					else (yes)
+					endif
+					| __Client__ |
+					if (E_RESP_HEADERS_SENT is set AND `body` is not empty) then (yes)
+						:Try `prepareBodyResponse()`;
+						| __ResponseHandler__ |
+						:Append `body` to `bufferResponse`;
+					else (no)
+					endif
+				endif
+			else (no)
+			endif
+			| __ClientHandler__ |
+			if (`E_OUT` is set for `TcpClient`) then (yes)
+				| __Client__ |
+				:Call `sendData()` with `bufferResponse`;
+				if (`E_RESP_HEADERS_SENT is NOT set) then (yes)
+					:Call `setFlags(E_RESP_HEADERS_SENT)`;
+				else (no)
+				endif
+				if (`E_EXEC_COMPLETE` is set) then (yes)
+					:Call `resetAllFlags()`;
+					:Call `clearBufferResponse()`;
+				else (no)
+				endif
+			else (no)
+			endif
+		endwhile
+	| __HTTPServer__ |
+	endwhile (no)
+	end
+
+	| __Client__ |
+	#red:(E)
+	:Call `setHTTPError(error)`;
+	:Call `setFlags(E_CLI_ERR_PARSING)`;
+	detach
+
+@enduml

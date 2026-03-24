@@ -5,11 +5,13 @@
 
 /**
 * @file StatusCode.hpp
-* @brief
+* @brief [TODO:description]
 */
 
 #include <string>
 
+namespace http
+{
 namespace status
 {
 
@@ -21,15 +23,15 @@ class StatusCode
 {
 	public:
 		StatusCode();
-		StatusCode(unsigned short code, std::string msg, std::string description);
+		StatusCode(const unsigned short code, const std::string msg, const std::string description);
 		~StatusCode();
 
 		StatusCode(const StatusCode &rhs);
 		StatusCode &operator=(const StatusCode &rhs);
 
-		int			getCode();
-		std::string	getMessage();
-		std::string	getDescription();
+		int			getCode() const;
+		std::string	getMessage() const;
+		std::string	getDescription() const;
 
 	private:
 		unsigned short		_code;
@@ -38,5 +40,6 @@ class StatusCode
 };
 
 } // !status
+} // !http
 
 #endif

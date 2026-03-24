@@ -1,0 +1,224 @@
+=== TEST: DELETE / ===
+
+--- CONFIG: dav-off_ai-off | idx: minus ---
+* Host localhost:80 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:80...
+* Connected to localhost (::1) port 80
+> DELETE / HTTP/1.1
+> Host: localhost
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 405 Not Allowed
+< Server: nginx/1.29.6
+< Date: Fri, 13 Mar 2026 03:40:55 GMT
+< Content-Type: text/html
+< Content-Length: 157
+< Connection: keep-alive
+< 
+{ [157 bytes data]
+* Connection #0 to host localhost left intact
+<html>
+<head><title>405 Not Allowed</title></head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>nginx/1.29.6</center>
+</body>
+</html>
+
+--- CONFIG: dav-off_ai-off | idx: plus ---
+* Host localhost:80 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:80...
+* Connected to localhost (::1) port 80
+> DELETE / HTTP/1.1
+> Host: localhost
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 405 Not Allowed
+< Server: nginx/1.29.6
+< Date: Fri, 13 Mar 2026 03:40:56 GMT
+< Content-Type: text/html
+< Content-Length: 157
+< Connection: keep-alive
+< 
+{ [157 bytes data]
+* Connection #0 to host localhost left intact
+<html>
+<head><title>405 Not Allowed</title></head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>nginx/1.29.6</center>
+</body>
+</html>
+
+--- CONFIG: dav-off_ai-on | idx: minus ---
+* Host localhost:80 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:80...
+* Connected to localhost (::1) port 80
+> DELETE / HTTP/1.1
+> Host: localhost
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 405 Not Allowed
+< Server: nginx/1.29.6
+< Date: Fri, 13 Mar 2026 03:40:57 GMT
+< Content-Type: text/html
+< Content-Length: 157
+< Connection: keep-alive
+< 
+{ [157 bytes data]
+* Connection #0 to host localhost left intact
+<html>
+<head><title>405 Not Allowed</title></head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>nginx/1.29.6</center>
+</body>
+</html>
+
+--- CONFIG: dav-off_ai-on | idx: plus ---
+* Host localhost:80 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:80...
+* Connected to localhost (::1) port 80
+> DELETE / HTTP/1.1
+> Host: localhost
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 405 Not Allowed
+< Server: nginx/1.29.6
+< Date: Fri, 13 Mar 2026 03:40:58 GMT
+< Content-Type: text/html
+< Content-Length: 157
+< Connection: keep-alive
+< 
+{ [157 bytes data]
+* Connection #0 to host localhost left intact
+<html>
+<head><title>405 Not Allowed</title></head>
+<body>
+<center><h1>405 Not Allowed</h1></center>
+<hr><center>nginx/1.29.6</center>
+</body>
+</html>
+
+--- CONFIG: dav-on_ai-off | idx: minus ---
+* Host localhost:80 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:80...
+* Connected to localhost (::1) port 80
+> DELETE / HTTP/1.1
+> Host: localhost
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 204 No Content
+< Server: nginx/1.29.6
+< Date: Fri, 13 Mar 2026 03:40:59 GMT
+< Connection: keep-alive
+< 
+* Connection #0 to host localhost left intact
+
+--- CONFIG: dav-on_ai-off | idx: plus ---
+* Host localhost:80 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:80...
+* Connected to localhost (::1) port 80
+> DELETE / HTTP/1.1
+> Host: localhost
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 404 Not Found
+< Server: nginx/1.29.6
+< Date: Fri, 13 Mar 2026 03:41:00 GMT
+< Content-Type: text/html
+< Content-Length: 153
+< Connection: keep-alive
+< 
+{ [153 bytes data]
+* Connection #0 to host localhost left intact
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>nginx/1.29.6</center>
+</body>
+</html>
+
+--- CONFIG: dav-on_ai-on | idx: minus ---
+* Host localhost:80 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:80...
+* Connected to localhost (::1) port 80
+> DELETE / HTTP/1.1
+> Host: localhost
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 404 Not Found
+< Server: nginx/1.29.6
+< Date: Fri, 13 Mar 2026 03:41:01 GMT
+< Content-Type: text/html
+< Content-Length: 153
+< Connection: keep-alive
+< 
+{ [153 bytes data]
+* Connection #0 to host localhost left intact
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>nginx/1.29.6</center>
+</body>
+</html>
+
+--- CONFIG: dav-on_ai-on | idx: plus ---
+* Host localhost:80 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:80...
+* Connected to localhost (::1) port 80
+> DELETE / HTTP/1.1
+> Host: localhost
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 404 Not Found
+< Server: nginx/1.29.6
+< Date: Fri, 13 Mar 2026 03:41:02 GMT
+< Content-Type: text/html
+< Content-Length: 153
+< Connection: keep-alive
+< 
+{ [153 bytes data]
+* Connection #0 to host localhost left intact
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>nginx/1.29.6</center>
+</body>
+</html>
+

@@ -2,11 +2,13 @@
 
 /**
 * @file StatusCodeRegistry.cpp
-* @brief
+* @brief [TODO:description]
 */
 
 #include <webserv/StatusCodeRegistry.hpp>
 
+namespace http
+{
 namespace status
 {
 
@@ -100,9 +102,21 @@ StatusCodeRegistry::~StatusCodeRegistry() {}
 /**
  * @brief [TODO:description]
  *
- * @param code [TODO:parameter]
+ * @return [TODO:return]
  */
-StatusCode StatusCodeRegistry::getStatusCode(unsigned short code)
+StatusCodeRegistry &StatusCodeRegistry::getInstance()
+{
+	static StatusCodeRegistry instance;
+	return (instance);
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param code [TODO:parameter]
+ * @return [TODO:return]
+ */
+StatusCode StatusCodeRegistry::getStatusCode(const unsigned short code) const
 {
 	std::map<unsigned short, StatusCode>::const_iterator it = _statusCodes.find(code);
 	if (it == _statusCodes.end())
@@ -111,3 +125,4 @@ StatusCode StatusCodeRegistry::getStatusCode(unsigned short code)
 }
 
 } // !status
+} // !http
