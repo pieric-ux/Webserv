@@ -356,18 +356,31 @@ namespace webserv.config {
 		- HTTPConfig()
 		+ {static} getInstance() : HTTPConfig
 		+ getClientMaxBodySize() : int
+		+ setClientMaxBodySize(clientMaxBodySize : int) : void
 		+ getCreateFullPutPath() : bool
+		+ setCreateFullPutPath(createFullPutPath : bool) : void
 		+ getDavPutPath() : string
+		+ setDavPutPath(davPutPath : string) : void
 		+ getDavAccess() : string
+		+ setDavAccess(davAcces : string) : void
 		+ getDavMethods() : vector<e_Method>
+		+ setDavMethods(davMethods : vector<e_Method>) : void
 		+ getDefaultType() : string
+		+ setDefaultType(defaultType : string) : void
 		+ getErrorPage() : vector<ErrorPage>
+		+ setErrorPage(errorPage : vector<ErrorPage>) : void
 		+ getKeepAliveTimeout() : int
+		+ setKeepAliveTimeout(keepAliveTimeout : int) : void
 		+ getRoot() : string
+		+ setRoot(root : string) : void
 		+ getServerConfigs() : vector<ServerConfig>
+		+ setServerConfigs(serverConfigs : vector<ServerConfig>) : void
 		+ getTypes() : map<string, string>
+		+ setTypes(types : map<string, string>) : void
 		+ getEnableCGI() : bool
+		+ setEnableCGI(enableCGI : bool) : void
 		+ getCgiExtensions() : map<string, string>
+		+ setCgiExtensions(cgiExstension : map<string, string>) : void
 	}
 
 	class "ServerConfig" as ServerConfig {
