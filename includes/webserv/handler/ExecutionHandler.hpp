@@ -43,22 +43,22 @@ class ExecutionHandler
 		void		setBodyReceived(const int bodyReceived);
 		int			getFlags() const;
 
-		void		execute(Request &request, Response &response, const ServerConfig &serverConfig);
-		void		executeCGI(Request &request, const ServerConfig &serverConfig);
-		void		executeRequest(Request &request, Response &response, const ServerConfig &serverConfig);
+		void		execute(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
+		void		executeCGI(client::Request &request, const config::ServerConfig &serverConfig);
+		void		executeRequest(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
 
 	private:
 		int							_fd;
 		int							_bodyReceived;
 		e_ExecutionHandlerFlags		_flags;
 
-		void		executeHEADorGET(Request &request, Response &response, const LocationConfig &locationConfig);
-		void		executePOST(Request &request, Response &response, const LocationConfig &locationConfig);
-		void		executeDELETE(Request &request, Response &response, const LocationConfig &locationConfig);
+		void		executeHEADorGET(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
+		void		executePOST(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
+		void		executeDELETE(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
 
-		int			openFile(const Request &request, const LocationConfig &locationConfig);
-		void		readChunk(const int fd, Response &response);
-		void		writeChunk(const int fd, Request &request);
+		int			openFile(const client::Request &request, const config::LocationConfig &locationConfig);
+		void		readChunk(const int fd, client::Response &response);
+		void		writeChunk(const int fd, client::Request &request);
 
 		int			getFileSize(const int fd);
 		std::string	getFileExtension(const std::string &requestTarget);

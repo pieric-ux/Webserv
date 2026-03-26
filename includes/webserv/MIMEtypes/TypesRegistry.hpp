@@ -9,6 +9,7 @@
 
 #include <map>
 #include <string>
+#include <webserv/types.hpp>
 
 namespace webserv
 {
@@ -25,6 +26,7 @@ class TypesRegistry
 
 	private:
 		std::map<std::string, std::string>	_types;
+		t_Logger							_logger;
 
 		TypesRegistry();
 		~TypesRegistry();

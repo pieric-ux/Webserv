@@ -11,9 +11,12 @@
 #include <vector>
 #include <map>
 #include <string>
-#include "webserv/config/ErrorPage.hpp"
-#include "webserv/config/Listen.hpp"
-#include "webserv/config/LocationConfig.hpp"
+#include <webserv/config/ErrorPage.hpp>
+#include <webserv/config/Listen.hpp>
+#include <webserv/config/LocationConfig.hpp>
+#include <webserv/types.hpp>
+#include <webserv/config/HTTPConfig.hpp>
+#include <webserv/config/method.hpp>
 
 namespace webserv
 {
@@ -49,6 +52,7 @@ class ServerConfig
 		LocationConfig						findLocationConfig(const std::string &requestTarget);
 
 	private:
+		t_Logger							_logger;
 		int									_clientMaxBodySize;
 		bool								_createFullPutPath;
 		std::string							_davPutPath;

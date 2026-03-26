@@ -8,10 +8,11 @@
 * @brief [TODO:description]
 */
 
-#include <webserv/status/StatusCode.hpp>
 #include <map>
+#include <webserv/status/StatusCode.hpp>
+#include <webserv/types.hpp>
 
-namespace http
+namespace webserv
 {
 namespace status
 {
@@ -29,6 +30,7 @@ class StatusCodeRegistry
 		StatusCode								getStatusCode(const unsigned short code) const;
 
 	private:
+		t_Logger								_logger;
 		std::map<unsigned short, StatusCode>	_statusCodes;
 
 		StatusCodeRegistry();
@@ -38,6 +40,6 @@ class StatusCodeRegistry
 };
 
 } // !status
-} // !http
+} // !webserv
 
 #endif // !WEBSERV_STATUS_STATUSCODEREGISTRY_HPP

@@ -51,6 +51,7 @@
 
 # vscode
 /.vscode/
+/.vscode
 
 # Compilation database for tooling
 compile_commands.json
@@ -66,3 +67,7 @@ valgrind.log
 doc/html/
 astABNF.pdf
 *.dot
+
+# Claude
+CLAUDE.md
+.claude/

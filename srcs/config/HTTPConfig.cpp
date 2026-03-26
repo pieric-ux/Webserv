@@ -1,0 +1,307 @@
+// TODO: don't forgot header
+
+/**
+ * @file HTTPConfig.cpp
+ * @brief [TODO:description]
+ */
+
+#include <webserv/config/HTTPConfig.hpp>
+#include <webserv/config/ServerConfig.hpp>
+
+namespace webserv
+{
+namespace config
+{
+
+/**
+ * @brief [TODO:description]
+ */
+HTTPConfig::HTTPConfig()
+	:	_clientMaxBodySize(DEFAULT_CLIENT_MAX_BODY_SIZE),
+		_createFullPutPath(false),
+		_defaultType(DEFAULT_TYPE),
+		_keepAliveTimeout(DEFAULT_KEEP_ALIVE_TIMEOUT),
+		_enableCGI(false)
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.httpconfig");
+	_logger->setLevel(log42::logRecord::INFO);
+}
+
+/**
+ * @brief [TODO:description]
+ */
+HTTPConfig::~HTTPConfig() {}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+HTTPConfig &HTTPConfig::getInstance()
+{
+	static HTTPConfig instance;
+	return instance;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+int	HTTPConfig::getClientMaxBodySize() const 
+{
+	return _clientMaxBodySize;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param clientMaxBodySize [TODO:parameter]
+ */
+void	HTTPConfig::setClientMaxBodySize(const int clientMaxBodySize)
+{
+	_clientMaxBodySize = clientMaxBodySize;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+bool HTTPConfig::getCreateFullPutPath() const
+{
+	return _createFullPutPath;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param createFullPutPath [TODO:parameter]
+ */
+void	HTTPConfig::setCreateFullPutPath(const bool createFullPutPath)
+{
+	_createFullPutPath = createFullPutPath;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::string HTTPConfig::getDavPutPath() const
+{
+	return _davPutPath;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param davPutPath [TODO:parameter]
+ */
+void	HTTPConfig::setDavPutPath(const std::string &davPutPath)
+{
+	_davPutPath = davPutPath;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::string HTTPConfig::getDavAccess() const
+{
+	return _davAccess;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param davAccess [TODO:parameter]
+ */
+void	HTTPConfig::setDavAccess(const std::string &davAccess)
+{
+	_davAccess = davAccess;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::vector<config::e_Method> HTTPConfig::getDavMethods() const
+{
+	return _davMethods;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param davMethods [TODO:parameter]
+ */
+void	HTTPConfig::setDavMethods(const	 std::vector<config::e_Method> &davMethods)
+{
+	_davMethods = davMethods;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::string HTTPConfig::getDefaultType() const
+{
+	return _defaultType;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param defaultType [TODO:parameter]
+ */
+void	HTTPConfig::setDefaultType(const std::string &defaultType)
+{
+	_defaultType = defaultType;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::vector<ErrorPage> HTTPConfig::getErrorPage() const
+{
+	return _errorPage;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param errorPage [TODO:parameter]
+ */
+void	HTTPConfig::setErrorPage(const std::vector<ErrorPage> &errorPage)
+{
+	_errorPage = errorPage;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+int HTTPConfig::getKeepAliveTimeout() const
+{
+	return _keepAliveTimeout;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param keepAliveTimeout [TODO:parameter]
+ */
+void	HTTPConfig::setKeepAliveTimeout(const int keepAliveTimeout)
+{
+	_keepAliveTimeout = keepAliveTimeout;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::string HTTPConfig::getRoot() const
+{
+	return _root;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param root [TODO:parameter]
+ */
+void	HTTPConfig::setRoot(const std::string &root)
+{
+	_root = root;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::vector<ServerConfig> HTTPConfig::getServerConfigs() const
+{
+	return _serverConfigs;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param serverConfigs [TODO:parameter]
+ */
+void	HTTPConfig::setServerConfigs(const std::vector<ServerConfig> &serverConfigs)
+{
+	_serverConfigs = serverConfigs;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::map<std::string, std::string> HTTPConfig::getTypes() const
+{
+	return _types;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param types [TODO:parameter]
+ */
+void	HTTPConfig::setTypes(const std::map<std::string, std::string> &types)
+{
+	_types = types;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+bool HTTPConfig::getEnableCGI() const
+{
+	return _enableCGI;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param enableCGI [TODO:parameter]
+ */
+void	HTTPConfig::setEnableCGI(const bool enableCGI)
+{
+	_enableCGI = enableCGI;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::map<std::string, std::string> HTTPConfig::getCgiExtensions() const
+{
+	return _cgiExtensions;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param cgiExtensions [TODO:parameter]
+ */
+void	HTTPConfig::setCgiExtensions(const std::map<std::string, std::string> &cgiExtensions)
+{
+	_cgiExtensions = cgiExtensions;
+}
+
+} // !config
+} // !webserv

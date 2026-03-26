@@ -7,7 +7,7 @@
 
 #include <webserv/status/StatusCode.hpp>
 
-namespace http 
+namespace webserv
 {
 namespace status
 {
@@ -15,7 +15,11 @@ namespace status
 /**
  * @brief [TODO:description]
  */
-StatusCode::StatusCode() : _code(0), _msg(), _description() {}
+StatusCode::StatusCode() : _code(0), _msg(), _description()
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.status.statuscode");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -86,4 +90,4 @@ std::string StatusCode::getDescription() const
 }
 
 } // !status
-} // !http
+} // !webserv

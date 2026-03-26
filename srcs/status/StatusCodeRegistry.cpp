@@ -7,7 +7,7 @@
 
 #include <webserv/status/StatusCodeRegistry.hpp>
 
-namespace http
+namespace webserv
 {
 namespace status
 {
@@ -17,6 +17,8 @@ namespace status
  */
 StatusCodeRegistry::StatusCodeRegistry() 
 {
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.status.statuscoderegistery");
+	_logger->setLevel(log42::logRecord::INFO);
 	// 1xx: Informational
 	_statusCodes[100] = StatusCode(100, "Continue", "This interim response indicates that the client should continue the request or ignore the response if the request is already finished.");
 	_statusCodes[101] = StatusCode(101, "Switching Protocols", "This code is sent in response to an Upgrade request header from the client, and indicates the protocol the server is switching to.");
@@ -125,4 +127,4 @@ StatusCode StatusCodeRegistry::getStatusCode(const unsigned short code) const
 }
 
 } // !status
-} // !http
+} // !webserv

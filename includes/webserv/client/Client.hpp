@@ -37,7 +37,8 @@ enum e_ReceiveDataStatus
 class Client
 {
 	public:
-		Client(const common::core::net::TcpClient socket, const ServerConfig &serverConfig);
+		Client();
+		Client(const common::core::net::TcpClient socket, const config::ServerConfig &serverConfig);
 		~Client();
 
 		Client(const Client &rhs);
@@ -47,16 +48,14 @@ class Client
 		void							setFlags(const e_ClientFlags flags);
 		e_ReceiveDataStatus				getStatus() const;
 		void							setStatus(const e_ReceiveDataStatus status);
-		ExecutionHandler				&getExecutionHandler();
-		RequestHandler					&getRequestHandler();
-		ResponseHandler					&getResponseHandler();
-		ServerConfig					&getServerConfig();
+		handler::ExecutionHandler		&getExecutionHandler();
+		handler::RequestHandler			&getRequestHandler();
+		handler::ResponseHandler		&getResponseHandler();
+		config::ServerConfig			&getServerConfig();
 		HTTPError						&getHTTPError();
 		void							setHTTPError(const HTTPError &error);
 		int								getLastActivityTime() const;
 		void							setLastActivityTime(const int time);
-
-
 
 		e_ReceiveDataStatus				receiveData();
 		void							sendData();
@@ -67,16 +66,16 @@ class Client
 		sockaddr_storage				_sockaddr_storage;
 		e_ClientFlags					_flags;
 		e_ReceiveDataStatus				_status;
-		ExecutionHandler				_executionHandler;
-		RequestHandler					_requestHandler;
-		ResponseHandler					_responseHandler;
-		ServerConfig					_serverConfig;
+		handler::ExecutionHandler		_executionHandler;
+		handler::RequestHandler			_requestHandler;
+		handler::ResponseHandler		_responseHandler;
+		config::ServerConfig			_serverConfig;
 		HTTPError						_HTTPError;
 		int								_lastActivityTime;
 
 		void							prepareHeadersRequest(const std::string &buffer);
 		void							prepareBodyRequest(const std::string &buffer);
-		void							prepareExecution(RequestHandler requestHandler, ResonseHandler responseHandler, ServerConfig serverConfig);
+		void							prepareExecution(handler::RequestHandler requestHandler, handler::ResponseHandler responseHandler, config::ServerConfig serverConfig);
 		void							prepareHeadersResponse();
 		void							prepareBodyResponse();
 };

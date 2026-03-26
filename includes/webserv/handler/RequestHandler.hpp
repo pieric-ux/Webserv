@@ -29,22 +29,22 @@ class RequestHandler
 		RequestHandler(const RequestHandler &rhs);
 		RequestHandler &operator=(const RequestHandler &rhs);
 
-		Request						&getRequest();
-		void						setRequest(const Request &request);
+		client::Request				&getRequest();
+		void						setRequest(const client::Request &request);
 		void						appendToBufferRequest(const std::string &buffer);
 		void						clearBufferRequest();
-		Parser						&getParser();
+		parser::Parser				&getParser();
 		int							getBodyReceived() const;
 
 	private:
-		Request						_request;
+		client::Request				_request;
 		std::vector<unsigned char>	_bufferRequest;
-		Parser						_parser;
+		parser::Parser				_parser;
 
 		void						parseHeadersFromBufferRequest();
-		void						validateHeaders(const ServerConfig &serverConfig);
-		void						parseBodyFromBuffer(const ServerConfig &serverConfig);
-		void						buildAbsolutPath(const std::string &requestTarget, const LocationConfig &locationConfig);
+		void						validateHeaders(const config::ServerConfig &serverConfig);
+		void						parseBodyFromBuffer(const config::ServerConfig &serverConfig);
+		void						buildAbsolutPath(const std::string &requestTarget, const config::LocationConfig &locationConfig);
 };
 
 } // !handler

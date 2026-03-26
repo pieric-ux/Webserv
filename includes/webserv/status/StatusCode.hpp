@@ -9,8 +9,9 @@
 */
 
 #include <string>
+#include <webserv/types.hpp>
 
-namespace http
+namespace webserv
 {
 namespace status
 {
@@ -34,12 +35,13 @@ class StatusCode
 		std::string		getDescription() const;
 
 	private:
+		t_Logger		_logger;
 		unsigned short	_code;
 		std::string		_msg;
 		std::string		_description;
 };
 
 } // !status
-} // !http
+} // !webserv
 
 #endif // !WEBSERV_STATUS_STATUSCODE_HPP

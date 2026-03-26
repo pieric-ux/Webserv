@@ -5,10 +5,11 @@
 * @brief [TODO:description]
 */
 
-#include "webserv/headers/HTTPHeader.hpp"
 #include <string>
+#include <webserv/headers/HTTPHeader.hpp>
+#include <webserv/types.hpp>
 
-namespace http
+namespace webserv
 {
 namespace HTTPheaders
 {
@@ -16,7 +17,11 @@ namespace HTTPheaders
 /**
  * @brief [TODO:description]
  */
-HTTPHeader::HTTPHeader() : _name(), _value(), _description() {}
+HTTPHeader::HTTPHeader() : _name(), _value(), _description()
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.httpheader");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -24,7 +29,11 @@ HTTPHeader::HTTPHeader() : _name(), _value(), _description() {}
  * @param name [TODO:description]
  * @param description [TODO:description]
  */
-HTTPHeader::HTTPHeader(const std::string name, const std::string description) : _name(name), _value(""), _description(description) {}
+HTTPHeader::HTTPHeader(const std::string name, const std::string description) : _name(name), _value(""), _description(description) 
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.httpheader");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -33,7 +42,11 @@ HTTPHeader::HTTPHeader(const std::string name, const std::string description) : 
  * @param value [TODO:description]
  * @param description [TODO:description]
  */
-HTTPHeader::HTTPHeader(const std::string name, const std::string value, const std::string description) : _name(name), _value(value), _description(description) {}
+HTTPHeader::HTTPHeader(const std::string name, const std::string value, const std::string description) : _name(name), _value(value), _description(description) 
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.httpheader");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -106,4 +119,4 @@ std::string HTTPHeader::getDescription() const
 }
 
 } // !HTTPheaders
-} // !http
+} // !webserv

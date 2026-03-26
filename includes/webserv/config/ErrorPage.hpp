@@ -20,15 +20,17 @@ namespace config
 class ErrorPage
 {
 	public:
-		ErrorPage(const std::vector<StatusCode> &codes, const std::string &path);
+		ErrorPage();
+		ErrorPage(const std::vector<status::StatusCode> &codes, const std::string &path);
 		~ErrorPage();
 
 		ErrorPage(const ErrorPage &rhs);
 		ErrorPage &operator=(const ErrorPage &rhs);
 
 	private:
-		std::vector<StatusCode> _codes;
-		std::string				_path;
+		t_Logger 						_logger;
+		std::vector<status::StatusCode> _codes;
+		std::string						_path;
 };
 
 } // !config

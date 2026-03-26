@@ -13,6 +13,8 @@
 #include <string>
 #include <webserv/config/ErrorPage.hpp>
 #include <webserv/config/Return.hpp>
+#include <webserv/types.hpp>
+#include <webserv/config/method.hpp>
 
 namespace webserv
 {
@@ -41,13 +43,13 @@ class LocationConfig
 		bool								getCreateFullPutPath() const;
 		std::string							getDavPutPath() const;
 		std::string							getDavAccess() const;
-		std::vector<config::e_Method>		getDavMethods() const;
+		std::vector<e_Method>				getDavMethods() const;
 
 		std::string							getDefaultType() const;
 		std::vector<ErrorPage>				getErrorPage() const;
 		std::vector<std::string>			getIndex() const;
 		int									getKeepAliveTimeout() const;
-		std::vector<config::e_Method>		getAllowedMethods() const;
+		std::vector<e_Method>				getAllowedMethods() const;
 		std::string							getRoot() const;
 		std::map<std::string, std::string>	getTypes() const;
 		std::string							getUri() const;
@@ -58,17 +60,18 @@ class LocationConfig
 		std::map<std::string, std::string>	getCgiExtensions() const;
 
 	private:
+		t_Logger							_logger;
 		bool								_autoindex;
 		int									_clientMaxBodySize;
 		bool								_createFullPutPath;
 		std::string							_davPutPath;
 		std::string							_davAccess;
-		std::vector<config::e_Method>		_davMethods;
+		std::vector<e_Method>				_davMethods;
 		std::string							_defaultType;
 		std::vector<ErrorPage>				_errorPage;
 		std::vector<std::string>			_index;
 		int									_keepAliveTimeout;
-		std::vector<int>					_allowedMethods;
+		std::vector<e_Method>				_allowedMethods;
 		std::string							_root;
 		std::map<std::string, std::string>	_types;
 		std::string							_uri;

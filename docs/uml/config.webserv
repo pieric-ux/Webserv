@@ -1,0 +1,168 @@
+http {
+
+    client_max_body_size    10m;
+    default_type            application/octet-stream;
+    keepalive_timeout       65;
+    root                    /var/www;
+
+    types {
+        text/html               html htm;
+        text/css                css;
+        text/javascript         js;
+        text/plain              txt;
+        image/jpeg              jpg jpeg;
+        image/png               png;
+        image/gif               gif;
+        image/svg+xml           svg;
+        application/json        json;
+        application/octet-stream bin;
+    }
+
+    error_page  404         /errors/404.html;
+    error_page  500 502 503 /errors/50x.html;
+
+    enable_cgi      on;
+    cgi_extension   .py     /usr/bin/python3;
+    cgi_extension   .php    /usr/bin/php-cgi;
+
+
+    server {
+
+        listen      80          default_server backlog=511 reuseport;
+        listen      [::]:80     ipv6only=on;
+
+        server_name example.com www.example.com;
+
+        root                    /var/www/html;
+        client_max_body_size    10m;
+        keepalive_timeout       65;
+        default_type            text/html;
+
+        error_page  403         /errors/403.html;
+        error_page  404         /errors/404.html;
+        error_page  500 502 503 /errors/50x.html;
+
+        location / {
+            root            /var/www/html;
+            index           index.html index.htm;
+            allow_methods   GET HEAD;
+            autoindex       off;
+        }
+
+        location = /ping {
+            root            /var/www/html;
+            allow_methods   GET HEAD;
+            return          200 /pong;
+        }
+
+        location ^~ /static/ {
+            root            /var/www;
+            allow_methods   GET HEAD;
+            autoindex       on;
+            default_type    application/octet-stream;
+        }
+
+        location /upload/ {
+            root                    /var/www/uploads;
+            allow_methods           GET POST DELETE;
+            client_max_body_size    50m;
+            dav_methods             PUT DELETE;
+            dav_put_path            /var/www/uploads;
+            create_full_put_path    on;
+            autoindex               on;
+            error_page  413         /errors/413.html;
+        }
+
+        location /cgi-bin/ {
+            root            /var/www/cgi-bin;
+            allow_methods   GET POST;
+            enable_cgi      on;
+            cgi_extension   .py     /usr/bin/python3;
+            cgi_extension   .php    /usr/bin/php-cgi;
+            index           index.py;
+        }
+
+        location /old/ {
+            return  301 /new/;
+        }
+
+        location = /moved {
+            return  302 https://example.com/destination;
+        }
+
+        location /errors/ {
+            root            /var/www/errors;
+            allow_methods   GET HEAD;
+            autoindex       off;
+        }
+    }
+
+
+    server {
+
+        listen      8080;
+        server_name api.example.com;
+
+        root                    /var/www/api;
+        client_max_body_size    20m;
+        keepalive_timeout       30;
+        default_type            application/json;
+
+        error_page  404 /api/errors/404.json;
+        error_page  500 /api/errors/500.json;
+
+        location /api/ {
+            root            /var/www/api;
+            allow_methods   GET POST DELETE;
+            autoindex       off;
+            index           index.py;
+            enable_cgi      on;
+            cgi_extension   .py /usr/bin/python3;
+        }
+
+        location = /api/health {
+            allow_methods   GET HEAD;
+            return          200 /api/health.json;
+        }
+
+        location ^~ /api/upload/ {
+            root                    /var/www/api/uploads;
+            allow_methods           POST DELETE;
+            client_max_body_size    100m;
+            dav_methods             PUT DELETE;
+            dav_put_path            /var/www/api/uploads;
+            create_full_put_path    on;
+        }
+    }
+
+
+    server {
+
+        listen      443 default_server so_keepalive=on;
+        listen      [::]:443 ipv6only=on so_keepalive=on;
+
+        server_name example.com www.example.com;
+
+        root                    /var/www/html;
+        client_max_body_size    10m;
+        keepalive_timeout       75;
+
+        error_page  404 /errors/404.html;
+        error_page  500 /errors/50x.html;
+
+        location / {
+            root            /var/www/html;
+            index           index.html;
+            allow_methods   GET HEAD;
+            autoindex       off;
+        }
+
+        location /secure/ {
+            root            /var/www/secure;
+            allow_methods   GET POST DELETE;
+            client_max_body_size 5m;
+            enable_cgi      on;
+            cgi_extension   .py /usr/bin/python3;
+        }
+    }
+}

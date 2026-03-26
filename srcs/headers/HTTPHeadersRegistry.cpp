@@ -5,11 +5,11 @@
 * @brief [TODO:description]
 */
 
-#include <webserv/headers/HTTPHeadersRegistry.hpp>
 #include <algorithm>
 #include <cctype>
+#include <webserv/headers/HTTPHeadersRegistry.hpp>
 
-namespace http
+namespace webserv
 {
 namespace HTTPheaders
 {
@@ -20,6 +20,8 @@ namespace HTTPheaders
  */
 HTTPHeadersRegistry::HTTPHeadersRegistry()
 {
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.headersregistry");
+	_logger->setLevel(log42::logRecord::INFO);
 	// A
 	_headers["a-im"] = HTTPHeader("A-IM", "Used with Response code to indicate partial instance manipulations.");
 	_headers["accept"] = HTTPHeader("Accept", "Informs the server about the types of data that can be sent back.");
@@ -388,4 +390,4 @@ HTTPHeader HTTPHeadersRegistry::getHeader(const std::string name) const
 }
 
 } // !HTTPheaders
-} // !http
+} // !webserv

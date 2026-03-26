@@ -18,7 +18,7 @@ namespace config
 
 struct Return
 {
-	StatusCode	statusCode;
+	status::StatusCode	statusCode;
 	std::string	url;
 };
 

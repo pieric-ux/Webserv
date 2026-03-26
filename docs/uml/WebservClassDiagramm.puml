@@ -473,6 +473,14 @@ namespace webserv {
 		- HTTPServer()
   		+ {static} getInstance() : HTTPServer
 		+ running() : bool
+		+ getHTTPConfig() : HTTPConfig
+		+ setHTTPconfig(httpConfig : HTTPConfig) : void
+		+ getServerFactory() : ServerFactory
+		+ setServerFactory(serverFactory : ServerFactory) : void
+		+ getServers() : vector<Server>
+		+ addServer(server : Server) : void
+		+ getIOMultiplexer() : t_ioMultiplexer
+		+ setIOMultiplexer(ioMultiplexer : t_ioMultiplexer) : void
 		- loadConfig() : HTTPConfig
 		- connectClient() : void
 	}

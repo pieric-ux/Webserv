@@ -8,12 +8,11 @@
 * @brief [TODO:description]
 */
 
-#include <webserv/headers/HTTPHeader.hpp>
 #include <string>
 #include <map>
-
-
-namespace http
+#include <webserv/headers/HTTPHeader.hpp>
+#include <webserv/types.hpp>
+namespace webserv
 {
 namespace HTTPheaders
 {
@@ -31,7 +30,8 @@ class HTTPHeadersRegistry
 		HTTPHeader getHeader(const std::string name) const;
 
 	private:
-		std::map<std::string, HTTPHeader> _headers;
+		t_Logger							_logger;
+		std::map<std::string, HTTPHeader>	_headers;
 
 		HTTPHeadersRegistry();
 		~HTTPHeadersRegistry();
@@ -40,6 +40,6 @@ class HTTPHeadersRegistry
 };
 
 } // !HTTPheaders
-} // !http
+} // !webserv
 
 #endif // !WEBSERV_HEADERS_HTTPHEADERSREGISTRY_HPP

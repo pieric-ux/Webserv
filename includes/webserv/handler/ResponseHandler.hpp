@@ -28,17 +28,17 @@ class ResponseHandler
 		ResponseHandler(const ResponseHandler &rhs);
 		ResponseHandler &operator=(const ResponseHandler &rhs);
 
-		Response					&getResponse();
-		void						setResponse(const Response &response);
+		client::Response			&getResponse();
+		void						setResponse(const client::Response &response);
 		void						appendToBufferResponse(const std::string &buffer);
 		void						clearBufferResponse();
 
 	private:
-		Response					_response;
+		client::Response			_response;
 		std::vector<unsigned char>	_bufferResponse;
 
-		void						buildStatusLine(const std::string &httpVersion, const StatusCode &statusCode, const std::string &reasonPhrase);
-		void						buildHeaders(const Request &request);
+		void						buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase);
+		void						buildHeaders(const client::Request &request);
 };
 
 } // !handler
