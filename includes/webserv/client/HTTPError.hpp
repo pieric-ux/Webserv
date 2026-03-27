@@ -10,6 +10,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <webserv/types.hpp>
 #include <webserv/status/StatusCode.hpp>
 
 namespace webserv
@@ -20,18 +21,22 @@ namespace client
 class HTTPError : public std::exception
 {
 	public:
-		HTTPError(const StatusCode &statusCode);
-		~HTTPError();
+		HTTPError();
+		explicit HTTPError(const status::StatusCode &statusCode);
+		virtual ~HTTPError() throw();
 
 		HTTPError(const HTTPError &rhs);
 		HTTPError &operator=(const HTTPError &rhs);
 
-		StatusCode		getStatusCode() const;
-		void			setStatusCode(const StatusCode &statusCode);
-		const char		*what(const throw());
+		t_Logger				getLogger() const;
+
+		status::StatusCode		getStatusCode() const;
+		void					setStatusCode(const status::StatusCode &statusCode);
+		const char				*what() const throw();
 
 	private:
-		StatusCode		_statusCode;
+		t_Logger				_logger;
+		status::StatusCode		_statusCode;
 };
 
 } // !client

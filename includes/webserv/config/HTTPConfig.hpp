@@ -8,61 +8,68 @@
  * @brief [TODO:description]
  */
 
-#include <vector>
-#include <map>
 #include <string>
-#include <webserv/config/ErrorPage.hpp>
-#include <webserv/config/ServerConfig.hpp>
+#include <webserv/types.hpp>
+#include <webserv/config/DefaultConfig.hpp>
 
 namespace webserv
 {
 namespace config
 {
 
-enum e_Method
-{
-	GET,
-	HEADER,
-	POST,
-	PUT,
-	DELETE
-};
+class ServerConfig;
 
 class HTTPConfig
 {
 	public:
-		static HTTPConfig					&getInstance();
+		static HTTPConfig	&getInstance();
 
-		int									getClientMaxBodySize() const;
+		t_Logger			getLogger() const;
 
-		bool								getCreateFullPutPath() const;
-		std::string							getDavPutPath() const;
-		std::string							getDavAccess() const;
-		std::vector<config::e_Method>		getDavMethods() const;
+		int					getClientMaxBodySize() const;
+		void				setClientMaxBodySize(const int clientMaxBodySize);
 
-		std::string							getDefaultType() const;
-		std::vector<ErrorPage>				getErrorPage() const;
-		int									getKeepAliveTimeout() const;
-		std::string							getRoot() const;
-		std::vector<ServerConfig>			getServerConfigs() const;
-		std::map<std::string, std::string>	getTypes() const;
-		bool								getEnableCGI() const;
-		std::map<std::string, std::string>	getCgiExtensions() const;
+		bool				getCreateFullPutPath() const;
+		void				setCreateFullPutPath(const bool createFullPutPath);
+		std::string			getDavPutPath() const;
+		void				setDavPutPath(const std::string &davPutPath);
+		std::string			getDavAccess() const;
+		void				setDavAccess(const std::string &davAccess);
+		t_DavMethods		getDavMethods() const;
+		void				setDavMethods(const	 t_DavMethods &davMethods);
+
+		std::string			getDefaultType() const;
+		void				setDefaultType(const std::string &defaultType);
+		t_ErrorPages		getErrorPage() const;
+		void				setErrorPage(const t_ErrorPages &errorPage);
+		int					getKeepAliveTimeout() const;
+		void				setKeepAliveTimeout(const int keepAliveTimeout);
+		std::string			getRoot() const;
+		void				setRoot(const std::string &root);
+		t_ServerConfigs		getServerConfigs() const;
+		void				setServerConfigs(const t_ServerConfigs &serverConfigs);
+		t_MimeTypes			getTypes() const;
+		void				setTypes(const t_MimeTypes &types);
+		bool				getEnableCGI() const;
+		void				setEnableCGI(const bool enableCGI);
+		t_CgiExtensions		getCgiExtensions() const;
+		void				setCgiExtensions(const t_CgiExtensions &cgiExtensions);
 
 	private:
-		int									_clientMaxBodySize;
-		bool								_createFullPutPath;
-		std::string							_davPutPath;
-		std::string							_davAccess;
-		std::vector<config::e_Method>		_davMethods;
-		std::string							_defaultType;
-		std::vector<ErrorPage>				_errorPage;
-		int									_keepAliveTimeout;
-		std::string							_root;
-		std::vector<ServerConfig>			_serverConfigs;
-		std::map<std::string, std::string>	_types;
-		bool								_enableCGI;
-		std::map<std::string, std::string>	_cgiExtensions;
+		t_Logger			_logger;
+		int					_clientMaxBodySize;
+		bool				_createFullPutPath;
+		std::string			_davPutPath;
+		std::string			_davAccess;
+		t_DavMethods		_davMethods;
+		std::string			_defaultType;
+		t_ErrorPages		_errorPage;
+		int					_keepAliveTimeout;
+		std::string			_root;
+		t_ServerConfigs		_serverConfigs;
+		t_MimeTypes			_types;
+		bool				_enableCGI;
+		t_CgiExtensions		_cgiExtensions;
 
 		HTTPConfig();
 		~HTTPConfig();

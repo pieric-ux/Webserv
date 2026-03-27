@@ -8,12 +8,12 @@
  * @brief [TODO:description]
  */
 
-#include <vector>
 #include <string>
 #include <webserv/client/Request.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
 #include <webserv/parser/Parser.hpp>
+#include <webserv/types.hpp>
 
 namespace webserv
 {
@@ -29,22 +29,25 @@ class RequestHandler
 		RequestHandler(const RequestHandler &rhs);
 		RequestHandler &operator=(const RequestHandler &rhs);
 
-		Request						&getRequest();
-		void						setRequest(const Request &request);
-		void						appendToBufferRequest(const std::string &buffer);
-		void						clearBufferRequest();
-		Parser						&getParser();
-		int							getBodyReceived() const;
+		t_Logger			getLogger() const;
+
+		client::Request		&getRequest();
+		void				setRequest(const client::Request &request);
+		void				appendToBufferRequest(const t_raw &buffer);
+		void				clearBufferRequest();
+		parser::Parser		&getParser();
+		int					getBodyReceived() const;
 
 	private:
-		Request						_request;
-		std::vector<unsigned char>	_bufferRequest;
-		Parser						_parser;
+		t_Logger			_logger;
+		client::Request		_request;
+		t_raw				_bufferRequest;
+		parser::Parser		_parser;
 
-		void						parseHeadersFromBufferRequest();
-		void						validateHeaders(const ServerConfig &serverConfig);
-		void						parseBodyFromBuffer(const ServerConfig &serverConfig);
-		void						buildAbsolutPath(const std::string &requestTarget, const LocationConfig &locationConfig);
+		void				parseHeadersFromBufferRequest();
+		void				validateHeaders(const config::ServerConfig &serverConfig);
+		void				parseBodyFromBuffer(const config::ServerConfig &serverConfig);
+		void				buildAbsolutPath(const std::string &requestTarget, const config::LocationConfig &locationConfig);
 };
 
 } // !handler

@@ -8,8 +8,8 @@
  * @brief [TODO:description]
  */
 
-#include <vector>
 #include <string>
+#include <webserv/types.hpp>
 #include <webserv/status/StatusCode.hpp>
 
 namespace webserv
@@ -20,15 +20,19 @@ namespace config
 class ErrorPage
 {
 	public:
-		ErrorPage(const std::vector<StatusCode> &codes, const std::string &path);
+		ErrorPage();
+		ErrorPage(const t_StatusCodes &codes, const std::string &path);
 		~ErrorPage();
 
 		ErrorPage(const ErrorPage &rhs);
 		ErrorPage &operator=(const ErrorPage &rhs);
 
+		t_Logger			getLogger() const;
+
 	private:
-		std::vector<StatusCode> _codes;
-		std::string				_path;
+		t_Logger 			_logger;
+		t_StatusCodes		_codes;
+		std::string			_path;
 };
 
 } // !config

@@ -24,20 +24,34 @@ DEBUG_FLAGS = -g3 -fno-omit-frame-pointer -fstack-protector-all
 
 INCLUDES = -I includes -I $(ABNFDIR)/includes -I $(LOGGERDIR)/includes -I $(COMMONDIR)/includes
 
-LIBS = -L $(ABNFDIR) -labnf -L $(COMMONDIR) -lcommon -L $(LOGGERDIR) -llog42
-
+LIBS = -L $(ABNFDIR) -labnf -L $(LOGGERDIR) -llog42 -L $(COMMONDIR) -lcommon
 # vpath to specify where to find the .cpp files
 vpath %.cpp \
 	$(SRCDIR) \
-	$(SRCDIR)/core \
-	$(SRCDIR)/http \
-	$(SRCDIR)/http/headers \
-	$(SRCDIR)/http/status \
+	$(SRCDIR)/client \
+	$(SRCDIR)/config \
+	$(SRCDIR)/handler \
+	$(SRCDIR)/headers \
+	$(SRCDIR)/MIMEtypes \
+	$(SRCDIR)/parser \
+	$(SRCDIR)/status \
 
 # Sources and object files
-SRCES = main.cpp \
-		HTTPHeader.cpp HTTPHeadersRegistry.cpp \
-		StatusCode.cpp StatusCodeRegistry.cpp
+SRCES =  main.cpp HTTPServer.cpp ServerFactory.cpp Server.cpp
+		 # Config
+SRCES += DefaultConfig.cpp ErrorPage.cpp HTTPConfig.cpp Listen.cpp LocationConfig.cpp ServerConfig.cpp
+		 # Handler
+SRCES += ClientHandler.cpp ExecutionHandler.cpp RequestHandler.cpp ResponseHandler.cpp
+		 # Client
+SRCES += Client.cpp Request.cpp Response.cpp HTTPError.cpp
+		 # Headers
+SRCES += HTTPHeader.cpp HTTPHeadersRegistry.cpp
+		 # MIMETypes
+SRCES += TypesRegistry.cpp
+		 # Parser
+SRCES += Parser.cpp
+		 # Status
+SRCES += StatusCode.cpp StatusCodeRegistry.cpp
 
 OBJS_SRCES = $(addprefix $(OBJDIR)/, $(SRCES:.cpp=.o))
 

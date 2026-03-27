@@ -9,8 +9,8 @@
 */
 
 #include <string>
-
-namespace http
+#include <webserv/types.hpp>
+namespace webserv
 {
 namespace HTTPheaders
 {
@@ -26,18 +26,21 @@ class HTTPHeader
 		HTTPHeader(const HTTPHeader &rhs);
 		HTTPHeader &operator=(const HTTPHeader &rhs);
 
+		t_Logger	getLogger() const;
+
 		std::string getName() const;
 		std::string getValue() const;
 		void 		setValue(const std::string value);
 		std::string getDescription() const;
 
 	private:
+		t_Logger 	_logger;
 		std::string _name;
 		std::string _value;
 		std::string _description;
 };
 
 } // !HTTPheaders
-} // !http
+} // !webserv
 
 #endif // !WEBSERV_HEADERS_HTTPHEADERS_HPP

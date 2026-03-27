@@ -8,12 +8,13 @@
  * @brief [TODO:description]
  */
 
-#include <vector>
-#include <map>
 #include <string>
-#include "webserv/config/ErrorPage.hpp"
-#include "webserv/config/Listen.hpp"
-#include "webserv/config/LocationConfig.hpp"
+#include <webserv/types.hpp>
+#include <webserv/config/method.hpp>
+#include <webserv/config/ErrorPage.hpp>
+#include <webserv/config/Listen.hpp>
+#include <webserv/config/LocationConfig.hpp>
+#include <webserv/config/DefaultConfig.hpp>
 
 namespace webserv
 {
@@ -29,41 +30,44 @@ class ServerConfig
 		ServerConfig(const ServerConfig &rhs);
 		ServerConfig &operator=(const ServerConfig &rhs);
 
-		int									getClientMaxBodySize() const;
+		t_Logger			getLogger() const;
 
-		bool								getCreateFullPutPath() const;
-		std::string							getDavPutPath() const;
-		std::string							getDavAccess() const;
-		std::vector<config::e_Method>		getDavMethods() const;
+		int					getClientMaxBodySize() const;
 
-		std::string							getDefaultType() const;
-		std::vector<ErrorPage>				getErrorPage() const;
-		int									getKeepAliveTimeout() const;
-		std::vector<Listen>					getListen() const;
-		std::vector<LocationConfig>			getLocationConfigs() const;
-		std::string							getRoot() const;
-		std::vector<std::string>			getServerName() const;
-		std::map<std::string, std::string>	getTypes() const;
-		bool								getEnableCGI() const;
-		std::map<std::string, std::string>	getCgiExtensions() const;
-		LocationConfig						findLocationConfig(const std::string &requestTarget);
+		bool				getCreateFullPutPath() const;
+		std::string			getDavPutPath() const;
+		std::string			getDavAccess() const;
+		t_DavMethods		getDavMethods() const;
+
+		std::string			getDefaultType() const;
+		t_ErrorPages		getErrorPage() const;
+		int					getKeepAliveTimeout() const;
+		t_Listen			getListen() const;
+		t_LocationConfigs	getLocationConfigs() const;
+		std::string			getRoot() const;
+		t_Servernames		getServerName() const;
+		t_MimeTypes			getTypes() const;
+		bool				getEnableCGI() const;
+		t_CgiExtensions		getCgiExtensions() const;
+		LocationConfig		findLocationConfig(const std::string &requestTarget);
 
 	private:
-		int									_clientMaxBodySize;
-		bool								_createFullPutPath;
-		std::string							_davPutPath;
-		std::string							_davAccess;
-		std::vector<config::e_Method>		_davMethods;
-		std::string							_defaultType;
-		std::vector<ErrorPage>				_errorPage;
-		int									_keepAliveTimeout;
-		std::vector<Listen>					_listen;
-		std::vector<LocationConfig>			_locationConfigs;
-		std::string							_root;
-		std::vector<std::string>			_serverName;
-		std::map<std::string, std::string>	_types;
-		bool								_enableCGI;
-		std::map<std::string, std::string>	_cgiExtensions;
+		t_Logger			_logger;
+		int					_clientMaxBodySize;
+		bool				_createFullPutPath;
+		std::string			_davPutPath;
+		std::string			_davAccess;
+		t_DavMethods		_davMethods;
+		std::string			_defaultType;
+		t_ErrorPages		_errorPage;
+		int					_keepAliveTimeout;
+		t_Listen			_listen;
+		t_LocationConfigs	_locationConfigs;
+		std::string			_root;
+		t_Servernames		_serverName;
+		t_MimeTypes			_types;
+		bool				_enableCGI;
+		t_CgiExtensions		_cgiExtensions;
 };
 
 } // !config

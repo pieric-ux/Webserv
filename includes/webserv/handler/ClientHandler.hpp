@@ -8,9 +8,8 @@
  * @brief [TODO:description]
  */
 
-#include <map>
-#include <common/core/io/IEventIO.hpp>
 #include <webserv/client/Client.hpp>
+#include <webserv/types.hpp>
 
 namespace webserv
 {
@@ -26,13 +25,15 @@ class ClientHandler
 		ClientHandler(const ClientHandler &rhs);
 		ClientHandler &operator=(const ClientHandler &rhs);
 
-		void						addClient(Client &client);
-		void						removeClient(Client &client);
-		void						processClients(common::core::io::IEventIO ioMultiplexer);
+		t_Logger	getLogger() const;
+
+		void		addClient(client::Client &client);
+		void		removeClient(client::Client &client);
+		void		processClients(t_ioMultiplexer ioMultiplexer);
 
 	private:
-		std::map<int, Client>		_clients;
-		common::core::io::IEventIO	_ioMultiplexer;
+		t_Logger	_logger;
+		t_Clients	_clients;
 };
 
 } // !handler

@@ -9,6 +9,7 @@
  */
 
 #include <webserv/config/HTTPConfig.hpp>
+#include <webserv/types.hpp>
 
 namespace webserv
 {
@@ -16,14 +17,18 @@ namespace webserv
 class ServerFactory
 {
 	public:
-		ServerFactory(HTTPConfig &httpConfig);
+		ServerFactory();
+		explicit ServerFactory(const config::HTTPConfig &httpConfig);
 		~ServerFactory();
 
 		ServerFactory(const ServerFactory &rhs);
 		ServerFactory &operator=(const ServerFactory &rhs);
 
+		t_Logger	getLogger() const;
+
 	private:
-		HTTPConfig	&_httpConfig;
+		t_Logger					_logger;
+		const config::HTTPConfig	&_httpConfig;
 };
 
 } // !webserv

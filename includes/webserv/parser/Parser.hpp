@@ -13,6 +13,7 @@
 #include <abnf/Abnf.hpp>
 #include <webserv/headers/HTTPHeader.hpp>
 #include <webserv/config/HTTPConfig.hpp>
+#include <webserv/types.hpp>
 
 namespace webserv
 {
@@ -39,16 +40,19 @@ class Parser
 		Parser(const Parser &rhs);
 		Parser &operator=(const Parser &rhs);
 
-		int						getFlags() const;
-		void					setFlags(const int flags);
-		bool					isIPv6Address(const std::string &address);
-		HTTPConfig				parseConfig(const std::string &buffer);
-		void					parseRequestLine(const std::string &bufferRequest);
-		std::vector<HTTPHeader>	parseHeaders(const std::string &bufferRequest);
+		t_Logger					getLogger() const;
+
+		int							getFlags() const;
+		void						setFlags(const int flags);
+		bool						isIPv6Address(const std::string &address);
+		config::HTTPConfig&			parseConfig(const t_raw &buffer);
+		void						parseRequestLine(const t_raw &bufferRequest);
+		t_Headers					parseHeaders(const t_raw &bufferRequest);
 
 	private:
-		static abnf::Abnf		&_abnf;
-		e_ParserFlags			_flags;
+		static abnf::Abnf			&_abnf;
+		t_Logger					_logger;
+		e_ParserFlags				_flags;
 };
 
 } // !parser

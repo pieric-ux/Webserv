@@ -18,8 +18,8 @@ namespace config
 
 struct Return
 {
-	StatusCode	statusCode;
-	std::string	url;
+	status::StatusCode	statusCode;
+	std::string			url;
 };
 
 } // !config
