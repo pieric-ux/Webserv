@@ -8,7 +8,7 @@
  * @brief [TODO:description]
  */
 
-#include <vector>
+#include <webserv/types.hpp>
 #include <string>
 #include <webserv/client/Response.hpp>
 #include <webserv/client/Request.hpp>
@@ -28,17 +28,20 @@ class ResponseHandler
 		ResponseHandler(const ResponseHandler &rhs);
 		ResponseHandler &operator=(const ResponseHandler &rhs);
 
-		client::Response			&getResponse();
-		void						setResponse(const client::Response &response);
-		void						appendToBufferResponse(const std::string &buffer);
-		void						clearBufferResponse();
+		t_Logger			getLogger() const;
+
+		client::Response	&getResponse();
+		void				setResponse(const client::Response &response);
+		void				appendToBufferResponse(const t_raw &buffer);
+		void				clearBufferResponse();
 
 	private:
-		client::Response			_response;
-		std::vector<unsigned char>	_bufferResponse;
+		t_Logger			_logger;
+		client::Response	_response;
+		t_raw				_bufferResponse;
 
-		void						buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase);
-		void						buildHeaders(const client::Request &request);
+		void				buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase);
+		void				buildHeaders(const client::Request &request);
 };
 
 } // !handler

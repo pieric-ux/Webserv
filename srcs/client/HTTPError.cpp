@@ -62,6 +62,16 @@ HTTPError &HTTPError::operator=(const HTTPError &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	HTTPError::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 status::StatusCode HTTPError::getStatusCode() const
 {
 	return _statusCode;

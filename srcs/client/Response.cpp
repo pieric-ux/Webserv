@@ -65,6 +65,16 @@ Response &Response::operator=(const Response &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	Response::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 std::string Response::getHttpVersion() const
 {
 	return _httpVersion;
@@ -125,7 +135,7 @@ void Response::setHeaders(const t_Headers &headers)
  *
  * @return [TODO:return]
  */
-std::vector<unsigned char> Response::getBody() const
+t_raw	Response::getBody() const
 {
 	return _body;
 }
@@ -135,7 +145,7 @@ std::vector<unsigned char> Response::getBody() const
  *
  * @param body [TODO:parameter]
  */
-void Response::setBody(const std::vector<unsigned char> &body)
+void Response::setBody(const t_raw &body)
 {
 	_body = body;
 }

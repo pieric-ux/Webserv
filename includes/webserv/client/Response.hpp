@@ -8,11 +8,10 @@
  * @brief [TODO:description]
  */
 
-#include <vector>
 #include <string>
+#include <webserv/types.hpp>
 #include <webserv/headers/HTTPHeader.hpp>
 #include <webserv/status/StatusCode.hpp>
-#include <webserv/types.hpp>
 
 namespace webserv
 {
@@ -33,23 +32,26 @@ class Response
 		Response(const Response &rhs);
 		Response &operator=(const Response &rhs);
 
-		std::string								getHttpVersion() const;
-		void									setHttpVersion(const std::string &httpVersion);
-		status::StatusCode						getStatusCode() const;
-		void									setStatusCode(const status::StatusCode &statusCode);
-		t_Headers								getHeaders() const;
-		void									setHeaders(const t_Headers &headers);
-		std::vector<unsigned char>				getBody() const;
-		void									setBody(const std::vector<unsigned char> &body);
-		e_ResponseFlags							getFlags() const;
-		void									setFlags(const e_ResponseFlags flags);
+		t_Logger				getLogger() const;
+
+		std::string				getHttpVersion() const;
+		void					setHttpVersion(const std::string &httpVersion);
+		status::StatusCode		getStatusCode() const;
+		void					setStatusCode(const status::StatusCode &statusCode);
+		t_Headers				getHeaders() const;
+		void					setHeaders(const t_Headers &headers);
+		t_raw					getBody() const;
+		void					setBody(const t_raw &body);
+		e_ResponseFlags			getFlags() const;
+		void					setFlags(const e_ResponseFlags flags);
 
 	private:
-		std::string								_httpVersion;
-		status::StatusCode						_statusCode;
-		t_Headers								_headers;
-		std::vector<unsigned char>				_body;
-		e_ResponseFlags							_flags;
+		t_Logger				_logger;
+		std::string				_httpVersion;
+		status::StatusCode		_statusCode;
+		t_Headers				_headers;
+		t_raw					_body;
+		e_ResponseFlags			_flags;
 };
 
 } // !client

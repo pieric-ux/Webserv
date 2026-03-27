@@ -8,7 +8,6 @@
  * @brief [TODO:description]
  */
 
-#include <map>
 #include <webserv/client/Client.hpp>
 #include <webserv/types.hpp>
 
@@ -26,13 +25,15 @@ class ClientHandler
 		ClientHandler(const ClientHandler &rhs);
 		ClientHandler &operator=(const ClientHandler &rhs);
 
-		void						addClient(client::Client &client);
-		void						removeClient(client::Client &client);
-		void						processClients(t_ioMultiplexer ioMultiplexer);
+		t_Logger	getLogger() const;
+
+		void		addClient(client::Client &client);
+		void		removeClient(client::Client &client);
+		void		processClients(t_ioMultiplexer ioMultiplexer);
 
 	private:
-		std::map<int, client::Client>	_clients;
-		t_Logger						_logger;
+		t_Logger	_logger;
+		t_Clients	_clients;
 };
 
 } // !handler

@@ -126,5 +126,15 @@ StatusCode StatusCodeRegistry::getStatusCode(const unsigned short code) const
 	return (it->second);
 }
 
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Logger	StatusCodeRegistry::getLogger() const
+{
+	return _logger;
+}
+
 } // !status
 } // !webserv

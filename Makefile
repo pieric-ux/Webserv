@@ -39,7 +39,7 @@ vpath %.cpp \
 # Sources and object files
 SRCES =  main.cpp HTTPServer.cpp ServerFactory.cpp Server.cpp
 		 # Config
-SRCES += ErrorPage.cpp HTTPConfig.cpp LocationConfig.cpp ServerConfig.cpp
+SRCES += DefaultConfig.cpp ErrorPage.cpp HTTPConfig.cpp Listen.cpp LocationConfig.cpp ServerConfig.cpp
 		 # Handler
 SRCES += ClientHandler.cpp ExecutionHandler.cpp RequestHandler.cpp ResponseHandler.cpp
 		 # Client

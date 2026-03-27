@@ -6,7 +6,6 @@
  */
 
 #include <webserv/config/LocationConfig.hpp>
-#include <webserv/config/HTTPConfig.hpp>
 
 namespace webserv
 {
@@ -17,12 +16,22 @@ namespace config
  * @brief [TODO:description]
  */
 LocationConfig::LocationConfig()
-	: _autoindex(false),
-	  _clientMaxBodySize(DEFAULT_CLIENT_MAX_BODY_SIZE),
-	  _createFullPutPath(false),
-	  _keepAliveTimeout(DEFAULT_KEEP_ALIVE_TIMEOUT),
-	  _modifier(PREFIX),
-	  _enableCGI(false)
+	:	_autoindex(DefaultConfig::autoindex),
+		_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
+		_createFullPutPath(DefaultConfig::createFullPutPath),
+		_davPutPath(DefaultConfig::davPutPath),
+		_davAccess(DefaultConfig::davAccess),
+		_davMethods(DefaultConfig::davMethods),
+		_defaultType(DefaultConfig::defaultType),
+		_errorPage(DefaultConfig::errorPage),
+		_index(DefaultConfig::index),
+		_keepAliveTimeout(DefaultConfig::keepAliveTimeout),
+		_allowedMethods(DefaultConfig::allowedMethods),
+		_root(DefaultConfig::root),
+		_types(DefaultConfig::types),
+		_modifier(PREFIX),
+		_enableCGI(DefaultConfig::enableCGI),
+		_cgiExtensions(DefaultConfig::cgiExtensions)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.locationconfig");
 	_logger->setLevel(log42::logRecord::INFO);
@@ -96,6 +105,16 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	LocationConfig::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 bool LocationConfig::getAutoindex() const
 {
 	return _autoindex;
@@ -145,7 +164,7 @@ std::string LocationConfig::getDavAccess() const
  *
  * @return [TODO:return]
  */
-std::vector<config::e_Method> LocationConfig::getDavMethods() const
+t_DavMethods	LocationConfig::getDavMethods() const
 {
 	return _davMethods;
 }
@@ -165,7 +184,7 @@ std::string LocationConfig::getDefaultType() const
  *
  * @return [TODO:return]
  */
-std::vector<ErrorPage> LocationConfig::getErrorPage() const
+t_ErrorPages	LocationConfig::getErrorPage() const
 {
 	return _errorPage;
 }
@@ -175,7 +194,7 @@ std::vector<ErrorPage> LocationConfig::getErrorPage() const
  *
  * @return [TODO:return]
  */
-std::vector<std::string> LocationConfig::getIndex() const
+t_Index	LocationConfig::getIndex() const
 {
 	return _index;
 }
@@ -205,7 +224,7 @@ std::string LocationConfig::getRoot() const
  *
  * @return [TODO:return]
  */
-std::map<std::string, std::string> LocationConfig::getTypes() const
+t_MimeTypes	LocationConfig::getTypes() const
 {
 	return _types;
 }
@@ -235,7 +254,7 @@ e_Modifier LocationConfig::getModifier() const
  *
  * @return [TODO:return]
  */
-std::vector<e_Method> LocationConfig::getAllowedMethods() const
+t_AllowedMethods	LocationConfig::getAllowedMethods() const
 {
 	return _allowedMethods;
 }
@@ -265,7 +284,7 @@ Return LocationConfig::getRedirect() const
  *
  * @return [TODO:return]
  */
-std::map<std::string, std::string> LocationConfig::getCgiExtensions() const
+t_CgiExtensions	LocationConfig::getCgiExtensions() const
 {
 	return _cgiExtensions;
 }

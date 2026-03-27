@@ -80,6 +80,16 @@ HTTPHeader &HTTPHeader::operator=(const HTTPHeader &rhs)
 /**
  * @brief [TODO:description]
  *
+ * @return [TODO:return]
+ */
+t_Logger	HTTPHeader::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:description]
  */
 std::string HTTPHeader::getName() const

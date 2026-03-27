@@ -29,9 +29,11 @@ class HTTPHeadersRegistry
 		static HTTPHeadersRegistry &getInstance();
 		HTTPHeader getHeader(const std::string name) const;
 
+		t_Logger			getLogger() const;
+
 	private:
-		t_Logger							_logger;
-		std::map<std::string, HTTPHeader>	_headers;
+		t_Logger			_logger;
+		t_HeadersRegistry	_headers;
 
 		HTTPHeadersRegistry();
 		~HTTPHeadersRegistry();

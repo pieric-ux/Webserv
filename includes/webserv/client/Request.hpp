@@ -8,13 +8,12 @@
  * @brief [TODO:description]
  */
 
-#include <vector>
-#include <list>
 #include <string>
-#include <webserv/config/HTTPConfig.hpp>
-#include <webserv/headers/HTTPHeader.hpp>
 #include <webserv/types.hpp>
 #include <webserv/config/method.hpp>
+#include <webserv/config/HTTPConfig.hpp>
+#include <webserv/headers/HTTPHeader.hpp>
+
 namespace webserv
 {
 namespace client
@@ -35,6 +34,8 @@ class Request
 
 		Request(const Request &rhs);
 		Request &operator=(const Request &rhs);
+	
+		t_Logger					getLogger() const;
 
 		config::e_Method			getMethod() const;
 		void						setMethod(const config::e_Method method);
@@ -47,17 +48,18 @@ class Request
 		t_Headers					getHeaders() const;
 		void						setHeaders(const t_Headers &headers);
 		std::vector<unsigned char>	getBody() const;
-		void						setBody(const std::vector<unsigned char> &body);
+		void						setBody(const t_raw &body);
 		e_RequestFlags				getFlags() const;
 		void						setFlags(const e_RequestFlags flags);
 
 	private:
+		t_Logger					_logger;
 		config::e_Method			_method;
 		std::string					_requestTarget;
 		std::string					_httpVersion;
 		std::string					_absolutePath;
 		t_Headers					_headers;
-		std::vector<unsigned char>	_body;
+		t_raw						_body;
 		e_RequestFlags				_flags;
 };
 

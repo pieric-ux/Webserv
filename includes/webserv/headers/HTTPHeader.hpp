@@ -26,6 +26,8 @@ class HTTPHeader
 		HTTPHeader(const HTTPHeader &rhs);
 		HTTPHeader &operator=(const HTTPHeader &rhs);
 
+		t_Logger	getLogger() const;
+
 		std::string getName() const;
 		std::string getValue() const;
 		void 		setValue(const std::string value);

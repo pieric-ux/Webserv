@@ -67,6 +67,7 @@ valgrind.log
 doc/html/
 astABNF.pdf
 *.dot
+*.svg
 
 # Claude
 CLAUDE.md

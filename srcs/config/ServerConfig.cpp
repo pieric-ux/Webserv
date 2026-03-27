@@ -16,10 +16,21 @@ namespace config
  * @brief [TODO:description]
  */
 ServerConfig::ServerConfig() 
-	:	_clientMaxBodySize(DEFAULT_CLIENT_MAX_BODY_SIZE),
-		_createFullPutPath(false),
-		_keepAliveTimeout(DEFAULT_KEEP_ALIVE_TIMEOUT),
-		_enableCGI(false)
+	:	_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
+		_createFullPutPath(DefaultConfig::createFullPutPath),
+		_davPutPath(DefaultConfig::davPutPath),
+		_davAccess(DefaultConfig::davAccess),
+		_davMethods(DefaultConfig::davMethods),
+		_defaultType(DefaultConfig::defaultType),
+		_errorPage(DefaultConfig::errorPage),
+		_keepAliveTimeout(DefaultConfig::keepAliveTimeout),
+		_listen(DefaultConfig::listen),
+		_locationConfigs(t_LocationConfigs()),
+		_root(DefaultConfig::root),
+		_serverName(DefaultConfig::servernames),
+		_types(DefaultConfig::types),
+		_enableCGI(DefaultConfig::enableCGI),
+		_cgiExtensions(DefaultConfig::cgiExtensions)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.serverconfig");
 	_logger->setLevel(log42::logRecord::INFO);
@@ -89,6 +100,16 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	ServerConfig::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 int ServerConfig::getClientMaxBodySize() const
 {
 	return _clientMaxBodySize;
@@ -129,7 +150,7 @@ std::string ServerConfig::getDavAccess() const
  *
  * @return [TODO:return]
  */
-std::vector<e_Method> ServerConfig::getDavMethods() const
+t_DavMethods	ServerConfig::getDavMethods() const
 {
 	return _davMethods;
 }
@@ -149,7 +170,7 @@ std::string ServerConfig::getDefaultType() const
  *
  * @return [TODO:return]
  */
-std::vector<ErrorPage> ServerConfig::getErrorPage() const
+t_ErrorPages	ServerConfig::getErrorPage() const
 {
 	return _errorPage;
 }
@@ -169,7 +190,7 @@ int ServerConfig::getKeepAliveTimeout() const
  *
  * @return [TODO:return]
  */
-std::vector<Listen> ServerConfig::getListen() const
+t_Listen ServerConfig::getListen() const
 {
 	return _listen;
 }
@@ -179,7 +200,7 @@ std::vector<Listen> ServerConfig::getListen() const
  *
  * @return [TODO:return]
  */
-std::vector<LocationConfig> ServerConfig::getLocationConfigs() const
+t_LocationConfigs	ServerConfig::getLocationConfigs() const
 {
 	return _locationConfigs;
 }
@@ -199,7 +220,7 @@ std::string ServerConfig::getRoot() const
  *
  * @return [TODO:return]
  */
-std::vector<std::string> ServerConfig::getServerName() const
+t_Servernames	ServerConfig::getServerName() const
 {
 	return _serverName;
 }
@@ -209,7 +230,7 @@ std::vector<std::string> ServerConfig::getServerName() const
  *
  * @return [TODO:return]
  */
-std::map<std::string, std::string> ServerConfig::getTypes() const
+t_MimeTypes	ServerConfig::getTypes() const
 {
 	return _types;
 }
@@ -229,7 +250,7 @@ bool ServerConfig::getEnableCGI() const
  *
  * @return [TODO:return]
  */
-std::map<std::string, std::string> ServerConfig::getCgiExtensions() const
+t_CgiExtensions	ServerConfig::getCgiExtensions() const
 {
 	return _cgiExtensions;
 }

@@ -40,6 +40,16 @@ TypesRegistry &TypesRegistry::getInstance()
 /**
  * @brief [TODO:description]
  *
+ * @return [TODO:return]
+ */
+t_Logger	TypesRegistry::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @param extension [TODO:parameter]
  * @return [TODO:return]
  */

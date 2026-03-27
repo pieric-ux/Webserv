@@ -17,11 +17,19 @@ namespace config
  * @brief [TODO:description]
  */
 HTTPConfig::HTTPConfig()
-	:	_clientMaxBodySize(DEFAULT_CLIENT_MAX_BODY_SIZE),
-		_createFullPutPath(false),
-		_defaultType(DEFAULT_TYPE),
-		_keepAliveTimeout(DEFAULT_KEEP_ALIVE_TIMEOUT),
-		_enableCGI(false)
+	:	_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
+		_createFullPutPath(DefaultConfig::createFullPutPath),
+		_davPutPath(DefaultConfig::davPutPath),
+		_davAccess(DefaultConfig::davAccess),
+		_davMethods(DefaultConfig::davMethods),
+		_defaultType(DefaultConfig::defaultType),
+		_errorPage(DefaultConfig::errorPage),
+		_keepAliveTimeout(DefaultConfig::keepAliveTimeout),
+		_root(DefaultConfig::root),
+		_serverConfigs(t_ServerConfigs()),
+		_types(DefaultConfig::types),
+		_enableCGI(DefaultConfig::enableCGI),
+		_cgiExtensions(DefaultConfig::cgiExtensions)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.httpconfig");
 	_logger->setLevel(log42::logRecord::INFO);
@@ -41,6 +49,16 @@ HTTPConfig &HTTPConfig::getInstance()
 {
 	static HTTPConfig instance;
 	return instance;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Logger	HTTPConfig::getLogger() const
+{
+	return _logger;
 }
 
 /**

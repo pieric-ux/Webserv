@@ -40,7 +40,7 @@ ServerFactory::~ServerFactory() {}
  *
  * @param rhs [TODO:parameter]
  */
-ServerFactory::ServerFactory(const ServerFactory &rhs) : _httpConfig(rhs._httpConfig), _logger(rhs._logger) {}
+ServerFactory::ServerFactory(const ServerFactory &rhs) : _logger(rhs._logger), _httpConfig(rhs._httpConfig) {}
 
 /**
  * @brief [TODO:description]
@@ -55,6 +55,16 @@ ServerFactory &ServerFactory::operator=(const ServerFactory &rhs)
 		_logger = rhs._logger;
 	}
 	return (*this);
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Logger	ServerFactory::getLogger() const
+{
+	return _logger;
 }
 
 } // !webserv

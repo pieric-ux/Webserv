@@ -106,6 +106,16 @@ Client &Client::operator=(const Client &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	Client::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 e_ClientFlags Client::getFlags() const
 {
 	return _flags;
@@ -244,7 +254,7 @@ void Client::sendData()
  *
  * @param buffer [TODO:parameter]
  */
-void Client::prepareHeadersRequest(const std::string &buffer)
+void Client::prepareHeadersRequest(const t_raw &buffer)
 {
 	(void)buffer;
 }
@@ -254,7 +264,7 @@ void Client::prepareHeadersRequest(const std::string &buffer)
  *
  * @param buffer [TODO:parameter]
  */
-void Client::prepareBodyRequest(const std::string &buffer)
+void Client::prepareBodyRequest(const t_raw &buffer)
 {
 	(void)buffer;
 }

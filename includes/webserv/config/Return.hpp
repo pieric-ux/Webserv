@@ -19,7 +19,7 @@ namespace config
 struct Return
 {
 	status::StatusCode	statusCode;
-	std::string	url;
+	std::string			url;
 };
 
 } // !config

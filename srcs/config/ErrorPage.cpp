@@ -27,7 +27,7 @@ ErrorPage::ErrorPage() : _codes(), _path()
  * @param codes [TODO:parameter]
  * @param path [TODO:parameter]
  */
-ErrorPage::ErrorPage(const std::vector<status::StatusCode> &codes, const std::string &path)
+ErrorPage::ErrorPage(const t_StatusCodes &codes, const std::string &path)
 	:	_codes(codes),
 		_path(path)
 {
@@ -39,6 +39,16 @@ ErrorPage::ErrorPage(const std::vector<status::StatusCode> &codes, const std::st
  * @brief [TODO:description]
  */
 ErrorPage::~ErrorPage() {}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Logger	ErrorPage::getLogger() const
+{
+	return _logger;
+}
 
 /**
  * @brief [TODO:description]

@@ -31,7 +31,7 @@ ClientHandler::~ClientHandler() {}
  *
  * @param rhs [TODO:parameter]
  */
-ClientHandler::ClientHandler(const ClientHandler &rhs) : _clients(rhs._clients), _logger(rhs._logger) {}
+ClientHandler::ClientHandler(const ClientHandler &rhs) : _logger(rhs._logger), _clients(rhs._clients) {}
 
 /**
  * @brief [TODO:description]
@@ -47,6 +47,16 @@ ClientHandler &ClientHandler::operator=(const ClientHandler &rhs)
 		_logger = rhs._logger;
 	}
 	return (*this);
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Logger	ClientHandler::getLogger() const
+{
+	return _logger;
 }
 
 /**

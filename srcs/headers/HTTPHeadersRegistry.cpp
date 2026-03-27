@@ -389,5 +389,15 @@ HTTPHeader HTTPHeadersRegistry::getHeader(const std::string name) const
 	return it->second;
 }
 
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Logger	HTTPHeadersRegistry::getLogger() const
+{
+	return _logger;
+}
+
 } // !HTTPheaders
 } // !webserv

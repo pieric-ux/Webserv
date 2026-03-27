@@ -59,6 +59,16 @@ ExecutionHandler &ExecutionHandler::operator=(const ExecutionHandler &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	ExecutionHandler::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 int ExecutionHandler::getFd() const
 {
 	return _fd;

@@ -59,6 +59,16 @@ RequestHandler &RequestHandler::operator=(const RequestHandler &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	RequestHandler::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 client::Request &RequestHandler::getRequest()
 {
 	return _request;
@@ -89,7 +99,7 @@ parser::Parser &RequestHandler::getParser()
  *
  * @param buffer [TODO:parameter]
  */
-void RequestHandler::appendToBufferRequest(const std::string &buffer)
+void RequestHandler::appendToBufferRequest(const t_raw &buffer)
 {
 	(void)buffer;
 }

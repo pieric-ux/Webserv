@@ -26,6 +26,8 @@ class Server
 		Server(const Server &rhs);
 		Server &operator=(const Server &rhs);
 
+		t_Logger	getLogger() const;
+
 	private:
 		t_Logger						_logger;
 		common::core::net::TcpServer	_socket4;

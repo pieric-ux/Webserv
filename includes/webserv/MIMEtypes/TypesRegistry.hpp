@@ -7,7 +7,6 @@
  * @brief [TODO:description]
  */
 
-#include <map>
 #include <string>
 #include <webserv/types.hpp>
 
@@ -19,14 +18,17 @@ namespace types
 class TypesRegistry
 {
 	public:
-		static TypesRegistry				&getInstance();
-		std::string							getMimeType(const std::string &extension);
-		void								loadFromFile(const std::string &filePath);
-		void								addMimeType(const std::string &extension, const std::string &mimeType);
+		static TypesRegistry		&getInstance();
+
+		t_Logger					getLogger() const;
+
+		std::string					getMimeType(const std::string &extension);
+		void						loadFromFile(const std::string &filePath);
+		void						addMimeType(const std::string &extension, const std::string &mimeType);
 
 	private:
-		std::map<std::string, std::string>	_types;
-		t_Logger							_logger;
+		t_Logger					_logger;
+		t_MimeTypes					_types;
 
 		TypesRegistry();
 		~TypesRegistry();

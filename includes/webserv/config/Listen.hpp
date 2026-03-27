@@ -23,10 +23,12 @@ struct Listen
 	int			backlog;
 	int			rcvbuf;
 	int			sndbuf;
-	bool		bind;
+	bool		doBind;
 	bool		ipv6only;
 	bool		reuseport;
 	bool		so_keepalive;
+
+	Listen();
 };
 
 } // !config

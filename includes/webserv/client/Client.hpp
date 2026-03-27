@@ -9,7 +9,8 @@
  */
 
 #include <string>
-#include <common/core/net/sockets/TcpClient.hpp>
+#include <common/common.hpp>
+#include <webserv/types.hpp>
 #include <webserv/client/Request.hpp>
 #include <webserv/client/Response.hpp>
 #include <webserv/client/HTTPError.hpp>
@@ -44,6 +45,8 @@ class Client
 		Client(const Client &rhs);
 		Client &operator=(const Client &rhs);
 
+		t_Logger						getLogger() const;
+
 		e_ClientFlags					getFlags() const;
 		void							setFlags(const e_ClientFlags flags);
 		e_ReceiveDataStatus				getStatus() const;
@@ -61,6 +64,7 @@ class Client
 		void							sendData();
 
 	private:
+		t_Logger						_logger;
 		int								_id;
 		common::core::net::TcpClient	_socket;
 		sockaddr_storage				_sockaddr_storage;
@@ -73,8 +77,8 @@ class Client
 		HTTPError						_HTTPError;
 		int								_lastActivityTime;
 
-		void							prepareHeadersRequest(const std::string &buffer);
-		void							prepareBodyRequest(const std::string &buffer);
+		void							prepareHeadersRequest(const t_raw &buffer);
+		void							prepareBodyRequest(const t_raw &buffer);
 		void							prepareExecution(handler::RequestHandler requestHandler, handler::ResponseHandler responseHandler, config::ServerConfig serverConfig);
 		void							prepareHeadersResponse();
 		void							prepareBodyResponse();

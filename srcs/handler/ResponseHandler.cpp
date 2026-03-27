@@ -56,6 +56,16 @@ ResponseHandler &ResponseHandler::operator=(const ResponseHandler &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	ResponseHandler::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 client::Response &ResponseHandler::getResponse()
 {
 	return _response;
@@ -76,7 +86,7 @@ void ResponseHandler::setResponse(const client::Response &response)
  *
  * @param buffer [TODO:parameter]
  */
-void ResponseHandler::appendToBufferResponse(const std::string &buffer)
+void ResponseHandler::appendToBufferResponse(const t_raw &buffer)
 {
 	(void)buffer;
 }

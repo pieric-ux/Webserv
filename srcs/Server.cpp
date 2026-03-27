@@ -79,4 +79,14 @@ Server &Server::operator=(const Server &rhs)
 	return (*this);
 }
 
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Logger	Server::getLogger() const
+{
+	return _logger;
+}
+
 } // !webserv

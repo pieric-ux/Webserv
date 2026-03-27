@@ -82,6 +82,16 @@ HTTPServer &HTTPServer::operator=(const HTTPServer &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	HTTPServer::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 HTTPServer &HTTPServer::getInstance()
 {
 	static HTTPServer instance;
@@ -143,7 +153,7 @@ void HTTPServer::setServerFactory(const ServerFactory &serverFactory)
  *
  * @return [TODO:return]
  */
-std::vector<Server> HTTPServer::getServers() const
+t_Servers HTTPServer::getServers() const
 {
 	return _servers;
 }

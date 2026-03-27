@@ -26,12 +26,16 @@ namespace status
 class StatusCodeRegistry
 {
 	public:
-		static StatusCodeRegistry				&getInstance();
-		StatusCode								getStatusCode(const unsigned short code) const;
+		static StatusCodeRegistry	&getInstance();
+
+		t_Logger					getLogger() const;
+
+		StatusCode					getStatusCode(const unsigned short code) const;
+
 
 	private:
-		t_Logger								_logger;
-		std::map<unsigned short, StatusCode>	_statusCodes;
+		t_Logger					_logger;
+		t_StatusCodesRegistry		_statusCodes;
 
 		StatusCodeRegistry();
 		~StatusCodeRegistry();

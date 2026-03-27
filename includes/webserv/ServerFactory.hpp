@@ -24,9 +24,11 @@ class ServerFactory
 		ServerFactory(const ServerFactory &rhs);
 		ServerFactory &operator=(const ServerFactory &rhs);
 
+		t_Logger	getLogger() const;
+
 	private:
-		const config::HTTPConfig	&_httpConfig;
 		t_Logger					_logger;
+		const config::HTTPConfig	&_httpConfig;
 };
 
 } // !webserv

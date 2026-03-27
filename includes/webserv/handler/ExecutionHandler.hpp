@@ -13,6 +13,7 @@
 #include <webserv/client/Response.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
+#include <webserv/types.hpp>
 
 namespace webserv
 {
@@ -36,6 +37,8 @@ class ExecutionHandler
 		ExecutionHandler(const ExecutionHandler &rhs);
 		ExecutionHandler &operator=(const ExecutionHandler &rhs);
 
+		t_Logger	getLogger() const;
+
 		int			getFd() const;
 		void		setFd(const int fd);
 		int			getBodyReceived() const;
@@ -48,6 +51,7 @@ class ExecutionHandler
 		void		executeRequest(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
 
 	private:
+		t_Logger					_logger;
 		int							_fd;
 		int							_bodyReceived;
 		e_ExecutionHandlerFlags		_flags;

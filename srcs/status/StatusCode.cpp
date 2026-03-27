@@ -64,6 +64,16 @@ StatusCode &StatusCode::operator=(const StatusCode &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	StatusCode::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 int StatusCode::getCode() const
 {
 	return (_code);

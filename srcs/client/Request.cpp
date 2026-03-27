@@ -71,6 +71,16 @@ Request &Request::operator=(const Request &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	Request::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 config::e_Method Request::getMethod() const
 {
 	return _method;
@@ -171,7 +181,7 @@ void Request::setHeaders(const t_Headers &headers)
  *
  * @return [TODO:return]
  */
-std::vector<unsigned char> Request::getBody() const
+t_raw	Request::getBody() const
 {
 	return _body;
 }
@@ -181,7 +191,7 @@ std::vector<unsigned char> Request::getBody() const
  *
  * @param body [TODO:parameter]
  */
-void Request::setBody(const std::vector<unsigned char> &body)
+void Request::setBody(const t_raw &body)
 {
 	_body = body;
 }

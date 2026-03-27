@@ -8,7 +8,6 @@
  * @brief [TODO:description]
  */
 
-#include <vector>
 #include <string>
 #include <abnf/Abnf.hpp>
 #include <webserv/config/HTTPConfig.hpp>
@@ -21,11 +20,6 @@
 #include <webserv/ServerFactory.hpp>
 #include <webserv/types.hpp>
 
-
-#ifndef DEFAULT_CONFIG_PATH
-# define DEFAULT_CONFIG_PATH "configs/default.conf"
-#endif
-
 namespace webserv
 {
 
@@ -33,13 +27,16 @@ class HTTPServer
 {
 	public:
 		static HTTPServer					&getInstance();
+
+		t_Logger							getLogger() const;
+
 		bool								running();
 
 		const config::HTTPConfig			&getHTTPConfig() const;
 		void								setHTTPconfig(const config::HTTPConfig &httpConfig);
 		ServerFactory						&getServerFactory() const;
 		void								setServerFactory(const ServerFactory &serverFactory);
-		std::vector<Server>					getServers() const;
+		t_Servers							getServers() const;
 		void								addServer(const Server &server);
 		t_ioMultiplexer						getIOMultiplexer() const;
 		void								setIOMultiplexer(const t_ioMultiplexer &ioMultiplexer);
@@ -51,9 +48,9 @@ class HTTPServer
 		parser::Parser						_parser;
 		const config::HTTPConfig			&_httpConfig;
 		ServerFactory						_serverFactory;
-		std::vector<Server>					_servers;
+		t_Servers							_servers;
 		t_ioMultiplexer						_ioMultiplexer;
-		webserv::handler::ClientHandler		_clientHandler;
+		handler::ClientHandler				_clientHandler;
 		HTTPheaders::HTTPHeadersRegistry	&_headerRegistry;
 		status::StatusCodeRegistry			&_statusCodeRegistry;
 		types::TypesRegistry				&_typesRegistry;

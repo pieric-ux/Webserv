@@ -59,6 +59,16 @@ Parser &Parser::operator=(const Parser &rhs)
  *
  * @return [TODO:return]
  */
+t_Logger	Parser::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 int Parser::getFlags() const
 {
 	return _flags;
@@ -92,7 +102,7 @@ bool Parser::isIPv6Address(const std::string &address)
  * @param buffer [TODO:parameter]
  * @return [TODO:return]
  */
-config::HTTPConfig& Parser::parseConfig(const std::string &buffer)
+config::HTTPConfig& Parser::parseConfig(const t_raw &buffer)
 {
 	(void)buffer;
 	return config::HTTPConfig::getInstance();
@@ -103,7 +113,7 @@ config::HTTPConfig& Parser::parseConfig(const std::string &buffer)
  *
  * @param bufferRequest [TODO:parameter]
  */
-void Parser::parseRequestLine(const std::string &bufferRequest)
+void Parser::parseRequestLine(const t_raw &bufferRequest)
 {
 	(void)bufferRequest;
 }
@@ -114,10 +124,10 @@ void Parser::parseRequestLine(const std::string &bufferRequest)
  * @param bufferRequest [TODO:parameter]
  * @return [TODO:return]
  */
-std::vector<HTTPheaders::HTTPHeader> Parser::parseHeaders(const std::string &bufferRequest)
+t_Headers	Parser::parseHeaders(const t_raw &bufferRequest)
 {
 	(void)bufferRequest;
-	return std::vector<HTTPheaders::HTTPHeader>();
+	return t_Headers();
 }
 
 } // !parser
