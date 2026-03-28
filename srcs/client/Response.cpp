@@ -21,7 +21,10 @@ Response::Response()
 		_headers(),
 		_body(),
 		_flags(static_cast<e_ResponseFlags>(0))
-{}
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.response");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -65,9 +68,9 @@ Response &Response::operator=(const Response &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	Response::getLogger() const
+t_Logger	Response::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.client.response");
 }
 
 /**

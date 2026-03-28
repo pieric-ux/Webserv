@@ -26,7 +26,7 @@ class Server
 		Server(const Server &rhs);
 		Server &operator=(const Server &rhs);
 
-		t_Logger	getLogger() const;
+		static t_Logger					getLogger();
 
 	private:
 		t_Logger						_logger;

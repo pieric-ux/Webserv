@@ -45,9 +45,9 @@ ErrorPage::~ErrorPage() {}
  *
  * @return [TODO:return]
  */
-t_Logger	ErrorPage::getLogger() const
+t_Logger	ErrorPage::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.config.ErrorPage");
 }
 
 /**

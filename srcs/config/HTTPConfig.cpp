@@ -106,7 +106,7 @@ void	HTTPConfig::setCreateFullPutPath(const bool createFullPutPath)
  *
  * @return [TODO:return]
  */
-std::string HTTPConfig::getDavPutPath() const
+const std::string &HTTPConfig::getDavPutPath() const
 {
 	return _davPutPath;
 }
@@ -126,7 +126,7 @@ void	HTTPConfig::setDavPutPath(const std::string &davPutPath)
  *
  * @return [TODO:return]
  */
-std::string HTTPConfig::getDavAccess() const
+const std::string &HTTPConfig::getDavAccess() const
 {
 	return _davAccess;
 }
@@ -146,7 +146,7 @@ void	HTTPConfig::setDavAccess(const std::string &davAccess)
  *
  * @return [TODO:return]
  */
-std::vector<config::e_Method> HTTPConfig::getDavMethods() const
+const std::vector<config::e_Method> &HTTPConfig::getDavMethods() const
 {
 	return _davMethods;
 }
@@ -166,7 +166,7 @@ void	HTTPConfig::setDavMethods(const	 std::vector<config::e_Method> &davMethods)
  *
  * @return [TODO:return]
  */
-std::string HTTPConfig::getDefaultType() const
+const std::string &HTTPConfig::getDefaultType() const
 {
 	return _defaultType;
 }
@@ -186,7 +186,7 @@ void	HTTPConfig::setDefaultType(const std::string &defaultType)
  *
  * @return [TODO:return]
  */
-std::vector<ErrorPage> HTTPConfig::getErrorPage() const
+const std::vector<ErrorPage> &HTTPConfig::getErrorPage() const
 {
 	return _errorPage;
 }
@@ -226,7 +226,7 @@ void	HTTPConfig::setKeepAliveTimeout(const int keepAliveTimeout)
  *
  * @return [TODO:return]
  */
-std::string HTTPConfig::getRoot() const
+const std::string &HTTPConfig::getRoot() const
 {
 	return _root;
 }
@@ -246,7 +246,7 @@ void	HTTPConfig::setRoot(const std::string &root)
  *
  * @return [TODO:return]
  */
-std::vector<ServerConfig> HTTPConfig::getServerConfigs() const
+const std::vector<ServerConfig> &HTTPConfig::getServerConfigs() const
 {
 	return _serverConfigs;
 }
@@ -266,7 +266,7 @@ void	HTTPConfig::setServerConfigs(const std::vector<ServerConfig> &serverConfigs
  *
  * @return [TODO:return]
  */
-std::map<std::string, std::string> HTTPConfig::getTypes() const
+const t_MimeTypes &HTTPConfig::getTypes() const
 {
 	return _types;
 }
@@ -276,7 +276,7 @@ std::map<std::string, std::string> HTTPConfig::getTypes() const
  *
  * @param types [TODO:parameter]
  */
-void	HTTPConfig::setTypes(const std::map<std::string, std::string> &types)
+void	HTTPConfig::setTypes(const t_MimeTypes &types)
 {
 	_types = types;
 }
@@ -306,7 +306,7 @@ void	HTTPConfig::setEnableCGI(const bool enableCGI)
  *
  * @return [TODO:return]
  */
-std::map<std::string, std::string> HTTPConfig::getCgiExtensions() const
+const t_CgiExtensions &HTTPConfig::getCgiExtensions() const
 {
 	return _cgiExtensions;
 }
@@ -316,7 +316,7 @@ std::map<std::string, std::string> HTTPConfig::getCgiExtensions() const
  *
  * @param cgiExtensions [TODO:parameter]
  */
-void	HTTPConfig::setCgiExtensions(const std::map<std::string, std::string> &cgiExtensions)
+void	HTTPConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
 {
 	_cgiExtensions = cgiExtensions;
 }

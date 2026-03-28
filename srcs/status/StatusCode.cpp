@@ -64,9 +64,9 @@ StatusCode &StatusCode::operator=(const StatusCode &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	StatusCode::getLogger() const
+t_Logger	StatusCode::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.status.statuscode");
 }
 
 /**
@@ -84,7 +84,7 @@ int StatusCode::getCode() const
  *
  * @return [TODO:return]
  */
-std::string StatusCode::getMessage() const
+const std::string	&StatusCode::getMessage() const
 {
 	return (_msg);
 }
@@ -94,7 +94,7 @@ std::string StatusCode::getMessage() const
  *
  * @return [TODO:return]
  */
-std::string StatusCode::getDescription() const
+const std::string &StatusCode::getDescription() const
 {
 	return (_description);
 }

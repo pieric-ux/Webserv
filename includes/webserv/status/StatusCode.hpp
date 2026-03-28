@@ -30,17 +30,17 @@ class StatusCode
 		StatusCode(const StatusCode &rhs);
 		StatusCode &operator=(const StatusCode &rhs);
 
-		t_Logger		getLogger() const;
+		static t_Logger			getLogger();
 
-		int				getCode() const;
-		std::string		getMessage() const;
-		std::string		getDescription() const;
+		int						getCode() const;
+		const std::string		&getMessage() const;
+		const std::string		&getDescription() const;
 
 	private:
-		t_Logger		_logger;
-		unsigned short	_code;
-		std::string		_msg;
-		std::string		_description;
+		t_Logger				_logger;
+		unsigned short			_code;
+		std::string				_msg;
+		std::string				_description;
 };
 
 } // !status

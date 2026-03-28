@@ -105,9 +105,9 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	LocationConfig::getLogger() const
+t_Logger	LocationConfig::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.config.locationconfig");
 }
 
 /**
@@ -144,7 +144,7 @@ bool LocationConfig::getCreateFullPutPath() const
  *
  * @return [TODO:return]
  */
-std::string LocationConfig::getDavPutPath() const
+const std::string &LocationConfig::getDavPutPath() const
 {
 	return _davPutPath;
 }
@@ -154,7 +154,7 @@ std::string LocationConfig::getDavPutPath() const
  *
  * @return [TODO:return]
  */
-std::string LocationConfig::getDavAccess() const
+const std::string &LocationConfig::getDavAccess() const
 {
 	return _davAccess;
 }
@@ -164,7 +164,7 @@ std::string LocationConfig::getDavAccess() const
  *
  * @return [TODO:return]
  */
-t_DavMethods	LocationConfig::getDavMethods() const
+const t_DavMethods	&LocationConfig::getDavMethods() const
 {
 	return _davMethods;
 }
@@ -174,7 +174,7 @@ t_DavMethods	LocationConfig::getDavMethods() const
  *
  * @return [TODO:return]
  */
-std::string LocationConfig::getDefaultType() const
+const std::string &LocationConfig::getDefaultType() const
 {
 	return _defaultType;
 }
@@ -184,7 +184,7 @@ std::string LocationConfig::getDefaultType() const
  *
  * @return [TODO:return]
  */
-t_ErrorPages	LocationConfig::getErrorPage() const
+const t_ErrorPages	&LocationConfig::getErrorPage() const
 {
 	return _errorPage;
 }
@@ -194,7 +194,7 @@ t_ErrorPages	LocationConfig::getErrorPage() const
  *
  * @return [TODO:return]
  */
-t_Index	LocationConfig::getIndex() const
+const t_Index	&LocationConfig::getIndex() const
 {
 	return _index;
 }
@@ -214,7 +214,7 @@ int LocationConfig::getKeepAliveTimeout() const
  *
  * @return [TODO:return]
  */
-std::string LocationConfig::getRoot() const
+const std::string &LocationConfig::getRoot() const
 {
 	return _root;
 }
@@ -224,7 +224,7 @@ std::string LocationConfig::getRoot() const
  *
  * @return [TODO:return]
  */
-t_MimeTypes	LocationConfig::getTypes() const
+const t_MimeTypes	&LocationConfig::getTypes() const
 {
 	return _types;
 }
@@ -234,7 +234,7 @@ t_MimeTypes	LocationConfig::getTypes() const
  *
  * @return [TODO:return]
  */
-std::string LocationConfig::getUri() const
+const std::string &LocationConfig::getUri() const
 {
 	return _uri;
 }
@@ -244,7 +244,7 @@ std::string LocationConfig::getUri() const
  *
  * @return [TODO:return]
  */
-e_Modifier LocationConfig::getModifier() const
+const e_Modifier &LocationConfig::getModifier() const
 {
 	return _modifier;
 }
@@ -254,7 +254,7 @@ e_Modifier LocationConfig::getModifier() const
  *
  * @return [TODO:return]
  */
-t_AllowedMethods	LocationConfig::getAllowedMethods() const
+const t_AllowedMethods	&LocationConfig::getAllowedMethods() const
 {
 	return _allowedMethods;
 }
@@ -274,7 +274,7 @@ bool LocationConfig::getEnableCGI() const
  *
  * @return [TODO:return]
  */
-Return LocationConfig::getRedirect() const
+const Return &LocationConfig::getRedirect() const
 {
 	return _redirect;
 }
@@ -284,7 +284,7 @@ Return LocationConfig::getRedirect() const
  *
  * @return [TODO:return]
  */
-t_CgiExtensions	LocationConfig::getCgiExtensions() const
+const t_CgiExtensions	&LocationConfig::getCgiExtensions() const
 {
 	return _cgiExtensions;
 }

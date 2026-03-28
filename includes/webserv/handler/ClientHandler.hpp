@@ -25,15 +25,15 @@ class ClientHandler
 		ClientHandler(const ClientHandler &rhs);
 		ClientHandler &operator=(const ClientHandler &rhs);
 
-		t_Logger	getLogger() const;
+		static t_Logger	getLogger();
 
-		void		addClient(client::Client &client);
-		void		removeClient(client::Client &client);
-		void		processClients(t_ioMultiplexer ioMultiplexer);
+		void			addClient(client::Client &client);
+		void			removeClient(client::Client &client);
+		void			processClients(t_ioMultiplexer ioMultiplexer);
 
 	private:
-		t_Logger	_logger;
-		t_Clients	_clients;
+		t_Logger		_logger;
+		t_Clients		_clients;
 };
 
 } // !handler

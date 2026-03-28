@@ -133,7 +133,7 @@ void HTTPServer::setHTTPconfig(const config::HTTPConfig &httpConfig)
  *
  * @return [TODO:return]
  */
-ServerFactory &HTTPServer::getServerFactory() const
+const ServerFactory &HTTPServer::getServerFactory() const
 {
 	return const_cast<ServerFactory &>(_serverFactory);
 }
@@ -153,7 +153,7 @@ void HTTPServer::setServerFactory(const ServerFactory &serverFactory)
  *
  * @return [TODO:return]
  */
-t_Servers HTTPServer::getServers() const
+const t_Servers &HTTPServer::getServers() const
 {
 	return _servers;
 }
@@ -173,7 +173,7 @@ void HTTPServer::addServer(const Server &server)
  *
  * @return [TODO:return]
  */
-t_ioMultiplexer HTTPServer::getIOMultiplexer() const
+const t_ioMultiplexer	&HTTPServer::getIOMultiplexer() const
 {
 	return _ioMultiplexer;
 }

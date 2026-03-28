@@ -18,7 +18,10 @@ namespace handler
 ResponseHandler::ResponseHandler()
 	:	_response(),
 		_bufferResponse()
-{}
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.responsehandler");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -56,9 +59,9 @@ ResponseHandler &ResponseHandler::operator=(const ResponseHandler &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	ResponseHandler::getLogger() const
+t_Logger	ResponseHandler::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.handler.responsehandler");
 }
 
 /**

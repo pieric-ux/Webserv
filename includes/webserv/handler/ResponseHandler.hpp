@@ -28,7 +28,7 @@ class ResponseHandler
 		ResponseHandler(const ResponseHandler &rhs);
 		ResponseHandler &operator=(const ResponseHandler &rhs);
 
-		t_Logger			getLogger() const;
+		static t_Logger		getLogger();
 
 		client::Response	&getResponse();
 		void				setResponse(const client::Response &response);

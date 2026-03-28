@@ -15,7 +15,11 @@ namespace client
 /**
  * @brief [TODO:description]
  */
-HTTPError::HTTPError() : _statusCode() {}
+HTTPError::HTTPError() : _statusCode() 
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -24,7 +28,10 @@ HTTPError::HTTPError() : _statusCode() {}
  */
 HTTPError::HTTPError(const status::StatusCode &statusCode)
 	:	_statusCode(statusCode)
-{}
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -62,9 +69,9 @@ HTTPError &HTTPError::operator=(const HTTPError &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	HTTPError::getLogger() const
+t_Logger	HTTPError::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
 }
 
 /**

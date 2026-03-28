@@ -14,14 +14,16 @@ namespace webserv
  * @brief [TODO:description]
  */
 Server::Server()
-	:	_logger(),
-		_socket4(),
+	:	_socket4(),
 		_socket6(),
 		_addrinfo4(),
 		_addrinfo6(),
 		_config(),
 		_parser()
-{}
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.server");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -29,14 +31,16 @@ Server::Server()
  * @param config [TODO:parameter]
  */
 Server::Server(const config::ServerConfig &config)
-	:	_logger(),
-		_socket4(),
+	:	_socket4(),
 		_socket6(),
 		_addrinfo4(),
 		_addrinfo6(),
 		_config(config),
 		_parser()
-{}
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.server");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -84,9 +88,9 @@ Server &Server::operator=(const Server &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	Server::getLogger() const
+t_Logger	Server::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.server");
 }
 
 } // !webserv

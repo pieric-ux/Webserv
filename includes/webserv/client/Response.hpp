@@ -32,7 +32,7 @@ class Response
 		Response(const Response &rhs);
 		Response &operator=(const Response &rhs);
 
-		t_Logger				getLogger() const;
+		static t_Logger				getLogger();
 
 		std::string				getHttpVersion() const;
 		void					setHttpVersion(const std::string &httpVersion);

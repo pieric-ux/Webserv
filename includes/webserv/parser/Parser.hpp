@@ -40,7 +40,7 @@ class Parser
 		Parser(const Parser &rhs);
 		Parser &operator=(const Parser &rhs);
 
-		t_Logger					getLogger() const;
+		static t_Logger				getLogger();
 
 		int							getFlags() const;
 		void						setFlags(const int flags);

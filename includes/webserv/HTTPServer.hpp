@@ -34,11 +34,11 @@ class HTTPServer
 
 		const config::HTTPConfig			&getHTTPConfig() const;
 		void								setHTTPconfig(const config::HTTPConfig &httpConfig);
-		ServerFactory						&getServerFactory() const;
+		const ServerFactory					&getServerFactory() const;
 		void								setServerFactory(const ServerFactory &serverFactory);
-		t_Servers							getServers() const;
+		const t_Servers						&getServers() const;
 		void								addServer(const Server &server);
-		t_ioMultiplexer						getIOMultiplexer() const;
+		const t_ioMultiplexer				&getIOMultiplexer() const;
 		void								setIOMultiplexer(const t_ioMultiplexer &ioMultiplexer);
 		
 	private :

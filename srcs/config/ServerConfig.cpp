@@ -100,9 +100,9 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	ServerConfig::getLogger() const
+t_Logger	ServerConfig::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.config.serverconfig");
 }
 
 /**
@@ -130,7 +130,7 @@ bool ServerConfig::getCreateFullPutPath() const
  *
  * @return [TODO:return]
  */
-std::string ServerConfig::getDavPutPath() const
+const std::string &ServerConfig::getDavPutPath() const
 {
 	return _davPutPath;
 }
@@ -140,7 +140,7 @@ std::string ServerConfig::getDavPutPath() const
  *
  * @return [TODO:return]
  */
-std::string ServerConfig::getDavAccess() const
+const std::string &ServerConfig::getDavAccess() const
 {
 	return _davAccess;
 }
@@ -150,7 +150,7 @@ std::string ServerConfig::getDavAccess() const
  *
  * @return [TODO:return]
  */
-t_DavMethods	ServerConfig::getDavMethods() const
+const t_DavMethods	&ServerConfig::getDavMethods() const
 {
 	return _davMethods;
 }
@@ -160,7 +160,7 @@ t_DavMethods	ServerConfig::getDavMethods() const
  *
  * @return [TODO:return]
  */
-std::string ServerConfig::getDefaultType() const
+const std::string &ServerConfig::getDefaultType() const
 {
 	return _defaultType;
 }
@@ -170,7 +170,7 @@ std::string ServerConfig::getDefaultType() const
  *
  * @return [TODO:return]
  */
-t_ErrorPages	ServerConfig::getErrorPage() const
+const t_ErrorPages	&ServerConfig::getErrorPage() const
 {
 	return _errorPage;
 }
@@ -190,7 +190,7 @@ int ServerConfig::getKeepAliveTimeout() const
  *
  * @return [TODO:return]
  */
-t_Listen ServerConfig::getListen() const
+const t_Listen &ServerConfig::getListen() const
 {
 	return _listen;
 }
@@ -200,7 +200,7 @@ t_Listen ServerConfig::getListen() const
  *
  * @return [TODO:return]
  */
-t_LocationConfigs	ServerConfig::getLocationConfigs() const
+const t_LocationConfigs	&ServerConfig::getLocationConfigs() const
 {
 	return _locationConfigs;
 }
@@ -210,7 +210,7 @@ t_LocationConfigs	ServerConfig::getLocationConfigs() const
  *
  * @return [TODO:return]
  */
-std::string ServerConfig::getRoot() const
+const std::string &ServerConfig::getRoot() const
 {
 	return _root;
 }
@@ -220,7 +220,7 @@ std::string ServerConfig::getRoot() const
  *
  * @return [TODO:return]
  */
-t_Servernames	ServerConfig::getServerName() const
+const t_Servernames	&ServerConfig::getServerName() const
 {
 	return _serverName;
 }
@@ -230,7 +230,7 @@ t_Servernames	ServerConfig::getServerName() const
  *
  * @return [TODO:return]
  */
-t_MimeTypes	ServerConfig::getTypes() const
+const t_MimeTypes	&ServerConfig::getTypes() const
 {
 	return _types;
 }
@@ -250,7 +250,7 @@ bool ServerConfig::getEnableCGI() const
  *
  * @return [TODO:return]
  */
-t_CgiExtensions	ServerConfig::getCgiExtensions() const
+const t_CgiExtensions	&ServerConfig::getCgiExtensions() const
 {
 	return _cgiExtensions;
 }
@@ -261,10 +261,10 @@ t_CgiExtensions	ServerConfig::getCgiExtensions() const
  * @param requestTarget [TODO:parameter]
  * @return [TODO:return]
  */
-LocationConfig ServerConfig::findLocationConfig(const std::string &requestTarget)
+const LocationConfig &ServerConfig::findLocationConfig(const std::string &requestTarget)
 {
 	(void)requestTarget;
-	return LocationConfig();
+	return _locationConfigs.front();
 }
 
 } // !config
