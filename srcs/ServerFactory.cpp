@@ -21,8 +21,6 @@ ServerFactory::ServerFactory() : _httpConfig(config::HTTPConfig::getInstance())
 
 /**
  * @brief [TODO:description]
- *
- * @param httpConfig [TODO:parameter]
  */
 ServerFactory::ServerFactory(const config::HTTPConfig &httpConfig) : _httpConfig(httpConfig)
 {
@@ -62,9 +60,28 @@ ServerFactory &ServerFactory::operator=(const ServerFactory &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	ServerFactory::getLogger() const
+t_Logger	ServerFactory::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.serverfactory");
+
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Servers	ServerFactory::createServers() const
+{
+	t_Servers servers;
+	t_ServerConfigs::const_iterator	it = _httpConfig.getServerConfigs().begin();
+
+	for (; it != _httpConfig.getServerConfigs().end(); ++it)
+	{
+		servers.push_back(Server(*it));
+	}
+
+	return servers;
 }
 
 } // !webserv

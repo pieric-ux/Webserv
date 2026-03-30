@@ -20,7 +20,7 @@ ABNFDIR = $(ABNF_PATH)
 # Compiler and flags
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -Wshadow -MMD -MP -std=c++98
-DEBUG_FLAGS = -g3 -fno-omit-frame-pointer -fstack-protector-all
+DEBUG_FLAGS = -g3 -fno-omit-frame-pointer -fstack-protector-all -fstandalone-debug
 
 INCLUDES = -I includes -I $(ABNFDIR)/includes -I $(LOGGERDIR)/includes -I $(COMMONDIR)/includes
 
@@ -60,11 +60,11 @@ all: $(NAME)
 
 # Build each library
 $(COMMONDIR)/libcommon.a:
-	$(MAKE) -C $(COMMONDIR)
+	$(MAKE) -C $(COMMONDIR) CXXFLAGS="$(CXXFLAGS)"
 $(LOGGERDIR)/liblog42.a:
-	$(MAKE) -C $(LOGGERDIR) COMMON_PATH=$(abspath $(COMMONDIR))
+	$(MAKE) -C $(LOGGERDIR) COMMON_PATH=$(abspath $(COMMONDIR)) CXXFLAGS="$(CXXFLAGS)"
 $(ABNFDIR)/libabnf.a:
-	$(MAKE) -C $(ABNFDIR) COMMON_PATH=$(abspath $(COMMONDIR)) LOGGER_PATH=$(abspath $(LOGGERDIR))
+	$(MAKE) -C $(ABNFDIR) COMMON_PATH=$(abspath $(COMMONDIR)) LOGGER_PATH=$(abspath $(LOGGERDIR)) CXXFLAGS="$(CXXFLAGS)"
 
 debug: CXXFLAGS = $(DEBUG_FLAGS)
 
@@ -92,6 +92,10 @@ $(OBJDIR)/%.o: %.cpp
 $(NAME): $(OBJS_SRCES) $(LOGGERDIR)/liblog42.a $(COMMONDIR)/libcommon.a $(ABNFDIR)/libabnf.a
 	$(CXX) $(CXXFLAGS) $(OBJS_SRCES) $(LIBS) -o $(NAME)
 
+# Rule to clean up log files
+removelogs:
+	rm -rf logs/*.log
+
 # Rule to clean up object files
 clean:
 	@$(MAKE) clean -C $(abspath $(COMMONDIR))
@@ -100,7 +104,7 @@ clean:
 	rm -rf $(OBJDIR)
 
 # Rule to clean up object files and executable
-fclean: clean
+fclean: clean removelogs
 	@$(MAKE) fclean -C $(abspath $(COMMONDIR))
 	@$(MAKE) fclean -C $(abspath $(LOGGERDIR)) COMMON_PATH=$(abspath $(COMMONDIR))
 	@$(MAKE) fclean -C $(abspath $(ABNFDIR)) COMMON_PATH=$(abspath $(COMMONDIR)) LOGGER_PATH=$(abspath $(LOGGERDIR))

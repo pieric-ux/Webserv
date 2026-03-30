@@ -5,9 +5,7 @@
  * @brief [TODO:description]
  */
 
-#include <abnf/Abnf.hpp>
 #include <webserv/HTTPServer.hpp>
-#include <webserv/config/HTTPConfig.hpp>
 
 namespace webserv
 {
@@ -15,8 +13,7 @@ namespace webserv
 /**
  * @brief [TODO:description]
  */
-HTTPServer::HTTPServer() :	_abnf(abnf::Abnf::getInstance()),
-							_defaultConfigPath(DEFAULT_CONFIG_PATH),
+HTTPServer::HTTPServer() :	_defaultConfigPath(DEFAULT_CONFIG_PATH),
 							_parser(),
 							_httpConfig(config::HTTPConfig::getInstance()),
 							_serverFactory(),
@@ -42,8 +39,7 @@ HTTPServer::~HTTPServer() {}
  * @param rhs [TODO:parameter]
  */
 HTTPServer::HTTPServer(const HTTPServer &rhs)
-	:	_abnf(rhs._abnf),
-		_logger(rhs._logger),
+	:	_logger(rhs._logger),
 		_defaultConfigPath(rhs._defaultConfigPath),
 		_parser(rhs._parser),
 		_httpConfig(rhs._httpConfig),
@@ -113,6 +109,24 @@ bool HTTPServer::running()
  *
  * @return [TODO:return]
  */
+void	HTTPServer::loadConfig()
+{
+
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void HTTPServer::connectClient()
+{
+
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 const config::HTTPConfig &HTTPServer::getHTTPConfig() const
 {
 	return _httpConfig;
@@ -135,17 +149,7 @@ void HTTPServer::setHTTPconfig(const config::HTTPConfig &httpConfig)
  */
 const ServerFactory &HTTPServer::getServerFactory() const
 {
-	return const_cast<ServerFactory &>(_serverFactory);
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param serverFactory [TODO:parameter]
- */
-void HTTPServer::setServerFactory(const ServerFactory &serverFactory)
-{
-	_serverFactory = serverFactory;
+	return _serverFactory;
 }
 
 /**
@@ -163,9 +167,9 @@ const t_Servers &HTTPServer::getServers() const
  *
  * @param server [TODO:parameter]
  */
-void HTTPServer::addServer(const Server &server)
+void HTTPServer::setServers(const t_Servers &servers)
 {
-	_servers.push_back(server);
+	_servers = servers;
 }
 
 /**
@@ -176,34 +180,6 @@ void HTTPServer::addServer(const Server &server)
 const t_ioMultiplexer	&HTTPServer::getIOMultiplexer() const
 {
 	return _ioMultiplexer;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param ioMultiplexer [TODO:parameter]
- */
-void HTTPServer::setIOMultiplexer(const t_ioMultiplexer &ioMultiplexer)
-{
-	_ioMultiplexer = ioMultiplexer;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-config::HTTPConfig &HTTPServer::loadConfig()
-{
-	return const_cast<config::HTTPConfig &>(_httpConfig);
-}
-
-/**
- * @brief [TODO:description]
- */
-void HTTPServer::connectClient()
-{
-
 }
 
 } // !webserv

@@ -8,8 +8,11 @@
  * @brief [TODO:description]
  */
 
+#include <cstdlib>
 #include <string>
 #include <abnf/Abnf.hpp>
+#include <log42/Log42.hpp>
+#include <common/common.hpp>
 #include <webserv/config/HTTPConfig.hpp>
 #include <webserv/handler/ClientHandler.hpp>
 #include <webserv/headers/HTTPHeadersRegistry.hpp>
@@ -19,6 +22,7 @@
 #include <webserv/Server.hpp>
 #include <webserv/ServerFactory.hpp>
 #include <webserv/types.hpp>
+#include <webserv/logging.hpp>
 
 namespace webserv
 {
@@ -31,18 +35,17 @@ class HTTPServer
 		t_Logger							getLogger() const;
 
 		bool								running();
+		void								loadConfig();
+		void								connectClient();
 
 		const config::HTTPConfig			&getHTTPConfig() const;
 		void								setHTTPconfig(const config::HTTPConfig &httpConfig);
 		const ServerFactory					&getServerFactory() const;
-		void								setServerFactory(const ServerFactory &serverFactory);
 		const t_Servers						&getServers() const;
-		void								addServer(const Server &server);
+		void								setServers(const t_Servers &servers);
 		const t_ioMultiplexer				&getIOMultiplexer() const;
-		void								setIOMultiplexer(const t_ioMultiplexer &ioMultiplexer);
 		
 	private :
-		abnf::Abnf							&_abnf;
 		t_Logger							_logger;
 		std::string							_defaultConfigPath;
 		parser::Parser						_parser;
@@ -54,9 +57,6 @@ class HTTPServer
 		HTTPheaders::HTTPHeadersRegistry	&_headerRegistry;
 		status::StatusCodeRegistry			&_statusCodeRegistry;
 		types::TypesRegistry				&_typesRegistry;
-		
-		config::HTTPConfig					&loadConfig();
-		void								connectClient();
 
 		HTTPServer();
 		~HTTPServer();
