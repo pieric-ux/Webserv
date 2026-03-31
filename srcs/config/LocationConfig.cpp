@@ -35,6 +35,7 @@ LocationConfig::LocationConfig()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.locationconfig");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "LocationConfig instance created with default values");
 }
 
 /**

@@ -5,10 +5,18 @@
  * @brief [TODO:description]
  */
 
+#include "log42/Logger.hpp"
 #include <webserv/ServerFactory.hpp>
 
 namespace webserv
 {
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param config [TODO:parameter]
+ */
+static std::string	formatServerInfo(const config::ServerConfig &config);
 
 /**
  * @brief [TODO:description]
@@ -17,6 +25,7 @@ ServerFactory::ServerFactory() : _httpConfig(config::HTTPConfig::getInstance())
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.serverfactory");
     _logger->setLevel(log42::logRecord::INFO);
+    INFO(_logger, "ServerFactory created with default HTTPConfig instance");
 }
 
 /**
@@ -79,9 +88,45 @@ t_Servers	ServerFactory::createServers() const
 	for (; it != _httpConfig.getServerConfigs().end(); ++it)
 	{
 		servers.push_back(Server(*it));
+		INFO(_logger, std::string("Created server with config: ") + formatServerInfo(*it));
 	}
 
+	std::ostringstream oss;
+	oss << "Created " << servers.size() << " server(s) from config";
+	INFO(_logger, oss.str());
+
 	return servers;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param config [TODO:parameter]
+ * @return [TODO:return]
+ */
+static std::string	formatServerInfo(const config::ServerConfig &config)
+{
+	std::ostringstream oss;
+
+	oss << "listen : [";
+	t_Listen::const_iterator lit = config.getListen().begin();
+	for (; lit != config.getListen().end(); ++lit)
+	{
+		if (lit != config.getListen().begin())
+			oss << ", ";
+		oss << lit->address << ":" << lit->port;
+	}
+	oss << "] | server_name : [";
+
+	t_Servernames::const_iterator sit = config.getServerNames().begin();
+	for (; sit != config.getServerNames().end(); ++sit)
+	{
+		if (sit != config.getServerNames().begin())
+			oss << ", ";
+		oss << *sit;
+	}
+	oss << "]";
+	return oss.str();
 }
 
 } // !webserv

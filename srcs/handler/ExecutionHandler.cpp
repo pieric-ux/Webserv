@@ -22,6 +22,7 @@ ExecutionHandler::ExecutionHandler()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.executionhandler");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "ExecutionHandler instance created");
 }
 
 /**

@@ -45,7 +45,7 @@ class ServerConfig
 		const t_Listen				&getListen() const;
 		const t_LocationConfigs		&getLocationConfigs() const;
 		const std::string			&getRoot() const;
-		const t_Servernames			&getServerName() const;
+		const t_Servernames			&getServerNames() const;
 		const t_MimeTypes			&getTypes() const;
 		bool						getEnableCGI() const;
 		const t_CgiExtensions		&getCgiExtensions() const;

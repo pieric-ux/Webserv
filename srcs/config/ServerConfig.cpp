@@ -34,6 +34,7 @@ ServerConfig::ServerConfig()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.serverconfig");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "ServerConfig created with default values");
 }
 
 /**
@@ -220,7 +221,7 @@ const std::string &ServerConfig::getRoot() const
  *
  * @return [TODO:return]
  */
-const t_Servernames	&ServerConfig::getServerName() const
+const t_Servernames	&ServerConfig::getServerNames() const
 {
 	return _serverName;
 }

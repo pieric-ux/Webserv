@@ -26,6 +26,7 @@ HTTPServer::HTTPServer() :	_defaultConfigPath(DEFAULT_CONFIG_PATH),
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "HTTPServer instance created");
 }
 
 /**

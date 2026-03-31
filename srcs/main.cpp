@@ -1,6 +1,35 @@
-#include "log42/Log42.hpp"
-#include <webserv/HTTPServer.hpp>
+// TODO: don't forget header
+
 #include <abnf/Abnf.hpp>
+#include <log42/Log42.hpp>
+#include <webserv/HTTPServer.hpp>
+
+static void	initLogging();
+static void	initAbnf();
+
+int main()
+{
+	try {
+		initLogging();
+	} catch (const std::exception &e) {
+		std::cerr << "Failed to initialize logging: " << e.what() << std::endl;
+		return (EXIT_FAILURE);
+	}
+
+	try {
+		initAbnf();
+	} catch (const std::exception &e) {
+		ROOT_CRITICAL(std::string("Failed to initialize abnf: ") + e.what());
+		return (EXIT_FAILURE);
+	}
+
+	webserv::HTTPServer &HTTPserver = webserv::HTTPServer::getInstance();
+
+	webserv::ServerFactory ServerFactory = HTTPserver.getServerFactory();
+	HTTPserver.setServers(ServerFactory.createServers());
+
+	return (EXIT_SUCCESS);
+}
 
 static void	initLogging()
 {
@@ -62,28 +91,4 @@ static void	initAbnf()
 	abnfConfig.level = log42::logRecord::ERROR;
 	abnf::Abnf::getInstance().initFromDirectory(ABNF_DIR, ABNF_EXTENSION, abnfConfig);
 	ROOT_INFO("Abnf initialized successfully");
-}
-
-int main()
-{
-	try {
-		initLogging();
-	} catch (const std::exception &e) {
-		std::cerr << "Failed to initialize logging: " << e.what() << std::endl;
-		return (EXIT_FAILURE);
-	}
-
-	try {
-		initAbnf();
-	} catch (const std::exception &e) {
-		ROOT_CRITICAL(std::string("Failed to initialize abnf: ") + e.what());
-		return (EXIT_FAILURE);
-	}
-
-	webserv::HTTPServer &HTTPserver = webserv::HTTPServer::getInstance();
-
-	webserv::ServerFactory ServerFactory = HTTPserver.getServerFactory();
-	HTTPserver.setServers(ServerFactory.createServers());
-
-	return (EXIT_SUCCESS);
 }

@@ -24,6 +24,7 @@ Parser::Parser() : _flags(static_cast<e_ParserFlags>(0))
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.parser.parser");
     _logger->setLevel(log42::logRecord::INFO);
+    INFO(_logger, "Parser instance created");
 }
 
 /**

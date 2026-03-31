@@ -413,7 +413,7 @@ namespace webserv.config {
 		+ getListen() : vector<Listen>
 		+ getLocationConfigs() : vector<LocationConfig>
 		+ getRoot() : string
-		+ getServerName() : vector<string>
+		+ getServerNames() : vector<string>
 		+ getTypes() : map<string, string>
 		+ getEnableCGI() : bool
 		+ getCgiExtensions() : map<string, string>
