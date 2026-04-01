@@ -18,7 +18,6 @@ Listen::Listen()
 		backlog(DefaultConfig::backlog),
 		rcvbuf(DefaultConfig::rcvbuf),
 		sndbuf(DefaultConfig::sndbuf),
-		doBind(DefaultConfig::doBind),
 		ipv6only(DefaultConfig::ipv6only),
 		reuseport(DefaultConfig::reuseport),
 		so_keepalive(DefaultConfig::so_keepalive)
