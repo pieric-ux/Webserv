@@ -10,6 +10,10 @@
 # define DEFAULT_CONFIG_PATH "configs/default.conf"
 #endif
 
+#ifndef DEFAULT_IOMULTIPLEXER
+# define DEFAULT_IOMULTIPLEXER "poll"
+#endif
+
 namespace webserv
 {
 namespace config
@@ -21,6 +25,7 @@ struct DefaultConfig
 	static const std::string		defaultConfigPath;
 
 	// HTTPCONFIG, SERVERCONFIG, LOCATIONCONFIG
+	static const std::string		ioMultiplexer;
 	static const bool				autoindex;
 	static const int				clientMaxBodySize;
 	static const bool				createFullPutPath;

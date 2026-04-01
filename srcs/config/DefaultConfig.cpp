@@ -34,7 +34,7 @@ webserv::t_CgiExtensions initCgiExtensions()
 	return cgiExtensions;
 }
 
-}
+} // !
 
 namespace webserv
 {
@@ -56,6 +56,7 @@ const bool					DefaultConfig::reuseport = false;
 const bool					DefaultConfig::so_keepalive = false;
 
 // HTTPCONFIG, SERVERCONFIG, LOCATIONCONFIG
+const std::string			DefaultConfig::ioMultiplexer = DEFAULT_IOMULTIPLEXER;
 const bool					DefaultConfig::autoindex = false;
 const int					DefaultConfig::clientMaxBodySize = 1048576;
 const bool					DefaultConfig::createFullPutPath = false;

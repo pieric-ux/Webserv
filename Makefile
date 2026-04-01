@@ -78,7 +78,7 @@ sanitize: debug
 # Rule to compile with Leaks check
 leaks:
 ifeq ($(OS), Darwin)
-	MallocStackLogging=YES leaks --outputGraph=webserv.memgraph --fullContent --fullStackHistory --atExit -- ./$(NAME)
+	MallocStackLogging=full leaks --outputGraph=webserv.memgraph --fullContent --fullStackHistory --atExit -- ./$(NAME)
 else ifeq ($(OS), Linux)
 	valgrind --leak-check=full --track-origins=yes --log-file=valgrind.log --show-leak-kinds=all --trace-children=yes --track-fds=all ./$(NAME)
 endif

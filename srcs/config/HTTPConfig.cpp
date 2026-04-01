@@ -17,7 +17,8 @@ namespace config
  * @brief [TODO:description]
  */
 HTTPConfig::HTTPConfig()
-	:	_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
+	:	_ioMultiplexer(DefaultConfig::ioMultiplexer),
+		_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
 		_createFullPutPath(DefaultConfig::createFullPutPath),
 		_davPutPath(DefaultConfig::davPutPath),
 		_davAccess(DefaultConfig::davAccess),
@@ -60,6 +61,26 @@ HTTPConfig &HTTPConfig::getInstance()
 t_Logger	HTTPConfig::getLogger() const
 {
 	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::string HTTPConfig::getIOMultiplexer() const
+{
+	return _ioMultiplexer;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param ioMultiplexer [TODO:parameter]
+ */
+void HTTPConfig::setIOMultiplexer(const std::string &ioMultiplexer)
+{
+	_ioMultiplexer = ioMultiplexer;
 }
 
 /**

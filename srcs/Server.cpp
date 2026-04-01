@@ -82,6 +82,16 @@ t_Logger	Server::getLogger()
 
 /**
  * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const t_ServerSockets	&Server::getSockets() const
+{
+	return _sockets;
+}
+
+/**
+ * @brief [TODO:description]
  */
 void	Server::createSockets()
 {

@@ -26,6 +26,9 @@ class HTTPConfig
 
 		t_Logger					getLogger() const;
 
+		std::string					getIOMultiplexer() const;
+		void						setIOMultiplexer(const std::string &ioMultiplexer);
+
 		int							getClientMaxBodySize() const;
 		void						setClientMaxBodySize(const int clientMaxBodySize);
 
@@ -57,6 +60,7 @@ class HTTPConfig
 
 	private:
 		t_Logger					_logger;
+		std::string 				_ioMultiplexer;
 		int							_clientMaxBodySize;
 		bool						_createFullPutPath;
 		std::string					_davPutPath;

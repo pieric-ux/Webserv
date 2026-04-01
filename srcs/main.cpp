@@ -7,7 +7,7 @@
 static void	initLogging();
 static void	initAbnf();
 
-int main()
+int main(int ac, char **av)
 {
 	try {
 		initLogging();
@@ -25,8 +25,27 @@ int main()
 
 	webserv::HTTPServer &HTTPserver = webserv::HTTPServer::getInstance();
 
-	webserv::ServerFactory ServerFactory = HTTPserver.getServerFactory();
-	HTTPserver.setServers(ServerFactory.createServers());
+	if (ac == 2)
+	{
+		if (common::core::utils::hasExtension(av[1], ".conf"))
+		{
+			HTTPserver.setConfigPath(av[1]);
+			ROOT_INFO("Configuration file set to: " + std::string(av[1]));
+		}
+		else
+		{
+			ROOT_CRITICAL("Invalid configuration file: " + std::string(av[1]) + " must have .conf extension");
+			return (EXIT_FAILURE);
+		}
+	}
+
+	try {
+		HTTPserver.setup();
+	} catch (const std::exception &e)
+	{
+		ROOT_CRITICAL(std::string("Failed to setup HTTP server: ") + e.what());
+		return (EXIT_FAILURE);
+	}
 
 	return (EXIT_SUCCESS);
 }
