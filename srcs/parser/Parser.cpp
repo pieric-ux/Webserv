@@ -59,9 +59,9 @@ Parser &Parser::operator=(const Parser &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	Parser::getLogger() const
+t_Logger	Parser::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.parser.parser");
 }
 
 /**

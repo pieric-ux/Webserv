@@ -37,18 +37,18 @@ class ExecutionHandler
 		ExecutionHandler(const ExecutionHandler &rhs);
 		ExecutionHandler &operator=(const ExecutionHandler &rhs);
 
-		t_Logger	getLogger() const;
+		static t_Logger				getLogger();
 
-		int			getFd() const;
-		void		setFd(const int fd);
-		int			getBodyReceived() const;
-		void		setFlags(const int flags);
-		void		setBodyReceived(const int bodyReceived);
-		int			getFlags() const;
+		int							getFd() const;
+		void						setFd(const int fd);
+		int							getBodyReceived() const;
+		void						setFlags(const int flags);
+		void						setBodyReceived(const int bodyReceived);
+		int							getFlags() const;
 
-		void		execute(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
-		void		executeCGI(client::Request &request, const config::ServerConfig &serverConfig);
-		void		executeRequest(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
+		void						execute(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
+		void						executeCGI(client::Request &request, const config::ServerConfig &serverConfig);
+		void						executeRequest(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
 
 	private:
 		t_Logger					_logger;
@@ -56,22 +56,22 @@ class ExecutionHandler
 		int							_bodyReceived;
 		e_ExecutionHandlerFlags		_flags;
 
-		void		executeHEADorGET(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
-		void		executePOST(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
-		void		executeDELETE(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
+		void						executeHEADorGET(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
+		void						executePOST(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
+		void						executeDELETE(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
 
-		int			openFile(const client::Request &request, const config::LocationConfig &locationConfig);
-		void		readChunk(const int fd, client::Response &response);
-		void		writeChunk(const int fd, client::Request &request);
+		int							openFile(const client::Request &request, const config::LocationConfig &locationConfig);
+		void						readChunk(const int fd, client::Response &response);
+		void						writeChunk(const int fd, client::Request &request);
 
-		int			getFileSize(const int fd);
-		std::string	getFileExtension(const std::string &requestTarget);
-		bool		isFile(const std::string& requestTarget);
-		bool		isFileExisting(const std::string& requestTarget);
-		void		deleteFile(const std::string& filePath);
-		void		deleteDirectory(const std::string& dirPath);
+		int							getFileSize(const int fd);
+		std::string					getFileExtension(const std::string &requestTarget);
+		bool						isFile(const std::string& requestTarget);
+		bool						isFileExisting(const std::string& requestTarget);
+		void						deleteFile(const std::string& filePath);
+		void						deleteDirectory(const std::string& dirPath);
 
-		std::string	generateAutoindexHTML(const std::string &dirPath);
+		std::string					generateAutoindexHTML(const std::string &dirPath);
 };
 
 } // !handler

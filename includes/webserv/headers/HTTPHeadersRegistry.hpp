@@ -9,7 +9,6 @@
 */
 
 #include <string>
-#include <map>
 #include <webserv/headers/HTTPHeader.hpp>
 #include <webserv/types.hpp>
 namespace webserv
@@ -27,9 +26,10 @@ class HTTPHeadersRegistry
 {
 	public:
 		static HTTPHeadersRegistry &getInstance();
-		HTTPHeader getHeader(const std::string name) const;
 
 		t_Logger			getLogger() const;
+
+		HTTPHeader			getHeader(const std::string name) const;
 
 	private:
 		t_Logger			_logger;

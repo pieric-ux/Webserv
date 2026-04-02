@@ -23,7 +23,10 @@ Request::Request()
 		_headers(),
 		_body(),
 		_flags(static_cast<e_RequestFlags>(0))
-{}
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.request");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -71,9 +74,9 @@ Request &Request::operator=(const Request &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	Request::getLogger() const
+t_Logger	Request::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.client.request");
 }
 
 /**

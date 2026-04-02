@@ -19,7 +19,10 @@ ExecutionHandler::ExecutionHandler()
 	:	_fd(-1),
 		_bodyReceived(0),
 		_flags(static_cast<e_ExecutionHandlerFlags>(0))
-{}
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.executionhandler");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -59,9 +62,9 @@ ExecutionHandler &ExecutionHandler::operator=(const ExecutionHandler &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	ExecutionHandler::getLogger() const
+t_Logger	ExecutionHandler::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.handler.executionhandler");
 }
 
 /**

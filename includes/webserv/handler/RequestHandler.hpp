@@ -29,7 +29,7 @@ class RequestHandler
 		RequestHandler(const RequestHandler &rhs);
 		RequestHandler &operator=(const RequestHandler &rhs);
 
-		t_Logger			getLogger() const;
+		static t_Logger		getLogger();
 
 		client::Request		&getRequest();
 		void				setRequest(const client::Request &request);

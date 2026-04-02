@@ -28,7 +28,7 @@ class HTTPError : public std::exception
 		HTTPError(const HTTPError &rhs);
 		HTTPError &operator=(const HTTPError &rhs);
 
-		t_Logger				getLogger() const;
+		static t_Logger			getLogger();
 
 		status::StatusCode		getStatusCode() const;
 		void					setStatusCode(const status::StatusCode &statusCode);

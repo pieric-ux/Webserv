@@ -29,6 +29,8 @@ Client::Client()
 		_lastActivityTime(0)
 {
 	std::memset(&_sockaddr_storage, 0, sizeof(_sockaddr_storage));
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
+	_logger->setLevel(log42::logRecord::INFO);
 }
 
 /**
@@ -50,6 +52,8 @@ Client::Client(const common::core::net::TcpClient socket, const config::ServerCo
 		_lastActivityTime(0)
 {
 	std::memset(&_sockaddr_storage, 0, sizeof(_sockaddr_storage));
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
+	_logger->setLevel(log42::logRecord::INFO);
 }
 
 /**
@@ -106,9 +110,9 @@ Client &Client::operator=(const Client &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	Client::getLogger() const
+t_Logger	Client::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.client.client");
 }
 
 /**

@@ -54,9 +54,9 @@ ClientHandler &ClientHandler::operator=(const ClientHandler &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	ClientHandler::getLogger() const
+t_Logger	ClientHandler::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.handler.clienthandler");
 }
 
 /**

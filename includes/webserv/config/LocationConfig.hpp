@@ -36,50 +36,50 @@ class LocationConfig
 		LocationConfig(const LocationConfig &rhs);
 		LocationConfig &operator=(const LocationConfig &rhs);
 
-		t_Logger			getLogger() const;
+		static t_Logger				getLogger();
 
-		bool				getAutoindex() const;
+		bool						getAutoindex() const;
 
-		int					getClientMaxBodySize() const;
-		bool				getCreateFullPutPath() const;
-		std::string			getDavPutPath() const;
-		std::string			getDavAccess() const;
-		t_DavMethods		getDavMethods() const;
+		int							getClientMaxBodySize() const;
+		bool						getCreateFullPutPath() const;
+		const std::string			&getDavPutPath() const;
+		const std::string			&getDavAccess() const;
+		const t_DavMethods			&getDavMethods() const;
 
-		std::string			getDefaultType() const;
-		t_ErrorPages		getErrorPage() const;
-		t_Index				getIndex() const;
-		int					getKeepAliveTimeout() const;
-		t_AllowedMethods	getAllowedMethods() const;
-		std::string			getRoot() const;
-		t_MimeTypes			getTypes() const;
-		std::string			getUri() const;
-		e_Modifier			getModifier() const;
-		void				setModifier(const e_Modifier modifier);
-		Return				getRedirect() const;
-		bool				getEnableCGI() const;
-		t_CgiExtensions		getCgiExtensions() const;
+		const std::string			&getDefaultType() const;
+		const t_ErrorPages			&getErrorPage() const;
+		const t_Index				&getIndex() const;
+		int							getKeepAliveTimeout() const;
+		const t_AllowedMethods		&getAllowedMethods() const;
+		const std::string			&getRoot() const;
+		const t_MimeTypes			&getTypes() const;
+		const std::string			&getUri() const;
+		const e_Modifier			&getModifier() const;
+		void						setModifier(const e_Modifier modifier);
+		const Return				&getRedirect() const;
+		bool						getEnableCGI() const;
+		const t_CgiExtensions		&getCgiExtensions() const;
 
 	private:
-		t_Logger			_logger;
-		bool				_autoindex;
-		int					_clientMaxBodySize;
-		bool				_createFullPutPath;
-		std::string			_davPutPath;
-		std::string			_davAccess;
-		t_DavMethods		_davMethods;
-		std::string			_defaultType;
-		t_ErrorPages		_errorPage;
-		t_Index				_index;
-		int					_keepAliveTimeout;
-		t_AllowedMethods	_allowedMethods;
-		std::string			_root;
-		t_MimeTypes			_types;
-		std::string			_uri;
-		e_Modifier			_modifier;
-		Return				_redirect;
-		bool				_enableCGI;
-		t_CgiExtensions		_cgiExtensions;
+		t_Logger					_logger;
+		bool						_autoindex;
+		int							_clientMaxBodySize;
+		bool						_createFullPutPath;
+		std::string					_davPutPath;
+		std::string					_davAccess;
+		t_DavMethods				_davMethods;
+		std::string					_defaultType;
+		t_ErrorPages				_errorPage;
+		t_Index						_index;
+		int							_keepAliveTimeout;
+		t_AllowedMethods			_allowedMethods;
+		std::string					_root;
+		t_MimeTypes					_types;
+		std::string					_uri;
+		e_Modifier					_modifier;
+		Return						_redirect;
+		bool						_enableCGI;
+		t_CgiExtensions				_cgiExtensions;
 };
 
 } // !config

@@ -35,7 +35,7 @@ class Request
 		Request(const Request &rhs);
 		Request &operator=(const Request &rhs);
 	
-		t_Logger					getLogger() const;
+		static t_Logger					getLogger();
 
 		config::e_Method			getMethod() const;
 		void						setMethod(const config::e_Method method);

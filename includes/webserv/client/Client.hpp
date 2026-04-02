@@ -45,7 +45,7 @@ class Client
 		Client(const Client &rhs);
 		Client &operator=(const Client &rhs);
 
-		t_Logger						getLogger() const;
+		static t_Logger					getLogger() ;
 
 		e_ClientFlags					getFlags() const;
 		void							setFlags(const e_ClientFlags flags);

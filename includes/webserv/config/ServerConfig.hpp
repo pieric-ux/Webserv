@@ -30,44 +30,44 @@ class ServerConfig
 		ServerConfig(const ServerConfig &rhs);
 		ServerConfig &operator=(const ServerConfig &rhs);
 
-		t_Logger			getLogger() const;
+		static t_Logger				getLogger();
 
-		int					getClientMaxBodySize() const;
+		int							getClientMaxBodySize() const;
 
-		bool				getCreateFullPutPath() const;
-		std::string			getDavPutPath() const;
-		std::string			getDavAccess() const;
-		t_DavMethods		getDavMethods() const;
+		bool						getCreateFullPutPath() const;
+		const std::string			&getDavPutPath() const;
+		const std::string			&getDavAccess() const;
+		const t_DavMethods			&getDavMethods() const;
 
-		std::string			getDefaultType() const;
-		t_ErrorPages		getErrorPage() const;
-		int					getKeepAliveTimeout() const;
-		t_Listen			getListen() const;
-		t_LocationConfigs	getLocationConfigs() const;
-		std::string			getRoot() const;
-		t_Servernames		getServerName() const;
-		t_MimeTypes			getTypes() const;
-		bool				getEnableCGI() const;
-		t_CgiExtensions		getCgiExtensions() const;
-		LocationConfig		findLocationConfig(const std::string &requestTarget);
+		const std::string			&getDefaultType() const;
+		const t_ErrorPages			&getErrorPage() const;
+		int							getKeepAliveTimeout() const;
+		const t_Listen				&getListen() const;
+		const t_LocationConfigs		&getLocationConfigs() const;
+		const std::string			&getRoot() const;
+		const t_Servernames			&getServerName() const;
+		const t_MimeTypes			&getTypes() const;
+		bool						getEnableCGI() const;
+		const t_CgiExtensions		&getCgiExtensions() const;
+		const LocationConfig		&findLocationConfig(const std::string &requestTarget);
 
 	private:
-		t_Logger			_logger;
-		int					_clientMaxBodySize;
-		bool				_createFullPutPath;
-		std::string			_davPutPath;
-		std::string			_davAccess;
-		t_DavMethods		_davMethods;
-		std::string			_defaultType;
-		t_ErrorPages		_errorPage;
-		int					_keepAliveTimeout;
-		t_Listen			_listen;
-		t_LocationConfigs	_locationConfigs;
-		std::string			_root;
-		t_Servernames		_serverName;
-		t_MimeTypes			_types;
-		bool				_enableCGI;
-		t_CgiExtensions		_cgiExtensions;
+		t_Logger					_logger;
+		int							_clientMaxBodySize;
+		bool						_createFullPutPath;
+		std::string					_davPutPath;
+		std::string					_davAccess;
+		t_DavMethods				_davMethods;
+		std::string					_defaultType;
+		t_ErrorPages				_errorPage;
+		int							_keepAliveTimeout;
+		t_Listen					_listen;
+		t_LocationConfigs			_locationConfigs;
+		std::string					_root;
+		t_Servernames				_serverName;
+		t_MimeTypes					_types;
+		bool						_enableCGI;
+		t_CgiExtensions				_cgiExtensions;
 };
 
 } // !config

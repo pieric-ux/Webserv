@@ -19,7 +19,10 @@ RequestHandler::RequestHandler()
 	:	_request(),
 		_bufferRequest(),
 		_parser()
-{}
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.requesthandler");
+	_logger->setLevel(log42::logRecord::INFO);
+}
 
 /**
  * @brief [TODO:description]
@@ -59,9 +62,9 @@ RequestHandler &RequestHandler::operator=(const RequestHandler &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	RequestHandler::getLogger() const
+t_Logger	RequestHandler::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.handler.requesthandler");
 }
 
 /**
