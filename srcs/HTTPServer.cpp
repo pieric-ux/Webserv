@@ -159,6 +159,24 @@ void HTTPServer::setConfigPath(const std::string &configPath)
  *
  * @return [TODO:return]
  */
+void	HTTPServer::loadConfig()
+{
+
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void HTTPServer::connectClient()
+{
+
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 const config::HTTPConfig &HTTPServer::getHTTPConfig() const
 {
 	return _httpConfig;
