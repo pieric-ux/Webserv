@@ -59,19 +59,11 @@ start
 	while (For each `ServerConfig` in `HTTPConfig`) is (yes)
 	:Create `Server` with `ServerConfig`;
 		| __Server__ |
-		:Create `Parser`;
 		while (For each `Listen` in `ServerConfig`) is (yes)
 			:Call `getListen()` to get `address` and `port`;
-			| __Parser__ |
-			:Call `isIPv6Address(address)`;
-			| __Server__ |
-			if (Address is IPV6?) then (yes)
-				:Create `socket6` and `addrinfo6`;
-				:Apply options with `setsockopt()`;
-			else (no)
-				:Create `socket4` and `addrinfo4`;
-				:Apply options with `setsockopt()`;
-			endif
+			:Resolve address with `getaddrinfo()` (AF_UNSPEC)\nreturns `ai_family` (AF_INET or AF_INET6);
+			:Create `TcpServer(ai_family)` and `Addrinfo`\nand push to `_sockets`;
+			:Apply options with `setsockopt()`;
 		endwhile
 	endwhile
 	| __HTTPServer__ |

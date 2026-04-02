@@ -292,7 +292,6 @@ namespace webserv.parser {
 		+ getFlags() : e_ParserFlags
 		+ setFlags(flags : e_ParserFlags) : void
 		+ parseConfig(buffer : string) : void
-		+ isIPv6Address(address : string) : bool
 		+ parseRequestLine(bufferRequest : string) : void
 		+ parseHeaders(bufferRequest : string) : vector<HTTPHeader>
 	}
@@ -316,12 +315,11 @@ namespace webserv.config {
 
 	class "Listen" as Listen <<struct>> {
 		+ address : string
-		+ port : int
+		+ port : string
 		+ defaultServer : bool
 		+ backlog : int
 		+ rcvbuf : int
 		+ sndbuf : int
-		+ bind : bool
 		+ ipv6only : bool
 		+ reuseport : bool
 		+ so_keepalive : bool
@@ -504,14 +502,12 @@ namespace webserv {
 	}
 
 	class "Server" as Server {
-		- _socket4 : common::core::net::TcpServer
-		- _socket6 : common::core::net::TcpServer
-		- _addrinfo4 : common::core::net::Addrinfo
-		- _addrinfo6 : common::core::net::Addrinfo
+		- _sockets : vector<pair<common::core::net::Addrinfo, common::core::net::TcpServer>>
 		- _config : ServerConfig
-		- _parser : Parser
 		--
 		+ Server(config : ServerConfig)
+		- createSockets() : void
+		- setSocketOptions(socket : common::core::net::TcpServer, listen : config::Listen) : void
 	}
 
 	Client "1" *-- "1" ExecutionHandler
@@ -558,7 +554,6 @@ namespace webserv {
 	ServerFactory ..> Server : creates
 	ServerFactory ..> HTTPConfig: uses
 
-	Server "1" *-- "1" Parser
 	Server "1" --> "1" ServerConfig : configures
 
 	StatusCode ..> StatusCodeRegistry : uses
@@ -588,8 +583,8 @@ namespace webserv {
 	HTTPServer "1" *-- "1" common.core.io.IEventIO
 	HTTPServer ..> common.loader.Loader : uses
 
-	Server "1" *-- "1..2" common.core.net.TcpServer
-	Server "1" *-- "1..2" common.core.net.Addrinfo
+	Server "1" *-- "1..*" common.core.net.TcpServer
+	Server "1" *-- "1..*" common.core.net.Addrinfo
 
 	ExecutionHandler ..> common.core.utils.Directory : uses
 	ExecutionHandler ..> common.core.utils.DirectoryIterator : uses

@@ -41,12 +41,11 @@ struct DefaultConfig
 
 	// LISTEN
 	static const std::string		address;
-	static const int				port;
+	static const std::string		port;
 	static const bool				defaultServer;
 	static const int				backlog;
 	static const int				rcvbuf;
 	static const int				sndbuf;
-	static const bool				doBind;
 	static const bool				ipv6only;
 	static const bool				reuseport;
 	static const bool				so_keepalive;

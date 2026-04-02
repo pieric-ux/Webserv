@@ -44,6 +44,17 @@ namespace config
 // HTTPSERVER
 const std::string			DefaultConfig::defaultConfigPath = DEFAULT_CONFIG_PATH;
 
+// LISTEN
+const std::string			DefaultConfig::address = "0.0.0.0";
+const std::string			DefaultConfig::port = "80";
+const bool					DefaultConfig::defaultServer = false;
+const int					DefaultConfig::backlog = -1;
+const int					DefaultConfig::rcvbuf = -1;
+const int					DefaultConfig::sndbuf = -1;
+const bool					DefaultConfig::ipv6only = false;
+const bool					DefaultConfig::reuseport = false;
+const bool					DefaultConfig::so_keepalive = false;
+
 // HTTPCONFIG, SERVERCONFIG, LOCATIONCONFIG
 const bool					DefaultConfig::autoindex = false;
 const int					DefaultConfig::clientMaxBodySize = 1048576;
@@ -62,18 +73,6 @@ const t_Servernames			DefaultConfig::servernames = t_Servernames(1, "");
 const t_MimeTypes			DefaultConfig::types = initTypes();
 const bool					DefaultConfig::enableCGI = false;
 const t_CgiExtensions		DefaultConfig::cgiExtensions = initCgiExtensions();
-
-// LISTEN
-const std::string			DefaultConfig::address = "0.0.0.0";
-const int					DefaultConfig::port = 80;
-const bool					DefaultConfig::defaultServer = false;
-const int					DefaultConfig::backlog = -1;
-const int					DefaultConfig::rcvbuf = -1;
-const int					DefaultConfig::sndbuf = -1;
-const bool					DefaultConfig::doBind = false;
-const bool					DefaultConfig::ipv6only = false;
-const bool					DefaultConfig::reuseport = false;
-const bool					DefaultConfig::so_keepalive = false;
 
 } // !config
 } // !webserv

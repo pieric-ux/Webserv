@@ -31,6 +31,9 @@ int main()
 	return (EXIT_SUCCESS);
 }
 
+/**
+ * @brief [TODO:description]
+ */
 static void	initLogging()
 {
 	log42::formatter::Formatter fmt(LOG_FMT, LOG_DATE_FMT);
@@ -76,13 +79,16 @@ static void	initLogging()
 		common::core::raii::SharedPtr<log42::handler::FileHandler> fileHandler =
 			MAKE_SHARED(log42::handler::FileHandler, file);
 		fileHandler->setFormatter(fmt);
-		fileHandler->setLevel(log42::logRecord::ERROR);
+		fileHandler->setLevel(log42::logRecord::INFO);
 		logger->addHandler(
 			common::core::raii::staticPointerCast<log42::handler::Handler>(fileHandler));
 	}
 	ROOT_INFO("Logging initialized successfully");
 }
 
+/**
+ * @brief [TODO:description]
+ */
 static void	initAbnf()
 {
 	abnf::AbnfLogConfig abnfConfig;
