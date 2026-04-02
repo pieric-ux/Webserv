@@ -36,8 +36,6 @@ class HTTPServer
 
 		void								setup();
 		bool								running();
-		void								loadConfig();
-		void								connectClient();
 
 		void								setConfigPath(const std::string &configPath);
 		const config::HTTPConfig			&getHTTPConfig() const;
