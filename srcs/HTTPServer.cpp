@@ -13,7 +13,7 @@ namespace webserv
 /**
  * @brief [TODO:description]
  */
-HTTPServer::HTTPServer() :	_defaultConfigPath(DEFAULT_CONFIG_PATH),
+HTTPServer::HTTPServer() :	_defaultConfigPath(config::DefaultConfig::defaultConfigPath),
 							_parser(),
 							_httpConfig(config::HTTPConfig::getInstance()),
 							_serverFactory(),
@@ -97,12 +97,61 @@ HTTPServer &HTTPServer::getInstance()
 
 /**
  * @brief [TODO:description]
+ */
+void	HTTPServer::setup()
+{
+	INFO(_logger, "Setting up HTTPServer...");
+
+	// try{
+	// 	loadConfig();
+	// } catch (const std::exception &e)
+	// {
+	// 	throw;
+	// }
+
+	_servers = _serverFactory.createServers();
+	if (_servers.empty())
+	{
+		CRITICAL(_logger, "No servers created. Check configuration.");
+		throw std::runtime_error("No servers created. Check configuration.");
+	}
+
+	_ioMultiplexer = t_ioMultiplexer(common::core::io::EventFactoryIO::create(_httpConfig.getIOMultiplexer()));
+	INFO(_logger, "I/O multiplexer initialized: " + _httpConfig.getIOMultiplexer());
+
+	t_Servers::const_iterator it = _servers.begin();
+	for (; it != _servers.end(); ++it)
+	{
+    	const t_ServerSockets &sockets = it->getSockets();
+		t_ServerSockets::const_iterator socketIt = sockets.begin();
+		for (; socketIt != sockets.end(); ++socketIt)
+		{
+			_ioMultiplexer->add(socketIt->second.getFd(), common::core::io::IEventIO::E_IN);
+			INFO(_logger, "Registered fd=" + common::core::utils::toString(socketIt->second.getFd()) + " to I/O multiplexer");
+		}
+	}
+	INFO(_logger, "HTTPServer setup complete");
+}
+
+/**
+ * @brief [TODO:description]
  *
  * @return [TODO:return]
  */
 bool HTTPServer::running()
 {
 	return false;
+}
+
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param configPath [TODO:parameter]
+ */
+void HTTPServer::setConfigPath(const std::string &configPath)
+{
+	_defaultConfigPath = configPath;
 }
 
 /**
@@ -136,51 +185,28 @@ const config::HTTPConfig &HTTPServer::getHTTPConfig() const
 /**
  * @brief [TODO:description]
  *
- * @param httpConfig [TODO:parameter]
- */
-void HTTPServer::setHTTPconfig(const config::HTTPConfig &httpConfig)
-{
-	(void)httpConfig;
-}
-
-/**
- * @brief [TODO:description]
- *
  * @return [TODO:return]
  */
-const ServerFactory &HTTPServer::getServerFactory() const
+void	HTTPServer::loadConfig()
 {
-	return _serverFactory;
+	std::ifstream configFile(_defaultConfigPath.c_str());
+	if (!configFile.is_open())
+	{
+		CRITICAL(_logger, "Failed to open config file: " + _defaultConfigPath);
+		throw std::runtime_error("Failed to open config file: " + _defaultConfigPath);
+	}
+	t_raw configContent((std::istreambuf_iterator<char>(configFile)),
+							std::istreambuf_iterator<char>());
+	configFile.close();
+	_parser.parseConfig(configContent);
 }
 
 /**
  * @brief [TODO:description]
- *
- * @return [TODO:return]
  */
-const t_Servers &HTTPServer::getServers() const
+void HTTPServer::connectClient()
 {
-	return _servers;
-}
 
-/**
- * @brief [TODO:description]
- *
- * @param server [TODO:parameter]
- */
-void HTTPServer::setServers(const t_Servers &servers)
-{
-	_servers = servers;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-const t_ioMultiplexer	&HTTPServer::getIOMultiplexer() const
-{
-	return _ioMultiplexer;
 }
 
 } // !webserv

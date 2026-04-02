@@ -34,16 +34,13 @@ class HTTPServer
 
 		t_Logger							getLogger() const;
 
+		void								setup();
 		bool								running();
 		void								loadConfig();
 		void								connectClient();
 
+		void								setConfigPath(const std::string &configPath);
 		const config::HTTPConfig			&getHTTPConfig() const;
-		void								setHTTPconfig(const config::HTTPConfig &httpConfig);
-		const ServerFactory					&getServerFactory() const;
-		const t_Servers						&getServers() const;
-		void								setServers(const t_Servers &servers);
-		const t_ioMultiplexer				&getIOMultiplexer() const;
 		
 	private :
 		t_Logger							_logger;
@@ -57,6 +54,9 @@ class HTTPServer
 		HTTPheaders::HTTPHeadersRegistry	&_headerRegistry;
 		status::StatusCodeRegistry			&_statusCodeRegistry;
 		types::TypesRegistry				&_typesRegistry;
+		
+		void								loadConfig();
+		void								connectClient();
 
 		HTTPServer();
 		~HTTPServer();

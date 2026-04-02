@@ -338,6 +338,7 @@ namespace webserv.config {
 	}
 
 	class "HTTPConfig" as HTTPConfig <<singleton>> {
+		- _ioMultiplexer : string
 		- _clientMaxBodySize : int
 		- _createFullPutPath : bool
 		- _davPutPath : string
@@ -483,15 +484,12 @@ namespace webserv {
 		--
 		- HTTPServer()
   		+ {static} getInstance() : HTTPServer
+  		+ setup() : void
 		+ running() : bool
-		+ loadConfig() : HTTPConfig
-		+ connectClient() : void
+		+ setConfigPath(configPath : string) : void
 		+ getHTTPConfig() : HTTPConfig
-		+ getServerFactory() : ServerFactory
-		+ getServers() : vector<Server>
-		+ setServers(servers : vector<Server>) : void
-		+ getIOMultiplexer() : t_ioMultiplexer
-		+ setIOMultiplexer(ioMultiplexer : t_ioMultiplexer) : void
+		- loadConfig() : HTTPConfig
+		- connectClient() : void
 	}
 
 	class "ServerFactory" as ServerFactory {

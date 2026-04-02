@@ -28,6 +28,8 @@ class Server
 
 		static t_Logger					getLogger();
 
+		const t_ServerSockets			&getSockets() const;
+
 	private:
 		t_Logger						_logger;
 		config::ServerConfig			_config;
