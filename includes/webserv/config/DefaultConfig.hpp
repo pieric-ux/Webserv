@@ -6,6 +6,10 @@
 #include <string>
 #include <webserv/types.hpp>
 
+#ifndef DEV_LOG
+# define DEV_LOG 0
+#endif
+
 #ifndef DEFAULT_CONFIG_PATH
 # define DEFAULT_CONFIG_PATH "configs/default.conf"
 #endif

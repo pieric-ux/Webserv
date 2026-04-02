@@ -15,7 +15,7 @@ namespace handler
 /**
  * @brief [TODO:description]
  */
-ClientHandler::ClientHandler() : _clients()
+ClientHandler::ClientHandler() : _clients(), _ioMultiplexer()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.clienthandler");
 	_logger->setLevel(log42::logRecord::INFO);
@@ -58,6 +58,16 @@ ClientHandler &ClientHandler::operator=(const ClientHandler &rhs)
 t_Logger	ClientHandler::getLogger()
 {
 	return log42::manager::Manager::getInstance().getLogger("webserv.handler.clienthandler");
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param ioMultiplexer [TODO:parameter]
+ */
+void	ClientHandler::setIoMultiplexer(const t_ioMultiplexer &ioMultiplexer)
+{
+	_ioMultiplexer = ioMultiplexer;
 }
 
 /**

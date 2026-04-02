@@ -130,6 +130,10 @@ void	HTTPServer::setup()
 			INFO(_logger, "Registered fd=" + common::core::utils::toString(socketIt->second.getFd()) + " to I/O multiplexer");
 		}
 	}
+
+	_clientHandler.setIoMultiplexer(_ioMultiplexer);
+	INFO(_logger, "Client handler initialized with I/O multiplexer");
+
 	INFO(_logger, "HTTPServer setup complete");
 }
 
@@ -152,24 +156,6 @@ bool HTTPServer::running()
 void HTTPServer::setConfigPath(const std::string &configPath)
 {
 	_defaultConfigPath = configPath;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-void	HTTPServer::loadConfig()
-{
-
-}
-
-/**
- * @brief [TODO:description]
- */
-void HTTPServer::connectClient()
-{
-
 }
 
 /**
