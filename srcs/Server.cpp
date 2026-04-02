@@ -18,7 +18,7 @@ Server::Server()
 		_sockets()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.server");
-	_logger->setLevel(log42::logRecord::DEBUG);
+	_logger->setLevel(log42::logRecord::INFO);
 	INFO(_logger, "Server instance created with default constructor");
 }
 
@@ -31,7 +31,7 @@ Server::Server(const config::ServerConfig &config)
 	:	_config(config)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.server");
-	_logger->setLevel(log42::logRecord::DEBUG);
+	_logger->setLevel(log42::logRecord::INFO);
 	INFO(_logger, "Server instance created with ServerConfig");
 
 	createSockets();
