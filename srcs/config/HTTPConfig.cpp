@@ -88,7 +88,7 @@ void HTTPConfig::setIOMultiplexer(const std::string &ioMultiplexer)
  *
  * @return [TODO:return]
  */
-int	HTTPConfig::getClientMaxBodySize() const 
+const t_clientMaxBodySize	&HTTPConfig::getClientMaxBodySize() const 
 {
 	return _clientMaxBodySize;
 }
@@ -98,7 +98,7 @@ int	HTTPConfig::getClientMaxBodySize() const
  *
  * @param clientMaxBodySize [TODO:parameter]
  */
-void	HTTPConfig::setClientMaxBodySize(const int clientMaxBodySize)
+void	HTTPConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
 {
 	_clientMaxBodySize = clientMaxBodySize;
 }
@@ -148,7 +148,7 @@ void	HTTPConfig::setDavPutPath(const std::string &davPutPath)
  *
  * @return [TODO:return]
  */
-const std::string &HTTPConfig::getDavAccess() const
+const t_Perms &HTTPConfig::getDavAccess() const
 {
 	return _davAccess;
 }
@@ -158,7 +158,7 @@ const std::string &HTTPConfig::getDavAccess() const
  *
  * @param davAccess [TODO:parameter]
  */
-void	HTTPConfig::setDavAccess(const std::string &davAccess)
+void	HTTPConfig::setDavAccess(const t_Perms &davAccess)
 {
 	_davAccess = davAccess;
 }
@@ -228,7 +228,7 @@ void	HTTPConfig::setErrorPage(const std::vector<ErrorPage> &errorPage)
  *
  * @return [TODO:return]
  */
-int HTTPConfig::getKeepAliveTimeout() const
+t_keepAliveTimeout HTTPConfig::getKeepAliveTimeout() const
 {
 	return _keepAliveTimeout;
 }
@@ -238,7 +238,7 @@ int HTTPConfig::getKeepAliveTimeout() const
  *
  * @param keepAliveTimeout [TODO:parameter]
  */
-void	HTTPConfig::setKeepAliveTimeout(const int keepAliveTimeout)
+void	HTTPConfig::setKeepAliveTimeout(const t_keepAliveTimeout keepAliveTimeout)
 {
 	_keepAliveTimeout = keepAliveTimeout;
 }

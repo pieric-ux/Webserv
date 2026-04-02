@@ -74,7 +74,14 @@ typedef std::map<unsigned short, status::StatusCode>										t_StatusCodesRegis
 typedef std::pair<common::core::net::Addrinfo, common::core::net::TcpServer>				t_SocketPair;
 
 typedef std::vector<t_SocketPair>															t_ServerSockets;
-	
+
+typedef std::vector<std::string>															t_SubRules;
+
+typedef unsigned int																		t_clientMaxBodySize;
+
+typedef unsigned int																		t_keepAliveTimeout;
+
+typedef unsigned short												t_Perms;
 } // !webserv
 
 #endif // !WEBSERV_TYPES_HPP

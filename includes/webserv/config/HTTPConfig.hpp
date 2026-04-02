@@ -29,15 +29,15 @@ class HTTPConfig
 		std::string					getIOMultiplexer() const;
 		void						setIOMultiplexer(const std::string &ioMultiplexer);
 
-		int							getClientMaxBodySize() const;
-		void						setClientMaxBodySize(const int clientMaxBodySize);
+		const t_clientMaxBodySize	&getClientMaxBodySize() const;
+		void						setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize);
 
 		bool						getCreateFullPutPath() const;
 		void						setCreateFullPutPath(const bool createFullPutPath);
 		const std::string			&getDavPutPath() const;
 		void						setDavPutPath(const std::string &davPutPath);
-		const std::string			&getDavAccess() const;
-		void						setDavAccess(const std::string &davAccess);
+		const t_Perms				&getDavAccess() const;
+		void						setDavAccess(const t_Perms &davAccess);
 		const t_DavMethods			&getDavMethods() const;
 		void						setDavMethods(const	 t_DavMethods &davMethods);
 
@@ -45,8 +45,8 @@ class HTTPConfig
 		void						setDefaultType(const std::string &defaultType);
 		const t_ErrorPages			&getErrorPage() const;
 		void						setErrorPage(const t_ErrorPages &errorPage);
-		int							getKeepAliveTimeout() const;
-		void						setKeepAliveTimeout(const int keepAliveTimeout);
+		t_keepAliveTimeout			getKeepAliveTimeout() const;
+		void						setKeepAliveTimeout(const t_keepAliveTimeout keepAliveTimeout);
 		const std::string			&getRoot() const;
 		void						setRoot(const std::string &root);
 		const t_ServerConfigs		&getServerConfigs() const;
@@ -61,14 +61,14 @@ class HTTPConfig
 	private:
 		t_Logger					_logger;
 		std::string 				_ioMultiplexer;
-		int							_clientMaxBodySize;
+		t_clientMaxBodySize			_clientMaxBodySize;
 		bool						_createFullPutPath;
 		std::string					_davPutPath;
-		std::string					_davAccess;
+		t_Perms						_davAccess;
 		t_DavMethods				_davMethods;
 		std::string					_defaultType;
 		t_ErrorPages				_errorPage;
-		int							_keepAliveTimeout;
+		t_keepAliveTimeout			_keepAliveTimeout;
 		std::string					_root;
 		t_ServerConfigs				_serverConfigs;
 		t_MimeTypes					_types;

@@ -125,7 +125,7 @@ bool LocationConfig::getAutoindex() const
  *
  * @return [TODO:return]
  */
-int LocationConfig::getClientMaxBodySize() const
+const t_clientMaxBodySize	&LocationConfig::getClientMaxBodySize() const
 {
 	return _clientMaxBodySize;
 }
@@ -155,7 +155,7 @@ const std::string &LocationConfig::getDavPutPath() const
  *
  * @return [TODO:return]
  */
-const std::string &LocationConfig::getDavAccess() const
+const t_Perms				&LocationConfig::getDavAccess() const
 {
 	return _davAccess;
 }
@@ -205,7 +205,7 @@ const t_Index	&LocationConfig::getIndex() const
  *
  * @return [TODO:return]
  */
-int LocationConfig::getKeepAliveTimeout() const
+const t_keepAliveTimeout	&LocationConfig::getKeepAliveTimeout() const
 {
 	return _keepAliveTimeout;
 }
@@ -298,6 +298,91 @@ const t_CgiExtensions	&LocationConfig::getCgiExtensions() const
 void LocationConfig::setModifier(const e_Modifier modifier)
 {
 	_modifier = modifier;
+}
+
+void LocationConfig::setAutoindex(const bool autoindex)
+{
+	_autoindex = autoindex;
+}
+
+void LocationConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
+{
+	_clientMaxBodySize = clientMaxBodySize;
+}
+
+void LocationConfig::setCreateFullPutPath(const bool createFullPutPath)
+{
+	_createFullPutPath = createFullPutPath;
+}
+
+void LocationConfig::setDavPutPath(const std::string &davPutPath)
+{
+	_davPutPath = davPutPath;
+}
+
+void LocationConfig::setDavAccess(const t_Perms &davAccess)
+{
+	_davAccess = davAccess;
+}
+
+void LocationConfig::setDavMethods(const t_DavMethods &davMethods)
+{
+	_davMethods = davMethods;
+}
+
+void LocationConfig::setDefaultType(const std::string &defaultType)
+{
+	_defaultType = defaultType;
+}
+
+void LocationConfig::setErrorPage(const t_ErrorPages &errorPage)
+{
+	_errorPage = errorPage;
+}
+
+void LocationConfig::setIndex(const t_Index &index)
+{
+	_index = index;
+}
+
+void LocationConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout)
+{
+	_keepAliveTimeout = keepAliveTimeout;
+}
+
+void LocationConfig::setAllowedMethods(const t_AllowedMethods &allowedMethods)
+{
+	_allowedMethods = allowedMethods;
+}
+
+void LocationConfig::setRoot(const std::string &root)
+{
+	_root = root;
+}
+
+void LocationConfig::setTypes(const t_MimeTypes &types)
+{
+	_types = types;
+}
+
+void LocationConfig::setUri(const std::string &uri)
+{
+	_uri = uri;
+}
+
+void LocationConfig::setRedirect(const Return &redirect)
+{
+	_redirect = redirect;
+}
+
+void LocationConfig::setEnableCGI(const bool enableCGI)
+{
+	_enableCGI = enableCGI;
+}
+
+void LocationConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
+{
+	_cgiExtensions = cgiExtensions;
 }
 
 } // !config

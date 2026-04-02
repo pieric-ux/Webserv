@@ -111,7 +111,7 @@ t_Logger	ServerConfig::getLogger()
  *
  * @return [TODO:return]
  */
-int ServerConfig::getClientMaxBodySize() const
+const t_clientMaxBodySize	&ServerConfig::getClientMaxBodySize() const
 {
 	return _clientMaxBodySize;
 }
@@ -141,7 +141,7 @@ const std::string &ServerConfig::getDavPutPath() const
  *
  * @return [TODO:return]
  */
-const std::string &ServerConfig::getDavAccess() const
+const t_Perms				&ServerConfig::getDavAccess() const
 {
 	return _davAccess;
 }
@@ -181,7 +181,7 @@ const t_ErrorPages	&ServerConfig::getErrorPage() const
  *
  * @return [TODO:return]
  */
-int ServerConfig::getKeepAliveTimeout() const
+const t_keepAliveTimeout	&ServerConfig::getKeepAliveTimeout() const
 {
 	return _keepAliveTimeout;
 }
@@ -254,6 +254,81 @@ bool ServerConfig::getEnableCGI() const
 const t_CgiExtensions	&ServerConfig::getCgiExtensions() const
 {
 	return _cgiExtensions;
+}
+
+void ServerConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
+{
+	_clientMaxBodySize = clientMaxBodySize;
+}
+
+void ServerConfig::setCreateFullPutPath(const bool createFullPutPath)
+{
+	_createFullPutPath = createFullPutPath;
+}
+
+void ServerConfig::setDavPutPath(const std::string &davPutPath)
+{
+	_davPutPath = davPutPath;
+}
+
+void ServerConfig::setDavAccess(const t_Perms &davAccess)
+{
+	_davAccess = davAccess;
+}
+
+void ServerConfig::setDavMethods(const t_DavMethods &davMethods)
+{
+	_davMethods = davMethods;
+}
+
+void ServerConfig::setDefaultType(const std::string &defaultType)
+{
+	_defaultType = defaultType;
+}
+
+void ServerConfig::setErrorPage(const t_ErrorPages &errorPage)
+{
+	_errorPage = errorPage;
+}
+
+void ServerConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout)
+{
+	_keepAliveTimeout = keepAliveTimeout;
+}
+
+void ServerConfig::setListen(const t_Listen &listen)
+{
+	_listen = listen;
+}
+
+void ServerConfig::setLocationConfigs(const t_LocationConfigs &locationConfigs)
+{
+	_locationConfigs = locationConfigs;
+}
+
+void ServerConfig::setRoot(const std::string &root)
+{
+	_root = root;
+}
+
+void ServerConfig::setServerName(const t_Servernames &serverName)
+{
+	_serverName = serverName;
+}
+
+void ServerConfig::setTypes(const t_MimeTypes &types)
+{
+	_types = types;
+}
+
+void ServerConfig::setEnableCGI(const bool enableCGI)
+{
+	_enableCGI = enableCGI;
+}
+
+void ServerConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
+{
+	_cgiExtensions = cgiExtensions;
 }
 
 /**

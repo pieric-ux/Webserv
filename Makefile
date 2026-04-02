@@ -116,7 +116,11 @@ fclean: clean removelogs
 	@$(MAKE) fclean -C $(abspath $(ABNFDIR)) COMMON_PATH=$(abspath $(COMMONDIR)) LOGGER_PATH=$(abspath $(LOGGERDIR))
 	rm -f $(NAME)
 
+# Rule to clear log files
+# logsclear:
+# 	find logs -type f -name '*.log' -exec truncate -s 0 {} +
+
 # Rule to recompile everything
 re: fclean all
 
-.PHONY: all clean fclean re bonus debug sanitize
+.PHONY: all clean fclean re bonus debug sanitize logsclear

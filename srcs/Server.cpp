@@ -18,7 +18,7 @@ Server::Server()
 		_sockets()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.server");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "Server instance created with default constructor");
 }
 
@@ -31,7 +31,7 @@ Server::Server(const config::ServerConfig &config)
 	:	_config(config)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.server");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "Server instance created with ServerConfig");
 
 	createSockets();
@@ -125,7 +125,7 @@ void	Server::createSockets()
 					if (it->backlog < 0 || it->backlog > SOMAXCONN)
 					{
 						if (it->backlog < 0)
-							WARNING(_logger, "Backlog value is not set (-1), using SOMAXCONN instead for " + it->address + ":" + it->port);
+							WARNING(_logger, "Backlog value " + common::core::utils::toString(it->backlog) + " is not set (-1), using SOMAXCONN instead for " + it->address + ":" + it->port);
 						else
 							WARNING(_logger, "Backlog value " + common::core::utils::toString(it->backlog) + " exceeds SOMAXCONN, using SOMAXCONN instead for " + it->address + ":" + it->port);
 						socket.listen(SOMAXCONN);
@@ -163,12 +163,12 @@ void	Server::setSocketOption(common::core::net::TcpServer &socket, const config:
 	DEBUG(_logger, "Set SO_REUSEADDR for " + listen.address + ":" + listen.port);
 	if (listen.reuseport)
 	{
-		socket.setsockopt<bool>(SO_REUSEPORT, listen.reuseport);
+		socket.setsockopt<int>(SO_REUSEPORT, listen.reuseport);
 		DEBUG(_logger, "Set SO_REUSEPORT for " + listen.address + ":" + listen.port);
 	}
 	if (listen.so_keepalive)
 	{
-		socket.setsockopt<bool>(SO_KEEPALIVE, listen.so_keepalive);
+		socket.setsockopt<int>(SO_KEEPALIVE, listen.so_keepalive);
 		DEBUG(_logger, "Set SO_KEEPALIVE for " + listen.address + ":" + listen.port);
 	}
 	if (listen.rcvbuf > 0)

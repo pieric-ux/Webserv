@@ -11,7 +11,7 @@ config          = OWS http-block OWS
 
 http-block      = "http" OWS "{" *(OWS http-directive) OWS "}"
 
-http-directive  = client-max-body-size-dir / default-type-dir / keepalive-timeout-dir / root-dir / types-block / error-page-dir / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / location-block / server-block
+http-directive  = client-max-body-size-dir / default-type-dir / keepalive-timeout-dir / root-dir / types-block / error-page-dir / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / io-multiplexer-dir / location-block / server-block
 
 ; ── Server block ─────────────────────────────────────────────────────────────
 
@@ -75,6 +75,9 @@ dav-access-who          = "user" / "group" / "all"
 dav-access-perms        = 1*( "r" / "w" / "x" )
 
 create-full-put-path-dir = "create_full_put_path" RWS on-off ";"
+
+io-multiplexer-dir      = "io_multiplexer" RWS io-multiplexer-val ";"
+io-multiplexer-val      = "poll" / "select" / "kqueue" / "epoll"
 
 enable-cgi-dir          = "enable_cgi" RWS on-off ";"
 

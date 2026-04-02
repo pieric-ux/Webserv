@@ -32,16 +32,16 @@ class ServerConfig
 
 		static t_Logger				getLogger();
 
-		int							getClientMaxBodySize() const;
+		const t_clientMaxBodySize	&getClientMaxBodySize() const;
 
 		bool						getCreateFullPutPath() const;
 		const std::string			&getDavPutPath() const;
-		const std::string			&getDavAccess() const;
+		const t_Perms				&getDavAccess() const;
 		const t_DavMethods			&getDavMethods() const;
 
 		const std::string			&getDefaultType() const;
 		const t_ErrorPages			&getErrorPage() const;
-		int							getKeepAliveTimeout() const;
+		const t_keepAliveTimeout	&getKeepAliveTimeout() const;
 		const t_Listen				&getListen() const;
 		const t_LocationConfigs		&getLocationConfigs() const;
 		const std::string			&getRoot() const;
@@ -51,16 +51,32 @@ class ServerConfig
 		const t_CgiExtensions		&getCgiExtensions() const;
 		const LocationConfig		&findLocationConfig(const std::string &requestTarget);
 
+		void				setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize);
+		void				setCreateFullPutPath(const bool createFullPutPath);
+		void				setDavPutPath(const std::string &davPutPath);
+		void				setDavAccess(const t_Perms &davAccess);
+		void				setDavMethods(const t_DavMethods &davMethods);
+		void				setDefaultType(const std::string &defaultType);
+		void				setErrorPage(const t_ErrorPages &errorPage);
+		void				setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout);
+		void				setListen(const t_Listen &listen);
+		void				setLocationConfigs(const t_LocationConfigs &locationConfigs);
+		void				setRoot(const std::string &root);
+		void				setServerName(const t_Servernames &serverName);
+		void				setTypes(const t_MimeTypes &types);
+		void				setEnableCGI(const bool enableCGI);
+		void				setCgiExtensions(const t_CgiExtensions &cgiExtensions);
+
 	private:
 		t_Logger					_logger;
-		int							_clientMaxBodySize;
+		t_clientMaxBodySize			_clientMaxBodySize;
 		bool						_createFullPutPath;
 		std::string					_davPutPath;
-		std::string					_davAccess;
+		t_Perms						_davAccess;
 		t_DavMethods				_davMethods;
 		std::string					_defaultType;
 		t_ErrorPages				_errorPage;
-		int							_keepAliveTimeout;
+		t_keepAliveTimeout			_keepAliveTimeout;
 		t_Listen					_listen;
 		t_LocationConfigs			_locationConfigs;
 		std::string					_root;

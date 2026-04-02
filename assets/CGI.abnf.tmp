@@ -1,0 +1,215 @@
+; -----------------------------------------------------------------------------
+; CGI - RFC3875
+; -----------------------------------------------------------------------------
+
+; Section 2.2 - Basic Parsing Constructs
+; (alpha=ALPHA, digit=DIGIT, SP, CTL, OCTET sont des core rules)
+
+alphanum      = ALPHA | DIGIT
+NL            = <newline>
+LWSP          = SP | HTAB | NL
+CHAR          = ALPHA | DIGIT | separator | "!" | "#" | "$" |
+                "%" | "&" | "'" | "*" | "+" | "-" | "." | "`" |
+                "^" | "_" | "{" | "|" | "}" | "~" | CTL
+separator     = "(" | ")" | "<" | ">" | "@" | "," | ";" | ":" |
+                "\" | <"> | "/" | "[" | "]" | "?" | "=" | "{" |
+                "}" | SP | HTAB
+token         = 1*<any CHAR except CTLs or separators>
+quoted-string = <"> *qdtext <">
+qdtext        = <any CHAR except <"> and CTLs but including LWSP>
+TEXT          = <any printable character>
+
+; Section 2.3 - URL Encoding
+
+reserved      = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+" | "$" |
+                "," | "[" | "]"
+hex           = DIGIT | "A" | "B" | "C" | "D" | "E" | "F" |
+                "a" | "b" | "c" | "d" | "e" | "f"
+escaped       = "%" hex hex
+unreserved    = ALPHA | DIGIT | mark
+mark          = "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")"
+
+; Section 4.1 - Meta-Variables
+
+meta-variable-name = "AUTH_TYPE" | "CONTENT_LENGTH" |
+                     "CONTENT_TYPE" | "GATEWAY_INTERFACE" |
+                     "PATH_INFO" | "PATH_TRANSLATED" |
+                     "QUERY_STRING" | "REMOTE_ADDR" |
+                     "REMOTE_HOST" | "REMOTE_IDENT" |
+                     "REMOTE_USER" | "REQUEST_METHOD" |
+                     "SCRIPT_NAME" | "SERVER_NAME" |
+                     "SERVER_PORT" | "SERVER_PROTOCOL" |
+                     "SERVER_SOFTWARE" | scheme |
+                     protocol-var-name | extension-var-name
+protocol-var-name  = ( protocol | scheme ) "_" var-name
+scheme             = ALPHA *( ALPHA | DIGIT | "+" | "-" | "." )
+var-name           = token
+extension-var-name = token
+meta-variable-value = "" | 1*<TEXT, CHAR or tokens of value>
+
+; Section 4.1.1 - AUTH_TYPE
+
+AUTH_TYPE      = "" | auth-scheme
+auth-scheme    = "Basic" | "Digest" | extension-auth
+extension-auth = token
+
+; Section 4.1.2 - CONTENT_LENGTH
+
+CONTENT_LENGTH = "" | 1*DIGIT
+
+; Section 4.1.3 - CONTENT_TYPE
+
+CONTENT_TYPE = "" | media-type
+media-type   = type "/" subtype *( ";" parameter )
+type         = token
+subtype      = token
+parameter    = attribute "=" value
+attribute    = token
+value        = token | quoted-string
+
+; Section 4.1.4 - GATEWAY_INTERFACE
+
+GATEWAY_INTERFACE = "CGI" "/" 1*DIGIT "." 1*DIGIT
+
+; Section 4.1.5 - PATH_INFO
+
+PATH_INFO = "" | ( "/" path )
+path      = lsegment *( "/" lsegment )
+lsegment  = *lchar
+lchar     = <any TEXT or CTL except "/">
+
+; Section 4.1.6 - PATH_TRANSLATED
+
+PATH_TRANSLATED = *<any character>
+
+; Section 4.1.7 - QUERY_STRING
+
+QUERY_STRING = query-string
+query-string = *uric
+uric         = reserved | unreserved | escaped
+
+; Section 4.1.8 - REMOTE_ADDR
+
+REMOTE_ADDR  = hostnumber
+hostnumber   = ipv4-address | ipv6-address
+ipv4-address = 1*3DIGIT "." 1*3DIGIT "." 1*3DIGIT "." 1*3DIGIT
+ipv6-address = hexpart [ ":" ipv4-address ]
+hexpart      = hexseq | ( [ hexseq ] "::" [ hexseq ] )
+hexseq       = 1*4hex *( ":" 1*4hex )
+
+; Section 4.1.9 - REMOTE_HOST
+
+REMOTE_HOST   = "" | hostname | hostnumber
+hostname      = *( domainlabel "." ) toplabel [ "." ]
+domainlabel   = alphanum [ *alphahypdigit alphanum ]
+toplabel      = ALPHA [ *alphahypdigit alphanum ]
+alphahypdigit = alphanum | "-"
+
+; Section 4.1.10 - REMOTE_IDENT
+
+REMOTE_IDENT = *TEXT
+
+; Section 4.1.11 - REMOTE_USER
+
+REMOTE_USER = *TEXT
+
+; Section 4.1.12 - REQUEST_METHOD
+
+REQUEST_METHOD   = method
+method           = "GET" | "POST" | "HEAD" | extension-method
+extension-method = "PUT" | "DELETE" | token
+
+; Section 4.1.13 - SCRIPT_NAME
+
+SCRIPT_NAME = "" | ( "/" path )
+
+; Section 4.1.14 - SERVER_NAME
+
+SERVER_NAME = server-name
+server-name = hostname | ipv4-address | ( "[" ipv6-address "]" )
+
+; Section 4.1.15 - SERVER_PORT
+
+SERVER_PORT = server-port
+server-port = 1*DIGIT
+
+; Section 4.1.16 - SERVER_PROTOCOL
+
+SERVER_PROTOCOL   = HTTP-Version | "INCLUDED" | extension-version
+HTTP-Version      = "HTTP" "/" 1*DIGIT "." 1*DIGIT
+extension-version = protocol [ "/" 1*DIGIT "." 1*DIGIT ]
+protocol          = token
+
+; Section 4.1.17 - SERVER_SOFTWARE
+
+SERVER_SOFTWARE = 1*( product | comment )
+product         = token [ "/" product-version ]
+product-version = token
+comment         = "(" *( ctext | comment ) ")"
+ctext           = <any TEXT excluding "(" and ")">
+
+; Section 4.2 - Request Message-Body
+
+Request-Data   = [ request-body ] [ extension-data ]
+request-body   = <CONTENT_LENGTH>OCTET
+extension-data = *OCTET
+
+; Section 4.4 - Indexed Queries (Search String)
+
+search-string = search-word *( "+" search-word )
+search-word   = 1*schar
+schar         = unreserved | escaped | xreserved
+xreserved     = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "," |
+                "$"
+
+; Section 6.2 - Response Types
+
+generic-response = 1*header-field NL [ response-body ]
+
+CGI-Response = document-response | local-redir-response |
+               client-redir-response | client-redirdoc-response
+
+document-response = Content-Type [ Status ] *other-field NL
+                    response-body
+
+local-redir-response = local-Location NL
+
+client-redir-response = client-Location *extension-field NL
+
+client-redirdoc-response = client-Location Status Content-Type
+                           *other-field NL response-body
+
+; Section 6.3 - Response Header Fields
+
+header-field    = CGI-field | other-field
+CGI-field       = Content-Type | Location | Status
+other-field     = protocol-field | extension-field
+protocol-field  = generic-field
+extension-field = generic-field
+generic-field   = field-name ":" [ field-value ] NL
+field-name      = token
+field-value     = *( field-content | LWSP )
+field-content   = *( token | separator | quoted-string )
+
+Content-Type = "Content-Type:" media-type NL
+
+Location        = local-Location | client-Location
+client-Location = "Location:" fragment-URI NL
+local-Location  = "Location:" local-pathquery NL
+fragment-URI    = absoluteURI [ "#" fragment ]
+fragment        = *uric
+local-pathquery = abs-path [ "?" query-string ]
+abs-path        = "/" path-segments
+path-segments   = segment *( "/" segment )
+segment         = *pchar
+pchar           = unreserved | escaped | extra
+extra           = ":" | "@" | "&" | "=" | "+" | "$" | ","
+
+Status         = "Status:" status-code SP reason-phrase NL
+status-code    = "200" | "302" | "400" | "501" | extension-code
+extension-code = 3DIGIT
+reason-phrase  = *TEXT
+
+; Section 6.4 - Response Message-Body
+
+response-body = *OCTET

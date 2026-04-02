@@ -74,15 +74,6 @@ HTTPServer &HTTPServer::operator=(const HTTPServer &rhs)
 	return (*this);
 }
 
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-t_Logger	HTTPServer::getLogger() const
-{
-	return _logger;
-}
 
 /**
  * @brief [TODO:description]
@@ -102,12 +93,12 @@ void	HTTPServer::setup()
 {
 	INFO(_logger, "Setting up HTTPServer...");
 
-	// try{
-	// 	loadConfig();
-	// } catch (const std::exception &e)
-	// {
-	// 	throw;
-	// }
+	try{
+		loadConfig();
+	} catch (const std::exception &e)
+	{
+		throw;
+	}
 
 	_servers = _serverFactory.createServers();
 	if (_servers.empty())
