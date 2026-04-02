@@ -22,6 +22,7 @@ HTTPHeadersRegistry::HTTPHeadersRegistry()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.headersregistry");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "HTTPHeadersRegistry instance created.");
 	// A
 	_headers["a-im"] = HTTPHeader("A-IM", "Used with Response code to indicate partial instance manipulations.");
 	_headers["accept"] = HTTPHeader("Accept", "Informs the server about the types of data that can be sent back.");

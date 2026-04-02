@@ -33,6 +33,7 @@ HTTPConfig::HTTPConfig()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.httpconfig");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "HTTPConfig instance created with default values");
 }
 
 /**

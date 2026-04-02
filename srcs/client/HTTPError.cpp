@@ -19,6 +19,7 @@ HTTPError::HTTPError() : _statusCode()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "HTTPError instance created with default constructor");
 }
 
 /**
@@ -31,6 +32,7 @@ HTTPError::HTTPError(const status::StatusCode &statusCode)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, std::string("HTTPError instance created with status code: ") + common::core::utils::toString(statusCode.getCode()));
 }
 
 /**

@@ -19,6 +19,7 @@ ClientHandler::ClientHandler() : _clients()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.clienthandler");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "ClientHandler instance created");
 }
 
 /**

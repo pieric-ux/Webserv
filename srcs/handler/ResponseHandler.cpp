@@ -21,6 +21,7 @@ ResponseHandler::ResponseHandler()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.responsehandler");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "ResponseHandler instance created");
 }
 
 /**

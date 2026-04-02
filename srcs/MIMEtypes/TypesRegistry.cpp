@@ -19,6 +19,7 @@ TypesRegistry::TypesRegistry() : _types()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.mimetypes.types");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "TypesRegistry instance created");
 }
 
 /**

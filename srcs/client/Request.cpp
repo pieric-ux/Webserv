@@ -26,6 +26,7 @@ Request::Request()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.request");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "Request instance created");
 }
 
 /**

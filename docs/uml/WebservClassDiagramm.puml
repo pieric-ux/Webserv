@@ -285,12 +285,13 @@ namespace webserv.parser {
 
 	class "Parser" as Parser {
 		- {static} _abnfParser : abnf::Abnf
+		- {static} _httpConfig : HTTPConfig
 		- _flags : e_ParserFlags
 		--
 		+ Parser()
 		+ getFlags() : e_ParserFlags
 		+ setFlags(flags : e_ParserFlags) : void
-		+ parseConfig(buffer : string) : HTTPConfig
+		+ parseConfig(buffer : string) : void
 		+ isIPv6Address(address : string) : bool
 		+ parseRequestLine(bufferRequest : string) : void
 		+ parseHeaders(bufferRequest : string) : vector<HTTPHeader>
@@ -412,7 +413,7 @@ namespace webserv.config {
 		+ getListen() : vector<Listen>
 		+ getLocationConfigs() : vector<LocationConfig>
 		+ getRoot() : string
-		+ getServerName() : vector<string>
+		+ getServerNames() : vector<string>
 		+ getTypes() : map<string, string>
 		+ getEnableCGI() : bool
 		+ getCgiExtensions() : map<string, string>
@@ -470,7 +471,6 @@ namespace webserv.cgi {
 namespace webserv {
 
 	class "HTTPServer" as HTTPServer <<singleton>> {
-		- _abnf : abnf::Abnf
 		- _logger : log42::logger::Logger
 		- _configPath : string
 		- _parser : Parser
@@ -486,22 +486,21 @@ namespace webserv {
 		- HTTPServer()
   		+ {static} getInstance() : HTTPServer
 		+ running() : bool
+		+ loadConfig() : HTTPConfig
+		+ connectClient() : void
 		+ getHTTPConfig() : HTTPConfig
-		+ setHTTPconfig(httpConfig : HTTPConfig) : void
 		+ getServerFactory() : ServerFactory
-		+ setServerFactory(serverFactory : ServerFactory) : void
 		+ getServers() : vector<Server>
-		+ addServer(server : Server) : void
+		+ setServers(servers : vector<Server>) : void
 		+ getIOMultiplexer() : t_ioMultiplexer
 		+ setIOMultiplexer(ioMultiplexer : t_ioMultiplexer) : void
-		- loadConfig() : HTTPConfig
-		- connectClient() : void
 	}
 
 	class "ServerFactory" as ServerFactory {
-		- _httpConfig : HTTPConfig
+		- {static} _httpConfig : HTTPConfig
 		--
-		+ ServerFactory(httpConfig : HTTPConfig)
+		+ ServerFactory()
+		+ createServers() : vector<Server>
 	}
 
 	class "Server" as Server {
@@ -586,7 +585,6 @@ namespace webserv {
 	Parser ..> abnf.Abnf : uses
 	
 	HTTPServer "1" *-- "1" log42.logger.Logger
-	HTTPServer "1" *-- "1" abnf.Abnf
 	HTTPServer "1" *-- "1" common.core.io.IEventIO
 	HTTPServer ..> common.loader.Loader : uses
 

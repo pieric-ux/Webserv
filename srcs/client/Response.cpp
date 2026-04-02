@@ -24,6 +24,7 @@ Response::Response()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.response");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "Response instance created");
 }
 
 /**
