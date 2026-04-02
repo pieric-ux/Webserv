@@ -73,7 +73,7 @@ start
 			:Add `TcpServer` to `ioMultiplexer`;
 		endwhile
 	endwhile (no)
-	:Create `ClientHandler` with `ioMultiplexer`;
+	:Set `ioMultiplexer` for `ClientHandler`;
 	while (HTTPServer is `running()`?) is (yes)
 		while (For each `TcpServer` in `ioMultiplexer`) is (yes)
 			if (`E_IN` is set for `TcpServer`) then (yes)

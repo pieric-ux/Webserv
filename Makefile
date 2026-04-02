@@ -20,6 +20,12 @@ ABNFDIR = $(ABNF_PATH)
 # Compiler and flags
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -Wshadow -MMD -MP -std=c++98
+
+DEV_LOG ?= 0
+ifeq ($(DEV_LOG), 1)
+CXXFLAGS += -D DEV_LOG=1
+endif
+
 DEBUG_FLAGS = -g3 -fno-omit-frame-pointer -fstack-protector-all -fstandalone-debug
 
 INCLUDES = -I includes -I $(ABNFDIR)/includes -I $(LOGGERDIR)/includes -I $(COMMONDIR)/includes

@@ -58,11 +58,14 @@ static void	initLogging()
 	log42::formatter::Formatter fmt(LOG_FMT, LOG_DATE_FMT);
 
 	webserv::t_Logger rootLogger = log42::manager::Manager::getInstance().getRoot();
-	rootLogger->setLevel(log42::logRecord::INFO);
+	if (DEV_LOG)
+		rootLogger->setLevel(log42::logRecord::DEBUG);
+	else
+		rootLogger->setLevel(log42::logRecord::INFO);
 	common::core::raii::SharedPtr<log42::handler::StreamHandler> consoleHandler =
 		MAKE_SHARED(log42::handler::StreamHandler);
 	consoleHandler->setFormatter(fmt);
-	consoleHandler->setLevel(log42::logRecord::ERROR);
+	consoleHandler->setLevel(log42::logRecord::WARNING);
 	rootLogger->addHandler(
 		common::core::raii::staticPointerCast<log42::handler::Handler>(consoleHandler));
 
@@ -98,7 +101,10 @@ static void	initLogging()
 		common::core::raii::SharedPtr<log42::handler::FileHandler> fileHandler =
 			MAKE_SHARED(log42::handler::FileHandler, file);
 		fileHandler->setFormatter(fmt);
-		fileHandler->setLevel(log42::logRecord::INFO);
+		if (DEV_LOG)
+			fileHandler->setLevel(log42::logRecord::DEBUG);
+		else
+			fileHandler->setLevel(log42::logRecord::WARNING);
 		logger->addHandler(
 			common::core::raii::staticPointerCast<log42::handler::Handler>(fileHandler));
 	}
@@ -113,7 +119,10 @@ static void	initAbnf()
 	abnf::AbnfLogConfig abnfConfig;
 	abnfConfig.dir = WEBSERV_LOG_DIR;
 	abnfConfig.formatter = log42::formatter::Formatter(LOG_FMT, LOG_DATE_FMT);
-	abnfConfig.level = log42::logRecord::ERROR;
+	if (DEV_LOG)
+		abnfConfig.level = log42::logRecord::INFO;
+	else
+		abnfConfig.level = log42::logRecord::WARNING;
 	abnf::Abnf::getInstance().initFromDirectory(ABNF_DIR, ABNF_EXTENSION, abnfConfig);
 	ROOT_INFO("Abnf initialized successfully");
 }

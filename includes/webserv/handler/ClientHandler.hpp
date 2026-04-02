@@ -27,6 +27,8 @@ class ClientHandler
 
 		static t_Logger	getLogger();
 
+		void			setIoMultiplexer(const t_ioMultiplexer &ioMultiplexer);
+
 		void			addClient(client::Client &client);
 		void			removeClient(client::Client &client);
 		void			processClients(t_ioMultiplexer ioMultiplexer);
@@ -34,6 +36,7 @@ class ClientHandler
 	private:
 		t_Logger		_logger;
 		t_Clients		_clients;
+		t_ioMultiplexer	_ioMultiplexer;
 };
 
 } // !handler
