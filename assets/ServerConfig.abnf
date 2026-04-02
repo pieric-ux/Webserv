@@ -1,0 +1,145 @@
+; -----------------------------------------------------------------------------
+; ServerConfig - Webserv configuration file grammar
+; Depends on: ABNF.abnf, URI.abnf
+; NOTE: All alternatives on single lines (parser validates line-by-line
+;       and does not support multi-line continuations or =/ syntax).
+; -----------------------------------------------------------------------------
+
+; ── Top-level ────────────────────────────────────────────────────────────────
+
+config          = OWS http-block OWS
+
+http-block      = "http" OWS "{" *(OWS http-directive) OWS "}"
+
+http-directive  = client-max-body-size-dir / default-type-dir / keepalive-timeout-dir / root-dir / types-block / error-page-dir / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / io-multiplexer-dir / location-block / server-block
+
+; ── Server block ─────────────────────────────────────────────────────────────
+
+server-block    = "server" OWS "{" *(OWS server-directive) OWS "}"
+
+server-directive = listen-dir / server-name-dir / root-dir / client-max-body-size-dir / keepalive-timeout-dir / default-type-dir / error-page-dir / types-block / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / location-block
+
+; ── Location block ───────────────────────────────────────────────────────────
+
+location-block  = "location" RWS [modifier RWS] uri-path OWS "{" *(OWS location-directive) OWS "}"
+
+modifier        = "=" / "^~"
+
+location-directive = root-dir / index-dir / autoindex-dir / allowed-methods-dir / client-max-body-size-dir / keepalive-timeout-dir / default-type-dir / error-page-dir / types-block / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / return-dir / location-block
+
+; ── Directives ───────────────────────────────────────────────────────────────
+
+listen-dir              = "listen" RWS listen-value *( RWS listen-option ) ";"
+listen-value            = ipv6-listen / ipv4-listen / hostname-listen / port-only
+ipv6-listen             = "[" IPv6address "]" ":" port
+ipv4-listen             = IPv4address ":" port
+hostname-listen         = hostname ":" port
+hostname                = 1*( ALPHA / DIGIT / "-" / "." )
+port-only               = port
+listen-option           = "default_server" / "reuseport" / "ipv6only=on" / "ipv6only=off" / ( "backlog=" 1*DIGIT ) / ( "rcvbuf=" size-value ) / ( "sndbuf=" size-value ) / ( "so_keepalive=on" ) / ( "so_keepalive=off" ) / ( "bind" )
+
+server-name-dir         = "server_name" 1*( RWS server-name-token ) ";"
+server-name-token       = 1*( ALPHA / DIGIT / "-" / "." )
+
+root-dir                = "root" RWS file-path ";"
+
+index-dir               = "index" 1*( RWS filename ) ";"
+
+autoindex-dir           = "autoindex" RWS on-off ";"
+
+allowed-methods-dir     = "allowed_methods" 1*( RWS method ) ";"
+method                  = "GET" / "HEAD" / "POST" / "PUT" / "DELETE"
+
+client-max-body-size-dir = "client_max_body_size" RWS size-value ";"
+
+keepalive-timeout-dir   = "keepalive_timeout" RWS 1*DIGIT ";"
+
+default-type-dir        = "default_type" RWS mime-type ";"
+
+error-page-dir          = "error_page" 1*( RWS status-code ) RWS uri-path ";"
+status-code             = 3DIGIT
+
+return-dir              = "return" RWS status-code [ RWS return-target ] ";"
+return-target           = absolute-URI / uri-path
+
+dav-methods-dir         = "dav_methods" RWS dav-methods-val ";"
+dav-methods-val         = "off" / dav-method *( RWS dav-method )
+dav-method              = "PUT" / "DELETE"
+
+dav-put-path-dir        = "dav_put_path:" RWS file-path ";"
+
+dav-access-dir          = "dav_access" RWS dav-access-val ";"
+dav-access-val          = dav-access-entry *( RWS dav-access-entry )
+dav-access-entry        = dav-access-who ":" dav-access-perms
+dav-access-who          = "user" / "group" / "all"
+dav-access-perms        = 1*( "r" / "w" / "x" )
+
+create-full-put-path-dir = "create_full_put_path" RWS on-off ";"
+
+io-multiplexer-dir      = "io_multiplexer" RWS io-multiplexer-val ";"
+io-multiplexer-val      = "poll" / "select" / "kqueue" / "epoll"
+
+enable-cgi-dir          = "enable_cgi" RWS on-off ";"
+
+cgi-extension-dir       = "cgi_extension" RWS cgi-ext RWS file-path ";"
+
+cgi-extensions-block    = "cgi_extensions" OWS "{" *(OWS cgi-mapping) OWS "}"
+cgi-mapping             = file-path RWS cgi-ext [";"]
+cgi-ext                 = "." 1*( ALPHA / DIGIT )
+
+; ── Types block ──────────────────────────────────────────────────────────────
+
+types-block             = "types" OWS "{" *(OWS type-mapping) OWS "}"
+type-mapping            = mime-type 1*( MWS file-ext ) ";"
+file-ext                = 1*( ALPHA / DIGIT )
+
+; ── Primitives ───────────────────────────────────────────────────────────────
+
+on-off                  = "on" / "off"
+
+mime-type               = type-name "/" subtype-name
+type-name               = token
+subtype-name            = token
+token                   = 1*tchar
+tchar                   = ALPHA / DIGIT / "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
+
+size-value              = 1*DIGIT [ size-unit ]
+size-unit               = "k" / "K" / "m" / "M" / "g" / "G"
+
+file-path               = "/" *( path-char / "/" )
+uri-path                = "/" *( path-char / "/" )
+filename                = 1*path-char
+path-char               = unreserved / pct-encoded / ":" / "@" / "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / ","
+
+port                    = 1*5DIGIT
+
+IPv4address             = dec-octet "." dec-octet "." dec-octet "." dec-octet
+dec-octet = DIGIT / %x31-39 DIGIT / "1" 2DIGIT / "2" %x30-34 DIGIT / "25" %x30-35
+IPv6address             = 1*( HEXDIG / ":" / "." )
+
+; ── URI primitives (from RFC 3986, inlined to avoid cross-file resolution) ──
+
+unreserved              = ALPHA / DIGIT / "-" / "." / "_" / "~"
+pct-encoded             = "%" HEXDIG HEXDIG
+absolute-URI            = scheme ":" hier-part [ "?" query ]
+scheme                  = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+hier-part               = "//" authority path-abempty / path-absolute / path-rootless / path-empty
+authority               = [ userinfo "@" ] host [ ":" port ]
+userinfo                = *( unreserved / pct-encoded / sub-delims / ":" )
+host                    = hostname
+path-abempty            = *( "/" segment )
+path-absolute           = "/" [ segment-nz *( "/" segment ) ]
+path-rootless           = segment-nz *( "/" segment )
+path-empty              = ""
+segment                 = *pchar
+segment-nz              = 1*pchar
+pchar                   = unreserved / pct-encoded / sub-delims / ":" / "@"
+query                   = *( pchar / "/" / "?" )
+sub-delims              = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / "="
+
+; ── Whitespace ───────────────────────────────────────────────────────────────
+
+comment                 = "#" *( %x20-7E / %x80-FF / HTAB ) ( CRLF / LF / CR )
+OWS                     = *( SP / HTAB / LF / CR / comment )
+RWS                     = 1*( SP / HTAB )
+MWS                     = 1*( SP / HTAB / LF / CR )
