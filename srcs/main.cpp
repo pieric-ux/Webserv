@@ -47,6 +47,8 @@ int main(int ac, char **av)
 		return (EXIT_FAILURE);
 	}
 
+	HTTPserver.run();
+
 	return (EXIT_SUCCESS);
 }
 

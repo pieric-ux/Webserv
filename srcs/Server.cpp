@@ -92,6 +92,16 @@ const t_ServerSockets	&Server::getSockets() const
 
 /**
  * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const config::ServerConfig	&Server::getConfig() const
+{
+	return _config;
+}
+
+/**
+ * @brief [TODO:description]
  */
 void	Server::createSockets()
 {
@@ -101,8 +111,10 @@ void	Server::createSockets()
 	for(; it != listen.end(); ++it)
 	{
 		try{
-			common::core::net::Addrinfo addrinfo(it->address.c_str(), it->port.c_str(), AI_PASSIVE | AI_NUMERICSERV, AF_UNSPEC, SOCK_STREAM);
+			common::core::net::GetAddrinfo addrinfo(it->address.c_str(), it->port.c_str(), AI_PASSIVE | AI_NUMERICSERV, AF_UNSPEC, SOCK_STREAM);
 
+			t_AddrPortPair addr;
+			struct sockaddr_storage storage;
 			struct addrinfo *current = addrinfo.getRes();
 			for(; current != NULL; current = current->ai_next)
 			{
@@ -116,31 +128,45 @@ void	Server::createSockets()
 					ERROR(_logger, "Unsupported address family for " + it->address + ":" + it->port);
 					continue;
 				}
+
+				try{
+					std::memset(&storage, 0, sizeof(storage));
+					std::memmove(&storage, current->ai_addr, current->ai_addrlen);
+					addr = common::core::net::getNameInfo(storage);
+				} catch (const std::exception &e)
+				{
+					WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+				}
+
 				try{
 					common::core::net::TcpServer socket(current->ai_family, current->ai_protocol, true);
-					setSocketOption(socket, *it);
-					INFO(_logger, "Created socket for " + it->address + ":" + it->port);
+					setSocketOption(socket, *it, addr);
+
+					INFO(_logger, "Created socket for " + addr.first + ":" + addr.second);
+
 					socket.bind(current->ai_addr, current->ai_addrlen);
-					INFO(_logger, "Bound socket for " + it->address + ":" + it->port);
+					INFO(_logger, "Bound socket for " + addr.first + ":" + addr.second);
+
 					if (it->backlog < 0 || it->backlog > SOMAXCONN)
 					{
 						if (it->backlog < 0)
-							WARNING(_logger, "Backlog value " + common::core::utils::toString(it->backlog) + " is not set (-1), using SOMAXCONN instead for " + it->address + ":" + it->port);
+							WARNING(_logger, "Backlog value " + common::core::utils::toString(it->backlog) + " is not set (-1), using SOMAXCONN instead for " + addr.first + ":" + addr.second);
 						else
-							WARNING(_logger, "Backlog value " + common::core::utils::toString(it->backlog) + " exceeds SOMAXCONN, using SOMAXCONN instead for " + it->address + ":" + it->port);
+							WARNING(_logger, "Backlog value " + common::core::utils::toString(it->backlog) + " exceeds SOMAXCONN, using SOMAXCONN instead for " + addr.first + ":" + addr.second);
+
 						socket.listen(SOMAXCONN);
-						_sockets.push_back(t_SocketPair(addrinfo, socket));
-						INFO(_logger, "Listening on socket for " + it->address + ":" + it->port + " with backlog " + common::core::utils::toString(SOMAXCONN));
+						_sockets.push_back(t_SocketPairServer(socket, storage));
+						INFO(_logger, "Listening on " + addr.first + ":" + addr.second + " with backlog " + common::core::utils::toString(SOMAXCONN));
 					}
 					else
 					{
 						socket.listen(it->backlog);
-						_sockets.push_back(t_SocketPair(addrinfo, socket));
-						INFO(_logger, "Listening on socket for " + it->address + ":" + it->port + " with backlog " + common::core::utils::toString(it->backlog));
+						_sockets.push_back(t_SocketPairServer(socket, storage));
+						INFO(_logger, "Listening on " + addr.first + ":" + addr.second + " with backlog " + common::core::utils::toString(SOMAXCONN));
 					}
 				} catch (const std::exception &e)
 				{
-					ERROR(_logger, "Failed to create socket for " + it->address + ":" + it->port + " - " + e.what());
+					ERROR(_logger, "Failed to create socket for " + addr.first + ":" + addr.second + " - " + e.what());
 				}
 			}
 		} catch (const std::exception &e)
@@ -157,29 +183,29 @@ void	Server::createSockets()
  * @param socket [TODO:parameter]
  * @param listen [TODO:parameter]
  */
-void	Server::setSocketOption(common::core::net::TcpServer &socket, const config::Listen &listen)
+void	Server::setSocketOption(common::core::net::TcpServer &socket, const config::Listen &listen, const t_AddrPortPair &addr)
 {
 	socket.setsockopt<int>(SO_REUSEADDR, 1);
-	DEBUG(_logger, "Set SO_REUSEADDR for " + listen.address + ":" + listen.port);
+	DEBUG(_logger, "Set SO_REUSEADDR for " + addr.first + ":" + addr.second);
 	if (listen.reuseport)
 	{
 		socket.setsockopt<int>(SO_REUSEPORT, listen.reuseport);
-		DEBUG(_logger, "Set SO_REUSEPORT for " + listen.address + ":" + listen.port);
+		DEBUG(_logger, "Set SO_REUSEPORT for " + addr.first + ":" + addr.second);
 	}
 	if (listen.so_keepalive)
 	{
 		socket.setsockopt<int>(SO_KEEPALIVE, listen.so_keepalive);
-		DEBUG(_logger, "Set SO_KEEPALIVE for " + listen.address + ":" + listen.port);
+		DEBUG(_logger, "Set SO_KEEPALIVE for " + addr.first + ":" + addr.second);
 	}
 	if (listen.rcvbuf > 0)
 	{
 		socket.setsockopt<int>(SO_RCVBUF, listen.rcvbuf);
-		DEBUG(_logger, "Set SO_RCVBUF for " + listen.address + ":" + listen.port);
+		DEBUG(_logger, "Set SO_RCVBUF for " + addr.first + ":" + addr.second);
 	}
 	if (listen.sndbuf > 0)
 	{
 		socket.setsockopt<int>(SO_SNDBUF, listen.sndbuf);
-		DEBUG(_logger, "Set SO_SNDBUF for " + listen.address + ":" + listen.port);
+		DEBUG(_logger, "Set SO_SNDBUF for " + addr.first + ":" + addr.second);
 	}
 }
 

@@ -91,8 +91,6 @@ t_Servers	ServerFactory::createServers() const
 		INFO(_logger, std::string("Created server with config: ") + formatServerInfo(*it));
 	}
 	
-	//servers.push_back(Server(config::ServerConfig())); // TODO:: remove this default server config after testing
-
 	std::ostringstream oss;
 	oss << "Created " << servers.size() << " server(s) from config";
 	INFO(_logger, oss.str());

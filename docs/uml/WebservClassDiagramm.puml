@@ -200,7 +200,7 @@ namespace webserv.handler {
 		+ setIoMultiplexer(ioMultiplexer : common::core::io::IEventIO) : void
 		+ addClient(client : Client)
 		+ removeClient(client : Client)
-		+ processClients(ioMultiplexer : IEventIO) : void
+		+ processClients() : void
 	}
 
 	class "RequestHandler" as RequestHandler {
@@ -490,7 +490,7 @@ namespace webserv {
 		+ setConfigPath(configPath : string) : void
 		+ getHTTPConfig() : HTTPConfig
 		- loadConfig() : HTTPConfig
-		- connectClient() : void
+		- connectClient(server : common::core::net::TcpServer) : void
 	}
 
 	class "ServerFactory" as ServerFactory {
@@ -501,10 +501,12 @@ namespace webserv {
 	}
 
 	class "Server" as Server {
-		- _sockets : vector<pair<common::core::net::Addrinfo, common::core::net::TcpServer>>
+		- _sockets : vector<pair<common::core::net::TcpServer, common::core::net::Addrinfo>>
 		- _config : ServerConfig
 		--
 		+ Server(config : ServerConfig)
+		+ getSockets() : vector<pair<common::core::net::TcpServer, common::core::net::Addrinfo>>
+		+ getConfig() : ServerConfig
 		- createSockets() : void
 		- setSocketOptions(socket : common::core::net::TcpServer, listen : config::Listen) : void
 	}
