@@ -501,11 +501,11 @@ namespace webserv {
 	}
 
 	class "Server" as Server {
-		- _sockets : vector<pair<common::core::net::TcpServer, common::core::net::Addrinfo>>
+		- _sockets : vector<pair<common::core::net::TcpServer, common::core::net::GetAddrinfo>>
 		- _config : ServerConfig
 		--
 		+ Server(config : ServerConfig)
-		+ getSockets() : vector<pair<common::core::net::TcpServer, common::core::net::Addrinfo>>
+		+ getSockets() : vector<pair<common::core::net::TcpServer, common::core::net::GetAddrinfo>>
 		+ getConfig() : ServerConfig
 		- createSockets() : void
 		- setSocketOptions(socket : common::core::net::TcpServer, listen : config::Listen) : void
@@ -585,7 +585,7 @@ namespace webserv {
 	HTTPServer ..> common.loader.Loader : uses
 
 	Server "1" *-- "1..*" common.core.net.TcpServer
-	Server "1" *-- "1..*" common.core.net.Addrinfo
+	Server "1" *-- "1..*" common.core.net.GetAddrinfo
 
 	ExecutionHandler ..> common.core.utils.Directory : uses
 	ExecutionHandler ..> common.core.utils.DirectoryIterator : uses
