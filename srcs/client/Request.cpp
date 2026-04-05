@@ -25,7 +25,7 @@ Request::Request()
 		_flags(static_cast<e_RequestFlags>(0))
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.request");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "Request instance created");
 }
 

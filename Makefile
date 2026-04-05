@@ -72,7 +72,7 @@ $(LOGGERDIR)/liblog42.a:
 $(ABNFDIR)/libabnf.a:
 	$(MAKE) -C $(ABNFDIR) COMMON_PATH=$(abspath $(COMMONDIR)) LOGGER_PATH=$(abspath $(LOGGERDIR)) CXXFLAGS="$(CXXFLAGS)"
 
-debug: CXXFLAGS = $(DEBUG_FLAGS)
+debug: CXXFLAGS += $(DEBUG_FLAGS)
 
 # Rebuild with debug flags
 debug: re

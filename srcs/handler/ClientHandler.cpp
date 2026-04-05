@@ -5,6 +5,8 @@
  * @brief [TODO:description]
  */
 
+#include "common/core/io/IEventIO.hpp"
+#include "webserv/types.hpp"
 #include <webserv/handler/ClientHandler.hpp>
 
 namespace webserv
@@ -18,7 +20,7 @@ namespace handler
 ClientHandler::ClientHandler() : _clients(), _ioMultiplexer()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.clienthandler");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "ClientHandler instance created");
 }
 
@@ -75,9 +77,22 @@ void	ClientHandler::setIoMultiplexer(const t_ioMultiplexer &ioMultiplexer)
  *
  * @param client [TODO:parameter]
  */
-void ClientHandler::addClient(const t_SocketPairClient &client)
+void	ClientHandler::addClient(const t_SocketPairClient &client, const config::ServerConfig &serverConfig)
 {
-	(void)client;
+	try{
+		_ioMultiplexer->add(client.first.getFd(), common::core::io::IEventIO::E_IN);
+	} catch (const std::exception &e) {
+		ERROR(_logger, "Failed to add client fd to io multiplexer: " + std::string(e.what()));
+		throw;
+	}
+
+	try{
+		t_AddrPortPair addr = common::core::net::getNameInfo(client.second);
+		INFO(_logger, "Added client " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(client.first.getFd()));
+	} catch (const std::exception &e) {
+		WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+	}
+	_clients.insert(std::make_pair(client.first.getFd(), client::Client(client, serverConfig)));
 }
 
 /**
@@ -85,7 +100,7 @@ void ClientHandler::addClient(const t_SocketPairClient &client)
  *
  * @param client [TODO:parameter]
  */
-void ClientHandler::removeClient(client::Client &client)
+void	ClientHandler::removeClient(client::Client &client)
 {
 	(void)client;
 }
@@ -95,7 +110,7 @@ void ClientHandler::removeClient(client::Client &client)
  *
  * @param ioMultiplexer [TODO:parameter]
  */
-void ClientHandler::processClients()
+void	ClientHandler::processClients()
 {
 
 }

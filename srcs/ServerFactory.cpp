@@ -24,7 +24,7 @@ static std::string	formatServerInfo(const config::ServerConfig &config);
 ServerFactory::ServerFactory() : _httpConfig(config::HTTPConfig::getInstance())
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.serverfactory");
-    _logger->setLevel(log42::logRecord::INFO);
+    _logger->setLevel(log42::logRecord::DEBUG);
     INFO(_logger, "ServerFactory created with default HTTPConfig instance");
 }
 
@@ -34,7 +34,7 @@ ServerFactory::ServerFactory() : _httpConfig(config::HTTPConfig::getInstance())
 ServerFactory::ServerFactory(const config::HTTPConfig &httpConfig) : _httpConfig(httpConfig)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.serverfactory");
-    _logger->setLevel(log42::logRecord::INFO);
+    _logger->setLevel(log42::logRecord::DEBUG);
 }
 
 /**

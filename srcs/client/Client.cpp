@@ -30,7 +30,7 @@ Client::Client()
 {
 	std::memset(&_sockaddr_storage, 0, sizeof(_sockaddr_storage));
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "Client instance created with default constructor");
 }
 
@@ -40,9 +40,10 @@ Client::Client()
  * @param socket [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-Client::Client(const common::core::net::TcpClient socket, const config::ServerConfig &serverConfig)
+Client::Client(const t_SocketPairClient &client, const config::ServerConfig &serverConfig)
 	:	_id(-1),
-		_socket(socket),
+		_socket(client.first),
+		_sockaddr_storage(client.second),
 		_flags(static_cast<e_ClientFlags>(0)),
 		_status(E_CLI_REQUEST),
 		_executionHandler(),
@@ -52,9 +53,8 @@ Client::Client(const common::core::net::TcpClient socket, const config::ServerCo
 		_HTTPError(status::StatusCode()),
 		_lastActivityTime(0)
 {
-	std::memset(&_sockaddr_storage, 0, sizeof(_sockaddr_storage));
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "Client instance created with socket and server configuration");
 }
 

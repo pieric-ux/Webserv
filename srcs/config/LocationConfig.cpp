@@ -34,7 +34,7 @@ LocationConfig::LocationConfig()
 		_cgiExtensions(DefaultConfig::cgiExtensions)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.locationconfig");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "LocationConfig instance created with default values");
 }
 

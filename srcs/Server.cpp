@@ -18,7 +18,7 @@ Server::Server()
 		_sockets()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.server");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "Server instance created with default constructor");
 }
 
@@ -31,7 +31,7 @@ Server::Server(const config::ServerConfig &config)
 	:	_config(config)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.server");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "Server instance created with ServerConfig");
 
 	createSockets();
@@ -111,7 +111,8 @@ void	Server::createSockets()
 	for(; it != listen.end(); ++it)
 	{
 		try{
-			common::core::net::GetAddrinfo addrinfo(it->address.c_str(), it->port.c_str(), AI_PASSIVE | AI_NUMERICSERV, AF_UNSPEC, SOCK_STREAM);
+			std::string address = it->address;
+			common::core::net::GetAddrinfo addrinfo(it->address == "*" ? NULL : it->address.c_str(), it->port.c_str(), AI_PASSIVE | AI_NUMERICSERV, AF_UNSPEC, SOCK_STREAM);
 
 			t_AddrPortPair addr;
 			struct sockaddr_storage storage;
@@ -133,14 +134,15 @@ void	Server::createSockets()
 					std::memset(&storage, 0, sizeof(storage));
 					std::memmove(&storage, current->ai_addr, current->ai_addrlen);
 					addr = common::core::net::getNameInfo(storage);
+					DEBUG(_logger, "Resolved address for " + it->address + ":" + it->port + " - " + addr.first + ":" + addr.second);
 				} catch (const std::exception &e)
 				{
-					WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+					WARNING(_logger, "Failed to get socket name info: " + std::string(e.what()));
 				}
 
 				try{
 					common::core::net::TcpServer socket(current->ai_family, current->ai_protocol, true);
-					setSocketOption(socket, *it, addr);
+					setSocketOption(socket, *it, current->ai_family, addr);
 
 					INFO(_logger, "Created socket for " + addr.first + ":" + addr.second);
 
@@ -150,7 +152,7 @@ void	Server::createSockets()
 					if (it->backlog < 0 || it->backlog > SOMAXCONN)
 					{
 						if (it->backlog < 0)
-							WARNING(_logger, "Backlog value " + common::core::utils::toString(it->backlog) + " is not set (-1), using SOMAXCONN instead for " + addr.first + ":" + addr.second);
+							WARNING(_logger, "Backlog value " + common::core::utils::toString(it->backlog) + " is unset, using SOMAXCONN instead for " + addr.first + ":" + addr.second);
 						else
 							WARNING(_logger, "Backlog value " + common::core::utils::toString(it->backlog) + " exceeds SOMAXCONN, using SOMAXCONN instead for " + addr.first + ":" + addr.second);
 
@@ -183,7 +185,7 @@ void	Server::createSockets()
  * @param socket [TODO:parameter]
  * @param listen [TODO:parameter]
  */
-void	Server::setSocketOption(common::core::net::TcpServer &socket, const config::Listen &listen, const t_AddrPortPair &addr)
+void	Server::setSocketOption(common::core::net::TcpServer &socket, const config::Listen &listen, const int ai_family, const t_AddrPortPair &addr)
 {
 	socket.setsockopt<int>(SO_REUSEADDR, 1);
 	DEBUG(_logger, "Set SO_REUSEADDR for " + addr.first + ":" + addr.second);
@@ -206,6 +208,11 @@ void	Server::setSocketOption(common::core::net::TcpServer &socket, const config:
 	{
 		socket.setsockopt<int>(SO_SNDBUF, listen.sndbuf);
 		DEBUG(_logger, "Set SO_SNDBUF for " + addr.first + ":" + addr.second);
+	}
+	if (ai_family == AF_INET6)
+	{
+		socket.setsockopt<int>(IPV6_V6ONLY, 1, IPPROTO_IPV6);
+		DEBUG(_logger, "Set IPV6_V6ONLY for " + addr.first + ":" + addr.second);
 	}
 }
 
