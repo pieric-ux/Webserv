@@ -65,8 +65,9 @@ t_Logger	ErrorPage::getLogger()
  * @param rhs [TODO:parameter]
  */
 ErrorPage::ErrorPage(const ErrorPage &rhs)
-	: _codes(rhs._codes),
-	  _path(rhs._path)
+	:	_logger(rhs._logger),
+		_codes(rhs._codes),
+		_path(rhs._path)
 {}
 
 /**
@@ -79,6 +80,7 @@ ErrorPage &ErrorPage::operator=(const ErrorPage &rhs)
 {
 	if (this != &rhs)
 	{
+		_logger = rhs._logger;
 		_codes = rhs._codes;
 		_path = rhs._path;
 	}

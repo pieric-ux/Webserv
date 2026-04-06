@@ -35,7 +35,8 @@ ResponseHandler::~ResponseHandler() {}
  * @param rhs [TODO:parameter]
  */
 ResponseHandler::ResponseHandler(const ResponseHandler &rhs)
-	:	_response(rhs._response),
+	:	_logger(rhs._logger),
+		_response(rhs._response),
 		_bufferResponse(rhs._bufferResponse)
 {}
 
@@ -49,6 +50,7 @@ ResponseHandler &ResponseHandler::operator=(const ResponseHandler &rhs)
 {
 	if (this != &rhs)
 	{
+		_logger = rhs._logger;
 		_response = rhs._response;
 		_bufferResponse = rhs._bufferResponse;
 	}

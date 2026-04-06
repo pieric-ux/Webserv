@@ -86,6 +86,15 @@ class Parser
 		void						parseCommonDirectives(const std::string &parentRule,
 										const std::string &input,
 										size_t depth, ConfigT &config);
+	
+		template <typename ParentT, typename ChildT>
+		static void					applyParentDefaults(const ParentT &parent, ChildT &child);
+
+		template <typename ParentT>
+		void						parseLocationBlock(const std::string &locationBlockStr,
+										t_LocationConfigs &locationConfigs,
+										const ParentT &parent);
+
 		template <typename ValueT>
 		static ValueT				parseMultiplier(const std::string &val);
 
@@ -93,8 +102,6 @@ class Parser
 										config::ServerConfig &config);
 		void						parseServerNameDirectives(const std::string &serverBlockStr,
 										config::ServerConfig &config);
-		void						parseLocationBlock(const std::string &locationBlockStr,
-										t_LocationConfigs &locationConfigs);
 		void						parseLocationUri(const std::string &locationBlockStr,
 										config::LocationConfig &config);
 		void						parseAutoindexDirective(const std::string &locationBlockStr,
@@ -107,6 +114,13 @@ class Parser
 										config::LocationConfig &config);
 };
 
+/**
+ * @brief [TODO:description]
+ *
+ * @tparam ValueT [TODO:tparam]
+ * @param val [TODO:parameter]
+ * @return [TODO:return]
+ */
 template <typename ValueT>
 ValueT Parser::parseMultiplier(const std::string &val)
 {
@@ -144,6 +158,15 @@ ValueT Parser::parseMultiplier(const std::string &val)
 	return static_cast<ValueT>(size);
 }
 
+/**
+ * @brief [TODO:description]
+ *
+ * @tparam ConfigT [TODO:tparam]
+ * @param parentRule [TODO:parameter]
+ * @param input [TODO:parameter]
+ * @param depth [TODO:parameter]
+ * @param config [TODO:parameter]
+ */
 template <typename ConfigT>
 void Parser::parseCommonDirectives(const std::string &parentRule,
                                    const std::string &input,
@@ -273,6 +296,60 @@ void Parser::parseCommonDirectives(const std::string &parentRule,
 			oss << it->first << "=" << it->second << " ";
 		DEBUG(_logger, oss.str());
 	}
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @tparam ParentT [TODO:tparam]
+ * @tparam ChildT [TODO:tparam]
+ * @param parent [TODO:parameter]
+ * @param child [TODO:parameter]
+ */
+template <typename ParentT, typename ChildT>
+void Parser::applyParentDefaults(const ParentT &parent, ChildT &child)
+{
+	child.setClientMaxBodySize(parent.getClientMaxBodySize());
+	child.setCreateFullPutPath(parent.getCreateFullPutPath());
+	child.setDavPutPath(parent.getDavPutPath());
+	child.setDavAccess(parent.getDavAccess());
+	child.setDavMethods(parent.getDavMethods());
+	child.setDefaultType(parent.getDefaultType());
+	child.setErrorPage(parent.getErrorPage());
+	child.setKeepAliveTimeout(parent.getKeepAliveTimeout());
+	child.setRoot(parent.getRoot());
+	child.setTypes(parent.getTypes());
+	child.setEnableCGI(parent.getEnableCGI());
+	child.setCgiExtensions(parent.getCgiExtensions());
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @tparam ParentT [TODO:tparam]
+ * @param locationBlockStr [TODO:parameter]
+ * @param locationConfigs [TODO:parameter]
+ * @param parent [TODO:parameter]
+ */
+template <typename ParentT>
+void Parser::parseLocationBlock(const std::string &locationBlockStr,
+                                t_LocationConfigs &locationConfigs,
+                                const ParentT &parent)
+{
+	config::LocationConfig loc;
+	applyParentDefaults(parent, loc);
+	parseLocationUri(locationBlockStr, loc);
+	parseCommonDirectives("location-block", locationBlockStr, 2, loc);
+	parseAutoindexDirective(locationBlockStr, loc);
+	parseIndexDirective(locationBlockStr, loc);
+	parseAllowedMethodsDirective(locationBlockStr, loc);
+	parseReturnDirective(locationBlockStr, loc);
+	locationConfigs.push_back(loc);
+
+	t_SubRules nested = extractDirectives("location-block", locationBlockStr,
+	                                      "location-block", 2);
+	for (size_t n = 0; n < nested.size(); ++n)
+		parseLocationBlock(nested[n], locationConfigs, loc);
 }
 
 } // !parser

@@ -6,7 +6,6 @@
  */
 
 #include <webserv/client/Client.hpp>
-#include <cstring>
 
 namespace webserv
 {
@@ -19,14 +18,14 @@ namespace client
 Client::Client()
 	:	_id(-1),
 		_socket(),
-		_flags(static_cast<e_ClientFlags>(0)),
 		_status(E_CLI_REQUEST),
 		_executionHandler(),
 		_requestHandler(),
 		_responseHandler(),
 		_serverConfig(),
 		_HTTPError(),
-		_lastActivityTime(0)
+		_lastActivityTime(0),
+		_effectiveKeepaliveTimeout(0)
 {
 	std::memset(&_sockaddr_storage, 0, sizeof(_sockaddr_storage));
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
@@ -44,14 +43,14 @@ Client::Client(const t_SocketPairClient &client, const config::ServerConfig &ser
 	:	_id(-1),
 		_socket(client.first),
 		_sockaddr_storage(client.second),
-		_flags(static_cast<e_ClientFlags>(0)),
 		_status(E_CLI_REQUEST),
 		_executionHandler(),
 		_requestHandler(),
 		_responseHandler(),
 		_serverConfig(serverConfig),
 		_HTTPError(status::StatusCode()),
-		_lastActivityTime(0)
+		_lastActivityTime(std::time(NULL)),
+		_effectiveKeepaliveTimeout(static_cast<std::time_t>(serverConfig.getKeepAliveTimeout()))
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -69,17 +68,18 @@ Client::~Client() {}
  * @param rhs [TODO:parameter]
  */
 Client::Client(const Client &rhs)
-	:	_id(rhs._id),
+	:	_logger(rhs._logger),
+		_id(rhs._id),
 		_socket(rhs._socket),
 		_sockaddr_storage(rhs._sockaddr_storage),
-		_flags(rhs._flags),
 		_status(rhs._status),
 		_executionHandler(rhs._executionHandler),
 		_requestHandler(rhs._requestHandler),
 		_responseHandler(rhs._responseHandler),
 		_serverConfig(rhs._serverConfig),
 		_HTTPError(rhs._HTTPError),
-		_lastActivityTime(rhs._lastActivityTime)
+		_lastActivityTime(rhs._lastActivityTime),
+		_effectiveKeepaliveTimeout(rhs._effectiveKeepaliveTimeout)
 {}
 
 /**
@@ -92,10 +92,10 @@ Client &Client::operator=(const Client &rhs)
 {
 	if (this != &rhs)
 	{
+		_logger = rhs._logger;
 		_id = rhs._id;
 		_socket = rhs._socket;
 		_sockaddr_storage = rhs._sockaddr_storage;
-		_flags = rhs._flags;
 		_status = rhs._status;
 		_executionHandler = rhs._executionHandler;
 		_requestHandler = rhs._requestHandler;
@@ -103,6 +103,7 @@ Client &Client::operator=(const Client &rhs)
 		_serverConfig = rhs._serverConfig;
 		_HTTPError = rhs._HTTPError;
 		_lastActivityTime = rhs._lastActivityTime;
+		_effectiveKeepaliveTimeout = rhs._effectiveKeepaliveTimeout;
 	}
 	return (*this);
 }
@@ -122,19 +123,19 @@ t_Logger	Client::getLogger()
  *
  * @return [TODO:return]
  */
-e_ClientFlags Client::getFlags() const
+const common::core::net::TcpClient &Client::getSocket() const
 {
-	return _flags;
+	return _socket;
 }
 
 /**
  * @brief [TODO:description]
  *
- * @param flags [TODO:parameter]
+ * @param socket [TODO:parameter]
  */
-void Client::setFlags(const e_ClientFlags flags)
+void Client::setSocket(const common::core::net::TcpClient &socket)
 {
-	_flags = flags;
+	_socket = socket;
 }
 
 /**
@@ -142,7 +143,27 @@ void Client::setFlags(const e_ClientFlags flags)
  *
  * @return [TODO:return]
  */
-e_ReceiveDataStatus Client::getStatus() const
+sockaddr_storage Client::getSockaddrStorage() const
+{
+	return _sockaddr_storage;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param sockaddr_storage [TODO:parameter]
+ */
+void Client::setSockaddrStorage(const sockaddr_storage &sockaddr_storage)
+{
+	_sockaddr_storage = sockaddr_storage;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+e_ClientStatus Client::getStatus() const
 {
 	return _status;
 }
@@ -152,7 +173,7 @@ e_ReceiveDataStatus Client::getStatus() const
  *
  * @param status [TODO:parameter]
  */
-void Client::setStatus(const e_ReceiveDataStatus status)
+void Client::setStatus(const e_ClientStatus status)
 {
 	_status = status;
 }
@@ -222,7 +243,7 @@ void Client::setHTTPError(const HTTPError &error)
  *
  * @return [TODO:return]
  */
-int Client::getLastActivityTime() const
+std::time_t Client::getLastActivityTime() const
 {
 	return _lastActivityTime;
 }
@@ -232,7 +253,7 @@ int Client::getLastActivityTime() const
  *
  * @param time [TODO:parameter]
  */
-void Client::setLastActivityTime(const int time)
+void Client::setLastActivityTime(const std::time_t time)
 {
 	_lastActivityTime = time;
 }
@@ -242,9 +263,60 @@ void Client::setLastActivityTime(const int time)
  *
  * @return [TODO:return]
  */
-e_ReceiveDataStatus	Client::receiveData()
+std::time_t Client::getEffectiveKeepaliveTimeout() const
 {
-	return E_CLI_REQUEST;
+	return _effectiveKeepaliveTimeout;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param timeout [TODO:parameter]
+ */
+void Client::setEffectiveKeepaliveTimeout(const std::time_t timeout)
+{
+	_effectiveKeepaliveTimeout = timeout;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+void	Client::receiveData()
+{
+	unsigned char	buf[4096];
+	ssize_t			rd;
+
+	try
+	{
+		rd = _socket.recv(buf, sizeof(buf));
+	}
+	catch (const std::exception &e)
+	{
+		try {
+			t_AddrPortPair addr = common::core::net::getNameInfo(this->getSockaddrStorage());
+			WARNING(_logger, "recv error from " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(this->getSocket().getFd()) + ": " + std::string(e.what()));
+		} catch (const std::exception &e) {
+			WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+		}
+		_status = E_CLI_DISCONNECTED;
+		return ;
+	}
+	if (rd == 0)
+	{
+		try {
+			t_AddrPortPair addr = common::core::net::getNameInfo(this->getSockaddrStorage());
+			DEBUG(_logger, "Client disconnected " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(this->getSocket().getFd()));
+		} catch (const std::exception &e) {
+			WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+		}
+		_status = E_CLI_DISCONNECTED;
+		return ;
+	}
+	t_raw raw(buf, buf + rd);
+	DEBUG(_logger, "Received " + common::core::utils::toString(rd) + " bytes from fd=" + common::core::utils::toString(this->getSocket().getFd()));
+	_requestHandler.appendToBufferRequest(raw);
 }
 
 /**
@@ -255,24 +327,27 @@ void Client::sendData()
 
 }
 
+
 /**
  * @brief [TODO:description]
- *
- * @param buffer [TODO:parameter]
  */
-void Client::prepareHeadersRequest(const t_raw &buffer)
+void Client::prepareRequest()
 {
-	(void)buffer;
+
 }
 
 /**
  * @brief [TODO:description]
- *
- * @param buffer [TODO:parameter]
  */
-void Client::prepareBodyRequest(const t_raw &buffer)
+void Client::prepareHeadersRequest()
 {
-	(void)buffer;
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void Client::prepareBodyRequest()
+{
 }
 
 /**

@@ -150,24 +150,21 @@ namespace webserv.client {
 		- _id : int
 		- _socket : common::core::net::TcpClient
 		- _addrStorage : sockaddr_storage
-		- _flags : e_ClientFlags
-		- _status : e_ReceiveDataStatus
+		- _status : e_ClientStatus
 		- _executionHandler : ExecutionHandler
 		- _requestHandler : RequestHandler
 		- _serverConfig : ServerConfig
 		- _HTTPError : HTTPError
 		- _lastActivityTime : int
 		--
-		- prepareHeadersRequest(buffer : string) : void
-		- prepareBodyRequest(buffer : string) : void
+		- prepareHeadersRequest() : void
+		- prepareBodyRequest() : void
 		- prepareExecution(requestHandler : RequestHandler, responseHandler : ResponseHandler, serverConfig : ServerConfig) : void
 		- prepareHeadersResponse() : void
 		- prepareBodyResponse() : void
 		+ Client(socket : common::core::net::TcpClient, serverConfig : ServerConfig)
-		+ getFlags() : e_ClientFlags
-		+ setFlags(flags : e_ClientFlags) : void
-		+ getStatus() : e_ReceiveDataStatus
-		+ setStatus() : e_ReceiveDataStatus
+		+ getStatus() : e_ClientStatus
+		+ setStatus(status : e_ClientStatus) : void
 		+ getExecutionHandler() : ExecutionHandler
 		+ getRequestHandler() : RequestHandler
 		+ getServerConfig() : ServerConfig
@@ -175,17 +172,15 @@ namespace webserv.client {
 		+ setHTTPError(error : HTTPError) : void
 		+ getLastActivityTime() : int
 		+ setLastActivityTime(time : int) : void
-		+ receiveData() : e_ReceiveDataStatus
+		+ receiveData() : void
 		+ sendData() : void
+		_ prepareRequest() : void
 	}
 
-	enum "e_ReceiveDataStatus" as e_ReceiveDataStatus {
-		E_DISCONNECTED
+	enum "e_ClientStatus" as e_ClientStatus {
 		E_CLI_REQUEST
-	}
-
-	enum "e_ClientFlags" as e_ClientFlags {
-		E_CLI_ERR_PARSING 1 << 0
+		E_CLI_ERR_PARSING
+		E_CLI_DISCONNECTED
 	}
 }
 
@@ -215,6 +210,7 @@ namespace webserv.handler {
 		+ RequestHandler()
 		+ getRequest() : Request
 		+ setRequest(request : Request) : void
+		+ getBufferRequest() : vector<unsigned char>
 		+ appendToBufferRequest(buffer : string) : void
 		+ clearBufferRequest() : void
 		+ getParser() : Parser
@@ -516,8 +512,7 @@ namespace webserv {
 	Client "1" *-- "1" ResponseHandler
 	Client "1" *-- "1" HTTPError
 	Client --> ServerConfig : uses
-	Client ..> e_ClientFlags : uses
-	Client ..> e_ReceiveDataStatus : uses
+	Client ..> e_ClientStatus : uses
 
 	ClientHandler "1" *-- "0..*" Client
 

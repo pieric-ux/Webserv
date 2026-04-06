@@ -36,7 +36,8 @@ RequestHandler::~RequestHandler() {}
  * @param rhs [TODO:parameter]
  */
 RequestHandler::RequestHandler(const RequestHandler &rhs)
-	:	_request(rhs._request),
+	:	_logger(rhs._logger),
+		_request(rhs._request),
 		_bufferRequest(rhs._bufferRequest),
 		_parser(rhs._parser)
 {}
@@ -51,6 +52,7 @@ RequestHandler &RequestHandler::operator=(const RequestHandler &rhs)
 {
 	if (this != &rhs)
 	{
+		_logger = rhs._logger;
 		_request = rhs._request;
 		_bufferRequest = rhs._bufferRequest;
 		_parser = rhs._parser;
@@ -101,11 +103,22 @@ parser::Parser &RequestHandler::getParser()
 /**
  * @brief [TODO:description]
  *
+ * @return [TODO:return]
+ */
+const t_raw &RequestHandler::getBufferRequest() const
+{
+	return _bufferRequest;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @param buffer [TODO:parameter]
  */
 void RequestHandler::appendToBufferRequest(const t_raw &buffer)
 {
-	(void)buffer;
+	_bufferRequest.insert(_bufferRequest.end(), buffer.begin(), buffer.end());
+	DEBUG(_logger, "Buffer request: +" + common::core::utils::toString(buffer.size()) + " bytes (total=" + common::core::utils::toString(_bufferRequest.size()) + "), buffer content: " + std::string(buffer.begin(), buffer.end()));
 }
 
 /**

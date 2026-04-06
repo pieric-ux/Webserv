@@ -85,6 +85,8 @@ start
 					:Add `Client` to `ioMultiplexer`;
 					:Create `Client` with `TcpClient` and `ServerConfig`;
 						| __Client__ |
+						:Set `lastActivityTime` = now;
+						:Set `effectiveKeepaliveTimeout` = `serverConfig.keepAliveTimeout`;
 						:Create `RequestHandler`;
 						| __RequestHandler__ |
 							:Create `Parser`;
@@ -97,32 +99,34 @@ start
 		| __ClientHandler__ |
 		:Call `processClients()`;
 		while (For each `Client`) is (yes)
-			| __Client__ |
-			if (`lastActivityTime` > `keepAliveTimeout`) then (yes)
-					:Call `setFlags(E_CLI_DISCONNECTED)`;
+			if (`effectiveKeepaliveTimeout` > 0\nAND\n`now - lastActivityTime` > `effectiveKeepaliveTimeout`) then (yes)
+					:Call `removeClient(client)`;
 			else (no)
 			endif
-			| __ClientHandler__ |
-			if (`E_IN` is set for `TcpClient` OR `bufferRequest` is not empty) then (yes)
-				| __Client__ |
-				:Update `lastActivityTime`;
-				if (`E_CLI_ERR_PARSING is set`) then (yes)
-					| __ClientHandler__ |
-					:continue;
-					detach
+			if (`E_CLI_ERR_PARSING` is set) then (no)
+				| __ClientHandler__ |
+				if (`E_IN` is set for `TcpClient`) then (yes)
 					| __Client__ |
-				else (no)
-					:Call `receiveData(client)`;
+					:Update `lastActivityTime`;
+					:Call `receiveData()`;
+					| __RequestHandler__ |
+					:Call `appendToBufferRequest()`;
+					| __Client__ |
+				else(no)
 				endif
 				| __ClientHandler__ |
-				if (`e_ReceiveDataStatus`?) then (E_DISCONNECTED)
+				if (`e_ClientStatus`?) then (E_DISCONNECTED)
 					:Call `removeClient(client)`;
+					:continue;
+					detach
 				else (E_REQUEST)
+				endif
+				if (`bufferResquest` is not empty) then (yes)
 					| __Client__ |
+					:Call `prepareRequest()`;
 					if (`E_REQ_HEADERS_VALIDATED` is set) then (no)
-						:Try `prepareHeadersRequest(buffer)`;
+						:Try `prepareHeadersRequest()`;
 						| __RequestHandler__ |
-						:Call `appendToBufferRequest(buffer)`;
 						:Call `parseHeadersFromBufferRequest()`;
 						if (`E_REQ_REQUEST_LINE` is set) then (no)
 							:Use `Parser` to check `Request-Line` presence and validity;
@@ -364,9 +368,8 @@ start
 					endif
 					| __Client__ |
 					if (`E_REQ_HEADERS_VALIDATED` is set and `method` is `POST` or `DELETE`) then (yes)
-						:Try `prepareBodyRequest(buffer)`;
+						:Try `prepareBodyRequest()`;
 						| __RequestHandler__ |
-						:Call `appendToBufferRequest(buffer)`;
 						:Call `parseBodyFromBuffer(serverConfig)`;
 						:Call `findLocationConfig(requestTarget)`;
 						if (`Content-Length` > `clientMaxBodySize`) then (yes)
@@ -789,8 +792,9 @@ start
 						:Append `body` to `bufferResponse`;
 					else (no)
 					endif
+				else (no)
 				endif
-			else (no)
+			else (yes)
 			endif
 			| __ClientHandler__ |
 			if (`E_OUT` is set for `TcpClient`) then (yes)
@@ -801,6 +805,7 @@ start
 				else (no)
 				endif
 				if (`E_EXEC_COMPLETE` is set) then (yes)
+					:Update `effectiveKeepaliveTimeout` = `locationConfig.keepAliveTimeout`;
 					:Call `resetAllFlags()`;
 					:Call `clearBufferResponse()`;
 				else (no)
@@ -815,7 +820,7 @@ start
 	| __Client__ |
 	#red:(E)
 	:Call `setHTTPError(error)`;
-	:Call `setFlags(E_CLI_ERR_PARSING)`;
+	:Call `setStatus(E_CLI_ERR_PARSING)`;
 	detach
 
 @enduml
