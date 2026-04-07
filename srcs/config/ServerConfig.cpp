@@ -339,7 +339,16 @@ void ServerConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
  */
 const LocationConfig &ServerConfig::findLocationConfig(const std::string &requestTarget)
 {
-	(void)requestTarget;
+	t_LocationConfigs::iterator it = _locationConfigs.begin();
+	for (; it != _locationConfigs.end(); ++it)
+	{
+		if (requestTarget == it->getUri())
+		{
+			INFO(_logger, "Exact match found for location: " + it->getUri());
+			return (*it);
+		}
+	}
+	INFO(_logger, "No exact match found for request target: " + requestTarget);
 	return _locationConfigs.front();
 }
 
