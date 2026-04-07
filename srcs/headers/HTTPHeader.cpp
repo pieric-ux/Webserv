@@ -61,7 +61,7 @@ HTTPHeader::~HTTPHeader () {}
  *
  * @param rhs [TODO:description]
  */
-HTTPHeader::HTTPHeader(const HTTPHeader &rhs) : _name(rhs._name), _value(rhs._value), _description(rhs._description) {}
+HTTPHeader::HTTPHeader(const HTTPHeader &rhs) : _logger(rhs._logger), _name(rhs._name), _value(rhs._value), _description(rhs._description) {}
 
 /**
  * @brief [TODO:description]
@@ -73,6 +73,7 @@ HTTPHeader	&HTTPHeader::operator=(const HTTPHeader &rhs)
 {
 	if (this != &rhs)
 	{
+		_logger = rhs._logger;
 		_name = rhs._name;
 		_value = rhs._value;
 		_description = rhs._description;

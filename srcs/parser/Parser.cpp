@@ -319,6 +319,7 @@ void Parser::parseConfig(const t_raw &buffer)
 	for (size_t i = 0; i < serverBlocks.size(); ++i)
 	{
 		config::ServerConfig srv;
+		applyParentDefaults(_config, srv);
 		parseCommonDirectives("server-block", serverBlocks[i], 2, srv);
 		parseListenDirectives(serverBlocks[i], srv);
 		parseServerNameDirectives(serverBlocks[i], srv);
@@ -327,7 +328,7 @@ void Parser::parseConfig(const t_raw &buffer)
 		                                         "location-block", 2);
 		t_LocationConfigs locs;
 		for (size_t j = 0; j < locBlocks.size(); ++j)
-			parseLocationBlock(locBlocks[j], locs);
+			parseLocationBlock(locBlocks[j], locs, srv);
 		srv.setLocationConfigs(locs);
 		serverConfigs.push_back(srv);
 	}
@@ -577,28 +578,6 @@ void Parser::parseReturnDirective(const std::string &locationBlockStr,
 		if (!returnTarget.empty()) retOss << " " << returnTarget;
 		DEBUG(_logger, retOss.str());
 	}
-}
-
-/**
- * @brief [TODO:description]
- */
-void Parser::parseLocationBlock(const std::string &locationBlockStr,
-                                t_LocationConfigs &locationConfigs)
-{
-	config::LocationConfig loc;
-	parseLocationUri(locationBlockStr, loc);
-	parseCommonDirectives("location-block", locationBlockStr, 2, loc);
-	parseAutoindexDirective(locationBlockStr, loc);
-	parseIndexDirective(locationBlockStr, loc);
-	parseAllowedMethodsDirective(locationBlockStr, loc);
-	parseReturnDirective(locationBlockStr, loc);
-	locationConfigs.push_back(loc);
-
-	// Nested locations
-	t_SubRules nested = extractDirectives("location-block", locationBlockStr,
-	                                      "location-block", 2);
-	for (size_t n = 0; n < nested.size(); ++n)
-		parseLocationBlock(nested[n], locationConfigs);
 }
 
 /**

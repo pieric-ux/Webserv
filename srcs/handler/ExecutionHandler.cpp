@@ -36,7 +36,8 @@ ExecutionHandler::~ExecutionHandler() {}
  * @param rhs [TODO:parameter]
  */
 ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
-	:	_fd(rhs._fd),
+	:	_logger(rhs._logger),
+		_fd(rhs._fd),
 		_bodyReceived(rhs._bodyReceived),
 		_flags(rhs._flags)
 {}
@@ -51,6 +52,7 @@ ExecutionHandler &ExecutionHandler::operator=(const ExecutionHandler &rhs)
 {
 	if (this != &rhs)
 	{
+		_logger = rhs._logger;
 		_fd = rhs._fd;
 		_bodyReceived = rhs._bodyReceived;
 		_flags = rhs._flags;

@@ -33,6 +33,7 @@ class RequestHandler
 
 		client::Request		&getRequest();
 		void				setRequest(const client::Request &request);
+		const t_raw			&getBufferRequest() const;
 		void				appendToBufferRequest(const t_raw &buffer);
 		void				clearBufferRequest();
 		parser::Parser		&getParser();
