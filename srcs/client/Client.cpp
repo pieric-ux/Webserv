@@ -5,6 +5,7 @@
  * @brief [TODO:description]
  */
 
+#include "webserv/client/Response.hpp"
 #include <webserv/client/Client.hpp>
 
 namespace webserv
@@ -20,7 +21,7 @@ Client::Client()
 		_socket(),
 		_status(E_CLI_REQUEST),
 		_executionHandler(),
-		_requestHandler(),
+		_requestHandler(_serverConfig),
 		_responseHandler(),
 		_serverConfig(),
 		_HTTPError(),
@@ -45,10 +46,10 @@ Client::Client(const t_SocketPairClient &client, const config::ServerConfig &ser
 		_sockaddr_storage(client.second),
 		_status(E_CLI_REQUEST),
 		_executionHandler(),
-		_requestHandler(),
+		_requestHandler(_serverConfig),
 		_responseHandler(),
 		_serverConfig(serverConfig),
-		_HTTPError(status::StatusCode()),
+		_HTTPError(),
 		_lastActivityTime(std::time(NULL)),
 		_effectiveKeepaliveTimeout(static_cast<std::time_t>(serverConfig.getKeepAliveTimeout()))
 {
@@ -331,53 +332,54 @@ void Client::sendData()
 /**
  * @brief [TODO:description]
  */
-void Client::prepareRequest()
+void Client::processHTTPCycle()
 {
-
-}
-
-/**
- * @brief [TODO:description]
- */
-void Client::prepareHeadersRequest()
-{
-}
-
-/**
- * @brief [TODO:description]
- */
-void Client::prepareBodyRequest()
-{
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param requestHandler [TODO:parameter]
- * @param responseHandler [TODO:parameter]
- * @param serverConfig [TODO:parameter]
- */
-void Client::prepareExecution(handler::RequestHandler requestHandler, handler::ResponseHandler responseHandler, config::ServerConfig serverConfig)
-{
-	(void)requestHandler;
-	(void)responseHandler;
-	(void)serverConfig;
-}
-
-/**
- * @brief [TODO:description]
- */
-void Client::prepareHeadersResponse()
-{
-
-}
-
-/**
- * @brief [TODO:description]
- */
-void Client::prepareBodyResponse()
-{
-
+	int method = _requestHandler.getRequest().getMethod();
+	if (!(_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED))
+		try{
+			_requestHandler.parseHeaders();
+		} catch (const HTTPError &e) {
+			INFO(_logger, "While parsing request headers: " + std::string(e.what()));
+			setHTTPError(e);
+			setStatus(E_CLI_ERR_PARSING);
+			return ;
+		}
+	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED && (method == config::POST || method == config::PUT || method == config::DELETE))
+		try{
+			_requestHandler.parseBody();
+		} catch (const HTTPError &e) {
+			INFO(_logger, "While parsing request body: " + std::string(e.what()));
+			setHTTPError(e);
+			setStatus(E_CLI_ERR_PARSING);
+			return ;
+		}
+	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED)
+		try{
+			_executionHandler.execute(_requestHandler, _responseHandler, _serverConfig);
+		} catch (const HTTPError &e) {
+			INFO(_logger, "While executing request: " + std::string(e.what()));
+			setHTTPError(e);
+			setStatus(E_CLI_ERR_PARSING);
+			return ;
+		}
+	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED && !(_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT))
+		try{
+			_responseHandler.buildHeadersResponse(_requestHandler.getRequest());
+		} catch (const HTTPError &e) {
+			INFO(_logger, "While preparing response headers: " + std::string(e.what()));
+			setHTTPError(e);
+			setStatus(E_CLI_ERR_PARSING);
+			return ;
+		}
+	if (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT && _responseHandler.getResponse().getBody().size() > 0)
+		try{
+			_responseHandler.buildBodyResponse();
+		} catch (const HTTPError &e) {
+			INFO(_logger, "While preparing response body: " + std::string(e.what()));
+			setHTTPError(e);
+			setStatus(E_CLI_ERR_PARSING);
+			return ;
+		}
 }
 
 } // !client

@@ -583,18 +583,19 @@ void Parser::parseReturnDirective(const std::string &locationBlockStr,
 /**
  * @brief [TODO:description]
  */
-void Parser::parseRequestLine(const t_raw &bufferRequest)
+void Parser::parseRequestLine(const std::string &line, client::Request &request)
 {
-	(void)bufferRequest;
+	(void)line;
+	(void)request;
 }
 
 /**
  * @brief [TODO:description]
  */
-t_Headers Parser::parseHeaders(const t_raw &bufferRequest)
+void	Parser::parseHeaders(const std::string &headerBlock, client::Request &request)
 {
-	(void)bufferRequest;
-	return t_Headers();
+	(void)headerBlock;
+	(void)request;
 }
 
 } // !parser

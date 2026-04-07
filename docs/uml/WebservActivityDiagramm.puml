@@ -123,16 +123,15 @@ start
 				endif
 				if (`bufferResquest` is not empty) then (yes)
 					| __Client__ |
-					:Call `prepareRequest()`;
+					:Call `processHTTPCycle()`;
 					if (`E_REQ_HEADERS_VALIDATED` is set) then (no)
-						:Try `prepareHeadersRequest()`;
 						| __RequestHandler__ |
-						:Call `parseHeadersFromBufferRequest()`;
+						:Call `parseHeaders()`;
 						if (`E_REQ_REQUEST_LINE` is set) then (no)
 							:Use `Parser` to check `Request-Line` presence and validity;
 							| __Parser__ |
 							floating note: During the headers parsing,\nthe bufferResquest is cleared\nfor each line parsed.\n\nOnly the stash is kept to handle\nthe case where a line is split\nbetween two `receiveData()` calls.
-							:Call `parseRequestLine()`;
+							:Call `parseRequestLine(line, request)`;
 							:Use ABNF to parse `method` token;
 							if (Valid method?) then (no)
 								:Throw HTTPError(400);
@@ -188,7 +187,7 @@ start
 						| __RequestHandler__ |
 						:Use `Parser` to check others headers presence and validity;
 						| __Parser__ |	
-						:Call `parseHeaders(bufferRequest)`;
+						:Call `parseHeaders(headersBlock, request)`;
 						:Use ABNF to parse headers;
 						if (`Host` header is present?) then (yes)
 							if (`E_PARS_HOST` is set) then (yes)
@@ -310,8 +309,8 @@ start
 						else (no)
 						endif
 						| __RequestHandler__ |
-						:Call `validateHeaders(serverConfig)`;
 						if (`E_PARS_CLRF` is set AND `E_REQ_HEADERS_VALIDATED` is NOT set) then (yes)
+							:Call `validateHeaders(serverConfig)`;
 							:Call `findLocationConfig(requestTarget)`;
 							:Call `buildAbsolutPath(requestTarget, LocationConfig)`;
 							if (`method` is allowed in `LocationConfig`) then (no)
@@ -367,10 +366,9 @@ start
 					else (yes)
 					endif
 					| __Client__ |
-					if (`E_REQ_HEADERS_VALIDATED` is set and `method` is `POST` or `DELETE`) then (yes)
-						:Try `prepareBodyRequest()`;
+					if (`E_REQ_HEADERS_VALIDATED` is set and `method` is `POST` or `PUT` or `DELETE`) then (yes)
 						| __RequestHandler__ |
-						:Call `parseBodyFromBuffer(serverConfig)`;
+						:Call `parseBody(serverConfig)`;
 						:Call `findLocationConfig(requestTarget)`;
 						if (`Content-Length` > `clientMaxBodySize`) then (yes)
 							:Throw HTTPError(413);
@@ -383,7 +381,6 @@ start
 					endif
 					| __Client__ |
 					if (`E_REQ_HEADERS_VALIDATED` is set) then(yes)
-						:Try `prepareExecution(requestHandler, responseHandler, serverConfig)`;
 						| __ExecutionHandler__ |
 						:Call `execute(requestHandler, responseHandler, serverConfig)`;
 						:Call `findLocationConfig(requestTarget)`;
@@ -758,8 +755,8 @@ start
 					endif
 					| __Client__ |
 					if (E_REQ_HEADERS_VALIDATED is set AND E_RESP_HEADERS_SENT is NOT set) then (no)
-						:Try `prepareHeadersResponse()`;
 						| __ResponseHandler__ |
+						:Call `buildHeadersResponse(request)`;
 						if (E_EXEC_CREATED) then (yes)
 							:statusCode = 201;
 						else if (E_EXEC_NOCONTENT) then (yes)
@@ -787,8 +784,8 @@ start
 					endif
 					| __Client__ |
 					if (E_RESP_HEADERS_SENT is set AND `body` is not empty) then (yes)
-						:Try `prepareBodyResponse()`;
 						| __ResponseHandler__ |
+						:Call `buildBodyResponse()`;
 						:Append `body` to `bufferResponse`;
 					else (no)
 					endif
@@ -819,6 +816,7 @@ start
 
 	| __Client__ |
 	#red:(E)
+	: Catch HTTPError;
 	:Call `setHTTPError(error)`;
 	:Call `setStatus(E_CLI_ERR_PARSING)`;
 	detach
