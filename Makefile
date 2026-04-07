@@ -20,20 +20,44 @@ ABNFDIR = $(ABNF_PATH)
 # Compiler and flags
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -Wshadow -MMD -MP -std=c++98
-DEBUG_FLAGS = -g3 -fno-omit-frame-pointer -fstack-protector-all
+
+DEV_LOG ?= 0
+ifeq ($(DEV_LOG), 1)
+CXXFLAGS += -D DEV_LOG=1
+endif
+
+DEBUG_FLAGS = -g3 -fno-omit-frame-pointer -fstack-protector-all -fstandalone-debug
 
 INCLUDES = -I includes -I $(ABNFDIR)/includes -I $(LOGGERDIR)/includes -I $(COMMONDIR)/includes
 
-LIBS = -L $(ABNFDIR) -labnf -L $(COMMONDIR) -lcommon -L $(LOGGERDIR) -llog42
-
+LIBS = -L $(ABNFDIR) -labnf -L $(LOGGERDIR) -llog42 -L $(COMMONDIR) -lcommon
 # vpath to specify where to find the .cpp files
 vpath %.cpp \
 	$(SRCDIR) \
-	$(SRCDIR)/core \
-	$(SRCDIR)/http \
+	$(SRCDIR)/client \
+	$(SRCDIR)/config \
+	$(SRCDIR)/handler \
+	$(SRCDIR)/headers \
+	$(SRCDIR)/MIMEtypes \
+	$(SRCDIR)/parser \
+	$(SRCDIR)/status \
 
 # Sources and object files
-SRCES = main.cpp
+SRCES =  main.cpp HTTPServer.cpp ServerFactory.cpp Server.cpp
+		 # Config
+SRCES += DefaultConfig.cpp ErrorPage.cpp HTTPConfig.cpp Listen.cpp LocationConfig.cpp ServerConfig.cpp
+		 # Handler
+SRCES += ClientHandler.cpp ExecutionHandler.cpp RequestHandler.cpp ResponseHandler.cpp
+		 # Client
+SRCES += Client.cpp Request.cpp Response.cpp HTTPError.cpp
+		 # Headers
+SRCES += HTTPHeader.cpp HTTPHeadersRegistry.cpp
+		 # MIMETypes
+SRCES += TypesRegistry.cpp
+		 # Parser
+SRCES += Parser.cpp
+		 # Status
+SRCES += StatusCode.cpp StatusCodeRegistry.cpp
 
 OBJS_SRCES = $(addprefix $(OBJDIR)/, $(SRCES:.cpp=.o))
 
@@ -42,13 +66,13 @@ all: $(NAME)
 
 # Build each library
 $(COMMONDIR)/libcommon.a:
-	$(MAKE) -C $(COMMONDIR)
+	$(MAKE) -C $(COMMONDIR) CXXFLAGS="$(CXXFLAGS)"
 $(LOGGERDIR)/liblog42.a:
-	$(MAKE) -C $(LOGGERDIR) COMMON_PATH=$(abspath $(COMMONDIR))
+	$(MAKE) -C $(LOGGERDIR) COMMON_PATH=$(abspath $(COMMONDIR)) CXXFLAGS="$(CXXFLAGS)"
 $(ABNFDIR)/libabnf.a:
-	$(MAKE) -C $(ABNFDIR) COMMON_PATH=$(abspath $(COMMONDIR)) LOGGER_PATH=$(abspath $(LOGGERDIR))
+	$(MAKE) -C $(ABNFDIR) COMMON_PATH=$(abspath $(COMMONDIR)) LOGGER_PATH=$(abspath $(LOGGERDIR)) CXXFLAGS="$(CXXFLAGS)"
 
-debug: CXXFLAGS = $(DEBUG_FLAGS)
+debug: CXXFLAGS += $(DEBUG_FLAGS)
 
 # Rebuild with debug flags
 debug: re
@@ -60,7 +84,7 @@ sanitize: debug
 # Rule to compile with Leaks check
 leaks:
 ifeq ($(OS), Darwin)
-	MallocStackLogging=YES leaks --outputGraph=webserv.memgraph --fullContent --fullStackHistory --atExit -- ./$(NAME)
+	MallocStackLogging=full leaks --outputGraph=webserv.memgraph --fullContent --fullStackHistory --atExit -- ./$(NAME)
 else ifeq ($(OS), Linux)
 	valgrind --leak-check=full --track-origins=yes --log-file=valgrind.log --show-leak-kinds=all --trace-children=yes --track-fds=all ./$(NAME)
 endif
@@ -74,6 +98,10 @@ $(OBJDIR)/%.o: %.cpp
 $(NAME): $(OBJS_SRCES) $(LOGGERDIR)/liblog42.a $(COMMONDIR)/libcommon.a $(ABNFDIR)/libabnf.a
 	$(CXX) $(CXXFLAGS) $(OBJS_SRCES) $(LIBS) -o $(NAME)
 
+# Rule to clean up log files
+removelogs:
+	rm -rf logs/*.log
+
 # Rule to clean up object files
 clean:
 	@$(MAKE) clean -C $(abspath $(COMMONDIR))
@@ -82,13 +110,17 @@ clean:
 	rm -rf $(OBJDIR)
 
 # Rule to clean up object files and executable
-fclean: clean
+fclean: clean removelogs
 	@$(MAKE) fclean -C $(abspath $(COMMONDIR))
 	@$(MAKE) fclean -C $(abspath $(LOGGERDIR)) COMMON_PATH=$(abspath $(COMMONDIR))
 	@$(MAKE) fclean -C $(abspath $(ABNFDIR)) COMMON_PATH=$(abspath $(COMMONDIR)) LOGGER_PATH=$(abspath $(LOGGERDIR))
 	rm -f $(NAME)
 
+# Rule to clear log files
+# logsclear:
+# 	find logs -type f -name '*.log' -exec truncate -s 0 {} +
+
 # Rule to recompile everything
 re: fclean all
 
-.PHONY: all clean fclean re bonus debug sanitize
+.PHONY: all clean fclean re bonus debug sanitize logsclear

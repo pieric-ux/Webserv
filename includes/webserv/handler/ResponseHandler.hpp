@@ -1,0 +1,52 @@
+// TODO: don't forget header
+
+#ifndef WEBSERV_HANDLER_RESPONSEHANDLER_HPP
+#define WEBSERV_HANDLER_RESPONSEHANDLER_HPP
+
+/**
+ * @file ResponseHandler.hpp
+ * @brief [TODO:description]
+ */
+
+#include <webserv/types.hpp>
+#include <string>
+#include <webserv/client/Response.hpp>
+#include <webserv/client/Request.hpp>
+#include <webserv/status/StatusCode.hpp>
+
+namespace webserv
+{
+namespace handler
+{
+
+class ResponseHandler
+{
+	public:
+		ResponseHandler();
+		~ResponseHandler();
+
+		ResponseHandler(const ResponseHandler &rhs);
+		ResponseHandler &operator=(const ResponseHandler &rhs);
+
+		static t_Logger		getLogger();
+
+		client::Response	&getResponse();
+		void				setResponse(const client::Response &response);
+		void				appendToBufferResponse(const t_raw &buffer);
+		void				clearBufferResponse();
+		void				buildHeadersResponse(const client::Request &request);
+		void				buildBodyResponse();
+
+	private:
+		t_Logger			_logger;
+		client::Response	_response;
+		t_raw				_bufferResponse;
+
+		void				buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase);
+		void				buildHeaders(const client::Request &request);
+};
+
+} // !handler
+} // !webserv
+
+#endif // !WEBSERV_HANDLER_RESPONSEHANDLER_HPP
