@@ -11,6 +11,8 @@
 #include <string>
 #include <webserv/client/Request.hpp>
 #include <webserv/client/Response.hpp>
+#include <webserv/handler/RequestHandler.hpp>
+#include <webserv/handler/ResponseHandler.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
 #include <webserv/types.hpp>
@@ -46,7 +48,7 @@ class ExecutionHandler
 		void						setBodyReceived(const int bodyReceived);
 		int							getFlags() const;
 
-		void						execute(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
+		void						execute(const RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::ServerConfig &serverConfig);
 		void						executeCGI(client::Request &request, const config::ServerConfig &serverConfig);
 		void						executeRequest(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
 

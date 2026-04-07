@@ -174,8 +174,8 @@ void	ClientHandler::processClients()
 			}
 			if (client.getRequestHandler().getBufferRequest().size() > 0)
 			{
-				DEBUG(_logger, "Preparing request for " + clientAddr);
-				client.prepareRequest();
+				DEBUG(_logger, "Processing HTTPCycle for " + clientAddr);
+				client.processHTTPCycle();
 			}
 		}
 		else

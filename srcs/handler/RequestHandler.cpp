@@ -5,6 +5,9 @@
  * @brief [TODO:description]
  */
 
+#include "webserv/client/HTTPError.hpp"
+#include "webserv/client/Request.hpp"
+#include "webserv/parser/Parser.hpp"
 #include <webserv/handler/RequestHandler.hpp>
 
 namespace webserv
@@ -15,10 +18,11 @@ namespace handler
 /**
  * @brief [TODO:description]
  */
-RequestHandler::RequestHandler()
+RequestHandler::RequestHandler(config::ServerConfig &config)
 	:	_request(),
 		_bufferRequest(),
-		_parser()
+		_parser(),
+		_serverConfig(config)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.requesthandler");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -39,8 +43,11 @@ RequestHandler::RequestHandler(const RequestHandler &rhs)
 	:	_logger(rhs._logger),
 		_request(rhs._request),
 		_bufferRequest(rhs._bufferRequest),
-		_parser(rhs._parser)
-{}
+		_parser(rhs._parser),
+		_serverConfig(rhs._serverConfig)
+{
+
+}
 
 /**
  * @brief [TODO:description]
@@ -56,6 +63,7 @@ RequestHandler &RequestHandler::operator=(const RequestHandler &rhs)
 		_request = rhs._request;
 		_bufferRequest = rhs._bufferRequest;
 		_parser = rhs._parser;
+		_serverConfig = rhs._serverConfig;
 	}
 	return (*this);
 }
@@ -142,7 +150,42 @@ int RequestHandler::getBodyReceived() const
 /**
  * @brief [TODO:description]
  */
-void RequestHandler::parseHeadersFromBufferRequest()
+void RequestHandler::parseHeaders()
+{
+	std::string bufferStr(_bufferRequest.begin(), _bufferRequest.end());
+
+	static const unsigned char CRLF[4] = {'\r', '\n', '\r', '\n'};
+	std::string::iterator it = std::search(bufferStr.begin(), bufferStr.end(), CRLF, CRLF + 4);
+	if (it == bufferStr.end())
+		throw client::HTTPError(400);
+
+	_parser.setFlags(parser::E_PARS_CLRF);
+
+	std::string::iterator lineEnd = std::find(bufferStr.begin(), bufferStr.end(), '\n');
+	std::string line(bufferStr.begin(), lineEnd);
+
+	std::string headersBlock(lineEnd + 1, it + 2);
+
+	if (!(_request.getFlags() & client::E_REQ_REQUEST_LINE))
+	{
+		_parser.parseRequestLine(line, _request);
+		_request.setFlags(client::E_REQ_REQUEST_LINE);
+	}
+	if (_request.getFlags() & client::E_REQ_REQUEST_LINE)
+		_parser.parseHeaders(headersBlock, _request);
+
+	if (_parser.getFlags() & parser::E_PARS_CLRF && !(_request.getFlags() & client::E_REQ_HEADERS_VALIDATED))
+	{
+		validateHeaders();
+	}
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param serverConfig [TODO:parameter]
+ */
+void RequestHandler::validateHeaders()
 {
 
 }
@@ -152,19 +195,8 @@ void RequestHandler::parseHeadersFromBufferRequest()
  *
  * @param serverConfig [TODO:parameter]
  */
-void RequestHandler::validateHeaders(const config::ServerConfig &serverConfig)
+void RequestHandler::parseBody()
 {
-	(void)serverConfig;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param serverConfig [TODO:parameter]
- */
-void RequestHandler::parseBodyFromBuffer(const config::ServerConfig &serverConfig)
-{
-	(void)serverConfig;
 }
 
 /**

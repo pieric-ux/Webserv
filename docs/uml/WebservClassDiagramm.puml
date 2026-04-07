@@ -140,7 +140,7 @@ namespace webserv.client {
 	class "HTTPError" as HTTPError <<exception>> {
 		- _statusCode : StatusCode
 		--
-		+ HTTPError(statusCode : StatusCode)
+		+ HTTPError(code : unsigned short)
 		+ getStatusCode() : StatusCode
 		+ setStatusCode(statusCode : StatusCode) : void
 		+ what() : string
@@ -157,11 +157,6 @@ namespace webserv.client {
 		- _HTTPError : HTTPError
 		- _lastActivityTime : int
 		--
-		- prepareHeadersRequest() : void
-		- prepareBodyRequest() : void
-		- prepareExecution(requestHandler : RequestHandler, responseHandler : ResponseHandler, serverConfig : ServerConfig) : void
-		- prepareHeadersResponse() : void
-		- prepareBodyResponse() : void
 		+ Client(socket : common::core::net::TcpClient, serverConfig : ServerConfig)
 		+ getStatus() : e_ClientStatus
 		+ setStatus(status : e_ClientStatus) : void
@@ -174,7 +169,7 @@ namespace webserv.client {
 		+ setLastActivityTime(time : int) : void
 		+ receiveData() : void
 		+ sendData() : void
-		_ prepareRequest() : void
+		_ processHTTPCycle() : void
 	}
 
 	enum "e_ClientStatus" as e_ClientStatus {
@@ -202,12 +197,13 @@ namespace webserv.handler {
 		- _request : Request
 		- _bufferRequest : vector<unsigned char>
 		- _parser : Parser
+		- _serverConfig : ServerConfig
 		--
-		- parseHeadersFromBufferRequest() : void
 		- validateHeaders(serverConfig : ServerConfig) : void
-		- parseBodyFromBuffer(serverConfig : ServerConfig) : void
 		- buildAbsolutPath(requestTarget : string, locationConfig : LocationConfig) : void
 		+ RequestHandler()
+		+ parseHeaders() : void
+		+ parseBody() : void
 		+ getRequest() : Request
 		+ setRequest(request : Request) : void
 		+ getBufferRequest() : vector<unsigned char>
@@ -228,6 +224,8 @@ namespace webserv.handler {
 		+ setResponse(response : Response) : void
 		+ appendToBufferResponse(buffer : string) : void
 		+ clearBufferResponse() : void
+		+ buildHeadersResponse(request : Request) : void
+		+ buildBodyResponse() : void
 	}
 
 	enum "e_ExecutionHandlerFlags" as e_ExecutionHandlerFlags {
@@ -249,7 +247,7 @@ namespace webserv.handler {
 		+ setBodyReceived(bodyReceived : int) : void
 		+ getFlags() : e_ExecutionFlags
 		+ setFlags(flags : e_ExecutionFlags) : void
-		+ execute(request : Request, response : Response, serverConfig : ServerConfig) : void
+		+ execute(requestHandler : requestHandler, responseHandler : ResponseHandler, serverConfig : ServerConfig) : void
 		+ executeCGI(request : Request, serverConfig : ServerConfig) : void
 		+ executeRequest(request : Request, response : Response, serverConfig : ServerConfig) : void
 		- executeHEADorGET(request : Request, response : Response, locationConfig : LocationConfig) : void
@@ -289,8 +287,8 @@ namespace webserv.parser {
 		+ getFlags() : e_ParserFlags
 		+ setFlags(flags : e_ParserFlags) : void
 		+ parseConfig(buffer : string) : void
-		+ parseRequestLine(bufferRequest : string) : void
-		+ parseHeaders(bufferRequest : string) : vector<HTTPHeader>
+		+ parseRequestLine(line : string, request : Request) : void
+		+ parseHeaders(headersBlock : string, request : Request) : void
 	}
 }
 

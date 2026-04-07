@@ -108,6 +108,24 @@ void ResponseHandler::clearBufferResponse()
 /**
  * @brief [TODO:description]
  *
+ * @param request [TODO:parameter]
+ */
+void ResponseHandler::buildHeadersResponse(const client::Request &request)
+{
+	(void)request;
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void ResponseHandler::buildBodyResponse()
+{
+
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @param httpVersion [TODO:parameter]
  * @param statusCode [TODO:parameter]
  * @param reasonPhrase [TODO:parameter]

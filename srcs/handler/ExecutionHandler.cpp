@@ -137,10 +137,10 @@ void ExecutionHandler::setFlags(const int flags)
  * @param response [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-void ExecutionHandler::execute(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig)
+void ExecutionHandler::execute(const RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::ServerConfig &serverConfig)
 {
-	(void)request;
-	(void)response;
+	(void)requestHandler;
+	(void)responseHandler;
 	(void)serverConfig;
 }
 

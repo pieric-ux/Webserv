@@ -27,12 +27,13 @@ HTTPError::HTTPError() : _statusCode()
  *
  * @param statusCode [TODO:parameter]
  */
-HTTPError::HTTPError(const status::StatusCode &statusCode)
-	:	_statusCode(statusCode)
+HTTPError::HTTPError(unsigned short code)
+	:	_statusCode(status::StatusCodeRegistry::getInstance().getStatusCode(code)),
+		_what(common::core::utils::toString(code) + " " + _statusCode.getMessage() + ": " + _statusCode.getDescription())
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
 	_logger->setLevel(log42::logRecord::DEBUG);
-	INFO(_logger, std::string("HTTPError instance created with status code: ") + common::core::utils::toString(statusCode.getCode()));
+	INFO(_logger, "HTTPError instance created: " + _what);
 }
 
 /**
@@ -47,7 +48,8 @@ HTTPError::~HTTPError() throw() {}
  */
 HTTPError::HTTPError(const HTTPError &rhs)
 	:	std::exception(rhs),
-		_statusCode(rhs._statusCode)
+		_statusCode(rhs._statusCode),
+		_what(rhs._what)
 {}
 
 /**
@@ -62,6 +64,7 @@ HTTPError &HTTPError::operator=(const HTTPError &rhs)
 	{
 		std::exception::operator=(rhs);
 		_statusCode = rhs._statusCode;
+		_what = rhs._what;
 	}
 	return (*this);
 }
@@ -103,7 +106,7 @@ void HTTPError::setStatusCode(const status::StatusCode &statusCode)
  */
 const char *HTTPError::what() const throw()
 {
-	return "";
+	return _what.c_str();
 }
 
 } // !client

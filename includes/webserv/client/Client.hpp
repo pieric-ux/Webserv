@@ -64,7 +64,7 @@ class Client
 
 		void								receiveData();
 		void								sendData();
-		void								prepareRequest();
+		void								processHTTPCycle();
 
 	private:
 		t_Logger							_logger;
@@ -79,12 +79,6 @@ class Client
 		HTTPError							_HTTPError;
 		std::time_t							_lastActivityTime;
 		std::time_t							_effectiveKeepaliveTimeout;
-
-		void								prepareHeadersRequest();
-		void								prepareBodyRequest();
-		void								prepareExecution(handler::RequestHandler requestHandler, handler::ResponseHandler responseHandler, config::ServerConfig serverConfig);
-		void								prepareHeadersResponse();
-		void								prepareBodyResponse();
 };
 
 } // !client

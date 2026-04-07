@@ -23,32 +23,34 @@ namespace handler
 class RequestHandler
 {
 	public:
-		RequestHandler();
+		RequestHandler(config::ServerConfig &serverConfig);
 		~RequestHandler();
 
 		RequestHandler(const RequestHandler &rhs);
 		RequestHandler &operator=(const RequestHandler &rhs);
 
-		static t_Logger		getLogger();
+		static t_Logger			getLogger();
 
-		client::Request		&getRequest();
-		void				setRequest(const client::Request &request);
-		const t_raw			&getBufferRequest() const;
-		void				appendToBufferRequest(const t_raw &buffer);
-		void				clearBufferRequest();
-		parser::Parser		&getParser();
-		int					getBodyReceived() const;
+		void					parseHeaders();
+		void					parseBody();
+
+		client::Request			&getRequest();
+		void					setRequest(const client::Request &request);
+		const t_raw				&getBufferRequest() const;
+		void					appendToBufferRequest(const t_raw &buffer);
+		void					clearBufferRequest();
+		parser::Parser			&getParser();
+		int						getBodyReceived() const;
 
 	private:
-		t_Logger			_logger;
-		client::Request		_request;
-		t_raw				_bufferRequest;
-		parser::Parser		_parser;
+		t_Logger				_logger;
+		client::Request			_request;
+		t_raw					_bufferRequest;
+		parser::Parser			_parser;
+		config::ServerConfig	&_serverConfig;
 
-		void				parseHeadersFromBufferRequest();
-		void				validateHeaders(const config::ServerConfig &serverConfig);
-		void				parseBodyFromBuffer(const config::ServerConfig &serverConfig);
-		void				buildAbsolutPath(const std::string &requestTarget, const config::LocationConfig &locationConfig);
+		void					validateHeaders();
+		void					buildAbsolutPath(const std::string &requestTarget, const config::LocationConfig &locationConfig);
 };
 
 } // !handler

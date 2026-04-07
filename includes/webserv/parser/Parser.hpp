@@ -8,7 +8,7 @@
  * @brief [TODO:description]
  */
 
- #include <cerrno>
+#include <cerrno>
 #include <climits>
 #include <vector>
 #include <string>
@@ -17,6 +17,7 @@
 #include <webserv/config/HTTPConfig.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
+#include <webserv/client/Request.hpp>
 #include <webserv/types.hpp>
 
 namespace webserv
@@ -49,8 +50,8 @@ class Parser
 		int							getFlags() const;
 		void						setFlags(const int flags);
 		void						parseConfig(const t_raw &buffer);
-		void						parseRequestLine(const t_raw &bufferRequest);
-		t_Headers					parseHeaders(const t_raw &bufferRequest);
+		void						parseRequestLine(const std::string &line, client::Request &request);
+		void						parseHeaders(const std::string &headerBlock, client::Request &request);
 
 	private:
 		static config::HTTPConfig	&_config;

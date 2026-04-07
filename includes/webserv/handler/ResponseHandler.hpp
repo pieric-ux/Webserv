@@ -34,6 +34,8 @@ class ResponseHandler
 		void				setResponse(const client::Response &response);
 		void				appendToBufferResponse(const t_raw &buffer);
 		void				clearBufferResponse();
+		void				buildHeadersResponse(const client::Request &request);
+		void				buildBodyResponse();
 
 	private:
 		t_Logger			_logger;
