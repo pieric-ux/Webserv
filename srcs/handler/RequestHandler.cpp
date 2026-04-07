@@ -9,6 +9,8 @@
 #include "webserv/client/Request.hpp"
 #include "webserv/parser/Parser.hpp"
 #include <webserv/handler/RequestHandler.hpp>
+#include <webserv/client/HTTPError.hpp>
+#include <algorithm>
 
 namespace webserv
 {
@@ -148,7 +150,8 @@ int RequestHandler::getBodyReceived() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Orchestrate header parsing on the buffered request bytes.
+ *
  */
 void RequestHandler::parseHeaders()
 {
@@ -177,6 +180,12 @@ void RequestHandler::parseHeaders()
 	if (_parser.getFlags() & parser::E_PARS_CLRF && !(_request.getFlags() & client::E_REQ_HEADERS_VALIDATED))
 	{
 		validateHeaders();
+		if (_request.getFlags() & client::E_REQ_HEADERS_VALIDATED)
+		{
+			t_raw::iterator end = std::search(_bufferRequest.begin(), _bufferRequest.end(), CRLF, CRLF + 4);
+			_bufferRequest.erase(_bufferRequest.begin(), end + 4);
+			INFO(_logger, "Headers parsed and validated, buffer request updated (remaining bytes: " + common::core::utils::toString(_bufferRequest.size()) + ")");
+		}
 	}
 }
 

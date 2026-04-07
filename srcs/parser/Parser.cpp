@@ -9,6 +9,8 @@
 #include <webserv/config/Listen.hpp>
 #include <webserv/config/Return.hpp>
 #include <webserv/status/StatusCode.hpp>
+#include <webserv/client/HTTPError.hpp>
+#include <webserv/headers/HTTPHeader.hpp>
 #include <sys/types.h>
 #include <sstream>
 
@@ -581,21 +583,108 @@ void Parser::parseReturnDirective(const std::string &locationBlockStr,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parse the HTTP request-line into the given Request.
  */
 void Parser::parseRequestLine(const std::string &line, client::Request &request)
 {
-	(void)line;
-	(void)request;
+	if (!_abnf.match("request-line", "HTTP", line))
+		throw client::HTTPError(400);
+
+	std::string methodStr;
+	std::string target;
+	std::string version;
+
+	if (!_abnf.extractSubRule("request-line", "HTTP", line, "method", methodStr)
+		|| !_abnf.extractSubRule("request-line", "HTTP", line, "request-target", target)
+		|| !_abnf.extractSubRule("request-line", "HTTP", line, "HTTP-version", version))
+		throw client::HTTPError(400);
+
+	if (target.size() > 8192)
+		throw client::HTTPError(414);
+
+	if (version != "HTTP/1.1")
+		throw client::HTTPError(505);
+
+	config::e_Method method;
+	if (methodStr == "GET") method = config::GET;
+	else if (methodStr == "HEAD") method = config::HEAD;
+	else if (methodStr == "POST") method = config::POST;
+	else if (methodStr == "PUT") method = config::PUT;
+	else if (methodStr == "DELETE") method = config::DELETE;
+	else
+		throw client::HTTPError(501);
+
+	request.setMethod(method);
+	request.setRequestTarget(target);
+	request.setHttpVersion(version);
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parse the headers section (between request-line and CRLF CRLF).
+ *
  */
-void	Parser::parseHeaders(const std::string &headerBlock, client::Request &request)
+void Parser::parseHeaders(const std::string &headersBlock, client::Request &request)
 {
-	(void)headerBlock;
-	(void)request;
+	t_Headers headers;
+	std::string::size_type pos = 0;
+
+	while (pos < headersBlock.size())
+	{
+		std::string::size_type eol = headersBlock.find("\r\n", pos);
+		if (eol == std::string::npos)
+			throw client::HTTPError(400);
+		if (eol == pos)
+			break;
+		std::string line = headersBlock.substr(pos, eol - pos);
+		pos = eol + 2;
+
+		if (!_abnf.match("field-line", "HTTP", line))
+			throw client::HTTPError(400);
+
+		std::string name;
+		std::string value;
+		if (!_abnf.extractSubRule("field-line", "HTTP", line, "field-name", name)
+			|| !_abnf.extractSubRule("field-line", "HTTP", line, "field-value", value))
+			throw client::HTTPError(400);
+
+		HTTPheaders::HTTPHeader header(name, value, "");
+
+		// group by field-name, add in following order 
+		bool grouped = false;
+		for (t_Headers::iterator it = headers.begin(); it != headers.end(); ++it)
+		{
+			if (!it->empty())
+			{
+				const std::string &existing = it->front().getName();
+				if (existing.size() == name.size())
+				{
+					bool same = true;
+					for (std::size_t i = 0; i < name.size(); ++i)
+					{
+						if (std::tolower(static_cast<unsigned char>(existing[i]))
+							!= std::tolower(static_cast<unsigned char>(name[i])))
+						{
+							same = false;
+							break;
+						}
+					}
+					if (same)
+					{
+						it->push_back(header);
+						grouped = true;
+						break;
+					}
+				}
+			}
+		}
+		if (!grouped)
+		{
+			std::list<HTTPheaders::HTTPHeader> bucket;
+			bucket.push_back(header);
+			headers.push_back(bucket);
+		}
+	}
+	request.setHeaders(headers);
 }
 
 } // !parser

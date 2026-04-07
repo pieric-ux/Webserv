@@ -14,6 +14,7 @@
 #include <string>
 #include <abnf/Abnf.hpp>
 #include <webserv/headers/HTTPHeader.hpp>
+#include <webserv/client/Request.hpp>
 #include <webserv/config/HTTPConfig.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
