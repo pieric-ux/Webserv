@@ -180,8 +180,8 @@ void Request::setHeaders(const t_Headers &headers)
 	_headers = headers;
 }
 
-
- /** @brief [TODO:description]
+/**
+ * @brief [TODO:description]
  *
  * @return [TODO:return]
  */
