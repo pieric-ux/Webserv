@@ -8,6 +8,7 @@
  * @brief [TODO:description]
  */
 
+#include <cstring>
 #include <webserv/types.hpp>
 #include <common/common.hpp>
 #include <webserv/config/ServerConfig.hpp>
@@ -29,6 +30,7 @@ class Server
 		static t_Logger					getLogger();
 
 		const t_ServerSockets			&getSockets() const;
+		const config::ServerConfig		&getConfig() const;
 
 	private:
 		t_Logger						_logger;
@@ -36,7 +38,7 @@ class Server
 		t_ServerSockets 				_sockets;
 
 		void							createSockets();
-		void							setSocketOption(common::core::net::TcpServer &socket, const config::Listen &listen);
+		void							setSocketOption(common::core::net::TcpServer &socket, const config::Listen &listen, const t_AddrPortPair &addr);
 };
 
 } // !webserv

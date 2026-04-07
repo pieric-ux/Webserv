@@ -74,7 +74,6 @@ HTTPServer &HTTPServer::operator=(const HTTPServer &rhs)
 	return (*this);
 }
 
-
 /**
  * @brief [TODO:description]
  *
@@ -117,8 +116,14 @@ void	HTTPServer::setup()
 		t_ServerSockets::const_iterator socketIt = sockets.begin();
 		for (; socketIt != sockets.end(); ++socketIt)
 		{
-			_ioMultiplexer->add(socketIt->second.getFd(), common::core::io::IEventIO::E_IN);
-			INFO(_logger, "Registered fd=" + common::core::utils::toString(socketIt->second.getFd()) + " to I/O multiplexer");
+			_ioMultiplexer->add(socketIt->first.getFd(), common::core::io::IEventIO::E_IN);
+			INFO(_logger, "Registered fd=" + common::core::utils::toString(socketIt->first.getFd()) + " to I/O multiplexer");
+			try {
+				t_AddrPortPair addr = common::core::net::getNameInfo(socketIt->second);
+				INFO(_logger, "Listening on " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(socketIt->first.getFd()));
+			} catch (const std::exception &e) {
+				WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+			}
 		}
 	}
 
@@ -133,11 +138,50 @@ void	HTTPServer::setup()
  *
  * @return [TODO:return]
  */
-bool HTTPServer::running()
+void	HTTPServer::run()
 {
-	return false;
-}
+	INFO(_logger, "HTTPServer is running...");
 
+	while (!g_SignalStatus)
+	{
+		int ready;
+
+		try {
+			ready = _ioMultiplexer->wait(IO_TIMEOUT_MS);
+			if (!ready)
+				continue;
+			DEBUG(_logger, "I/O multiplexer signaled " + common::core::utils::toString(ready) + " ready file descriptors");
+		} catch (const std::exception &e) {
+			ERROR(_logger, "I/O multiplexer wait failed: " + std::string(e.what()));
+		}
+
+		t_Servers::const_iterator it = _servers.begin();
+		for (; it != _servers.end(); ++it)
+		{
+    		const t_ServerSockets &sockets = it->getSockets();
+			t_ServerSockets::const_iterator socketIt = sockets.begin();
+			for (; socketIt != sockets.end(); ++socketIt)
+			{
+				if (_ioMultiplexer->getEvents(socketIt->first.getFd()) & common::core::io::IEventIO::E_IN)
+				{
+					try {
+						t_AddrPortPair addr = common::core::net::getNameInfo(socketIt->second);
+						INFO(_logger, "Incoming connection on " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(socketIt->first.getFd()));
+					} catch (const std::exception &e) {
+						WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+					}
+
+					try {
+						connectClient(*socketIt);
+					} catch (const std::exception &e) {
+						continue;
+					}
+				}
+			}
+		}
+		_clientHandler.processClients();
+	}
+}
 
 /**
  * @brief [TODO:description]
@@ -181,9 +225,21 @@ void	HTTPServer::loadConfig()
 /**
  * @brief [TODO:description]
  */
-void HTTPServer::connectClient()
+void HTTPServer::connectClient(const t_SocketPairServer &socket) //TODO: log with getsockname to log client IP and port and getpeername to log server IP and port
 {
-
+	try {
+		t_SocketPairClient client = socket.first.accept<sockaddr_storage>();
+			try{
+				t_AddrPortPair addr = common::core::net::getNameInfo(client.second);
+				INFO(_logger, "Accepted new client connection on " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(client.first.getFd()));
+			} catch (const std::exception &e) {
+				WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+			}
+		_clientHandler.addClient(client);
+	} catch (const std::exception &e) {
+		ERROR(_logger, "Failed connect client connection: " + std::string(e.what()));
+		throw;
+	}
 }
 
 } // !webserv

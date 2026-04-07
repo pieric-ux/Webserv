@@ -75,7 +75,7 @@ void	ClientHandler::setIoMultiplexer(const t_ioMultiplexer &ioMultiplexer)
  *
  * @param client [TODO:parameter]
  */
-void ClientHandler::addClient(client::Client &client)
+void ClientHandler::addClient(const t_SocketPairClient &client)
 {
 	(void)client;
 }
@@ -95,9 +95,9 @@ void ClientHandler::removeClient(client::Client &client)
  *
  * @param ioMultiplexer [TODO:parameter]
  */
-void ClientHandler::processClients(t_ioMultiplexer ioMultiplexer)
+void ClientHandler::processClients()
 {
-	(void)ioMultiplexer;
+
 }
 
 } // !handler

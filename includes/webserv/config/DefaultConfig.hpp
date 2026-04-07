@@ -10,6 +10,10 @@
 # define DEV_LOG 0
 #endif
 
+#ifndef IO_TIMEOUT_MS
+# define IO_TIMEOUT_MS 100
+#endif
+
 #ifndef DEFAULT_CONFIG_PATH
 # define DEFAULT_CONFIG_PATH "configs/default.conf"
 #endif

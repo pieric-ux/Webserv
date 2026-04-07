@@ -62,7 +62,7 @@ start
 		while (For each `Listen` in `ServerConfig`) is (yes)
 			:Call `getListen()` to get `address` and `port`;
 			:Resolve address with `getaddrinfo()` (AF_UNSPEC)\nreturns `ai_family` (AF_INET or AF_INET6);
-			:Create `TcpServer(ai_family)` and `Addrinfo`\nand push to `_sockets`;
+			:Create `TcpServer(ai_family)` and `GetAddrinfo`\nand push to `_sockets`;
 			:Apply options with `setsockopt()`;
 		endwhile
 	endwhile
@@ -74,10 +74,11 @@ start
 		endwhile
 	endwhile (no)
 	:Set `ioMultiplexer` for `ClientHandler`;
-	while (HTTPServer is `running()`?) is (yes)
+	:Call `run()`;
+	while (`g_SignalStatus`)
 		while (For each `TcpServer` in `ioMultiplexer`) is (yes)
 			if (`E_IN` is set for `TcpServer`) then (yes)
-				:Call `connectClient()`;
+				:Call `connectClient(server)`;
 				| __ClientHandler__ |
 				:Create `Client` with `TcpClient` and `ServerConfig`;
 					| __Client__ |
@@ -94,7 +95,7 @@ start
 			endif
 		endwhile (no)
 		| __ClientHandler__ |
-		:Call `processClients(ioMultiplexer)`;
+		:Call `processClients()`;
 		while (For each `Client`) is (yes)
 			| __Client__ |
 			if (`lastActivityTime` > `keepAliveTimeout`) then (yes)

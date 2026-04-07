@@ -3,8 +3,8 @@
 #ifndef WEBSERV_TYPES_HPP
 #define WEBSERV_TYPES_HPP
 
-#include "common/core/net/sockets/TcpServer.hpp"
 #include <list>
+#include <sys/socket.h>
 #include <vector>
 #include <log42/Log42.hpp>
 #include <common/common.hpp>
@@ -71,17 +71,22 @@ typedef std::map<std::string, HTTPheaders::HTTPHeader>										t_HeadersRegistr
 
 typedef std::map<unsigned short, status::StatusCode>										t_StatusCodesRegistry;
 
-typedef std::pair<common::core::net::Addrinfo, common::core::net::TcpServer>				t_SocketPair;
-
-typedef std::vector<t_SocketPair>															t_ServerSockets;
-
 typedef std::vector<std::string>															t_SubRules;
 
 typedef unsigned int																		t_clientMaxBodySize;
 
 typedef unsigned int																		t_keepAliveTimeout;
 
-typedef unsigned short												t_Perms;
+typedef unsigned short																		t_Perms;
+
+typedef std::pair<common::core::net::TcpServer, sockaddr_storage>							t_SocketPairServer;
+
+typedef std::pair<common::core::net::TcpClient, sockaddr_storage>							t_SocketPairClient;
+
+typedef std::vector<t_SocketPairServer>														t_ServerSockets;
+
+typedef std::pair<std::string, std::string>													t_AddrPortPair;
+	
 } // !webserv
 
 #endif // !WEBSERV_TYPES_HPP

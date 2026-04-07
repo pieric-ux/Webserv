@@ -23,6 +23,7 @@
 #include <webserv/ServerFactory.hpp>
 #include <webserv/types.hpp>
 #include <webserv/logging.hpp>
+#include <webserv/signal.hpp>
 
 namespace webserv
 {
@@ -35,7 +36,7 @@ class HTTPServer
 		t_Logger							getLogger() const;
 
 		void								setup();
-		bool								running();
+		void								run();
 
 		void								setConfigPath(const std::string &configPath);
 		const config::HTTPConfig			&getHTTPConfig() const;
@@ -64,7 +65,7 @@ class HTTPServer
 		status::StatusCodeRegistry			&_statusCodeRegistry;
 		types::TypesRegistry				&_typesRegistry;
 		void								loadConfig();
-		void								connectClient();
+		void								connectClient(const t_SocketPairServer &socket);
 
 		HTTPServer();
 		~HTTPServer();
