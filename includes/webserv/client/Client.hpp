@@ -39,7 +39,7 @@ class Client
 {
 	public:
 		Client();
-		Client(const common::core::net::TcpClient socket, const config::ServerConfig &serverConfig);
+		Client(const t_SocketPairClient &client, const config::ServerConfig &serverConfig);
 		~Client();
 
 		Client(const Client &rhs);

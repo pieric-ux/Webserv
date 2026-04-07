@@ -48,7 +48,6 @@ class Parser
 
 		int							getFlags() const;
 		void						setFlags(const int flags);
-		bool						isIPv6Address(const std::string &address);
 		void						parseConfig(const t_raw &buffer);
 		void						parseRequestLine(const t_raw &bufferRequest);
 		t_Headers					parseHeaders(const t_raw &bufferRequest);

@@ -76,23 +76,23 @@ start
 	:Set `ioMultiplexer` for `ClientHandler`;
 	:Call `run()`;
 	while (`g_SignalStatus`)
-		while (For each `TcpServer` in `ioMultiplexer`) is (yes)
-			if (`E_IN` is set for `TcpServer`) then (yes)
-				:Call `connectClient(server)`;
-				| __ClientHandler__ |
-				:Create `Client` with `TcpClient` and `ServerConfig`;
-					| __Client__ |
-					:Create `RequestHandler`;
-					| __RequestHandler__ |
-						:Create `Parser`;
-					| __Client__ |
-					:Create `ResponseHandler`;
-				| __ClientHandler__ |
-				:Call `addClient(client)`;
-				| __HTTPServer__ |
-				:Add `TcpClient` to `ioMultiplexer`;
-			else (no)
-			endif
+		while(For each `Server`) is (yes)
+			while (For each `TcpServer` in `Server`) is (yes)
+				if (`E_IN` is set for `TcpServer` in `ioMultiplexer`) then (yes)
+					:Call `connectClient(TcpServer, serverConfig)`;
+					| __ClientHandler__ |
+					:Call `addClient(client, serverConfig)`;
+					:Add `Client` to `ioMultiplexer`;
+					:Create `Client` with `TcpClient` and `ServerConfig`;
+						| __Client__ |
+						:Create `RequestHandler`;
+						| __RequestHandler__ |
+							:Create `Parser`;
+						| __Client__ |
+						:Create `ResponseHandler`;
+				else (no)
+				endif
+			endwhile (no)
 		endwhile (no)
 		| __ClientHandler__ |
 		:Call `processClients()`;

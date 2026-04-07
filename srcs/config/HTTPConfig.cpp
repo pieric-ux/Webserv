@@ -33,7 +33,7 @@ HTTPConfig::HTTPConfig()
 		_cgiExtensions(DefaultConfig::cgiExtensions)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.httpconfig");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "HTTPConfig instance created with default values");
 }
 

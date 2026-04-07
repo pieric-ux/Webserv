@@ -18,7 +18,7 @@ namespace types
 TypesRegistry::TypesRegistry() : _types()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.mimetypes.types");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "TypesRegistry instance created");
 }
 

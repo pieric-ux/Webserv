@@ -71,15 +71,6 @@ void Parser::setFlags(const int flags) { _flags = static_cast<e_ParserFlags>(fla
 /**
  * @brief [TODO:description]
  */
-bool Parser::isIPv6Address(const std::string &address)
-{
-	(void)address;
-	return false;
-}
-
-/**
- * @brief [TODO:description]
- */
 t_SubRules Parser::extractDirectives(const std::string &parentRule,
                                      const std::string &input,
                                      const std::string &directive,
@@ -269,7 +260,7 @@ t_CgiExtensions Parser::parseCgiExtensionDirs(const t_SubRules &extDirs,
  */
 void Parser::checkConfigABNF(const t_raw &buffer)
 {
-	INFO(_logger, "Successfully initialized ABNF grammar from directory");
+	INFO(_logger, "Checking config ABNF...");
 	_buffer = buffer;
 	std::string buffer_str(_buffer.begin(), _buffer.end());
 	if (!_abnf.match("config", "ServerConfig", buffer_str))
@@ -278,7 +269,6 @@ void Parser::checkConfigABNF(const t_raw &buffer)
 		throw std::runtime_error("Failed to match config");
 	}
 	INFO(_logger, "Successfully matched config");
-	INFO(_logger, "Starting to parse config...");
 }
 
 /**
@@ -286,6 +276,7 @@ void Parser::checkConfigABNF(const t_raw &buffer)
  */
 void Parser::parseConfig(const t_raw &buffer)
 {
+	INFO(_logger, "Starting to parse config...");
 	checkConfigABNF(buffer);
 	std::string bufferStr(_buffer.begin(), _buffer.end());
 

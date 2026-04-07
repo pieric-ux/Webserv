@@ -45,7 +45,7 @@ namespace config
 const std::string			DefaultConfig::defaultConfigPath = DEFAULT_CONFIG_PATH;
 
 // LISTEN
-const std::string			DefaultConfig::address = "0.0.0.0";
+const std::string			DefaultConfig::address = "*";
 const std::string			DefaultConfig::port = "80";
 const bool					DefaultConfig::defaultServer = false;
 const int					DefaultConfig::backlog = -1;

@@ -38,7 +38,7 @@ class Server
 		t_ServerSockets 				_sockets;
 
 		void							createSockets();
-		void							setSocketOption(common::core::net::TcpServer &socket, const config::Listen &listen, const t_AddrPortPair &addr);
+		void							setSocketOption(common::core::net::TcpServer &socket, const config::Listen &listen, const int ai_family, const t_AddrPortPair &addr);
 };
 
 } // !webserv

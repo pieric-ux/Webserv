@@ -65,7 +65,7 @@ class HTTPServer
 		status::StatusCodeRegistry			&_statusCodeRegistry;
 		types::TypesRegistry				&_typesRegistry;
 		void								loadConfig();
-		void								connectClient(const t_SocketPairServer &socket);
+		void								connectClient(const t_SocketPairServer &socket, const config::ServerConfig &serverConfig);
 
 		HTTPServer();
 		~HTTPServer();

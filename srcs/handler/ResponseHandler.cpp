@@ -20,7 +20,7 @@ ResponseHandler::ResponseHandler()
 		_bufferResponse()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.responsehandler");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "ResponseHandler instance created");
 }
 

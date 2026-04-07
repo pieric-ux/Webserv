@@ -29,7 +29,7 @@ class ClientHandler
 
 		void			setIoMultiplexer(const t_ioMultiplexer &ioMultiplexer);
 
-		void			addClient(const t_SocketPairClient &client);
+		void			addClient(const t_SocketPairClient &client, const config::ServerConfig &serverConfig);
 		void			removeClient(client::Client &client);
 		void			processClients();
 

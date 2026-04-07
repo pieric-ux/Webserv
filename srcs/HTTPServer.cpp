@@ -25,7 +25,7 @@ HTTPServer::HTTPServer() :	_defaultConfigPath(config::DefaultConfig::defaultConf
 							_typesRegistry(types::TypesRegistry::getInstance())
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "HTTPServer instance created");
 }
 
@@ -150,7 +150,6 @@ void	HTTPServer::run()
 			ready = _ioMultiplexer->wait(IO_TIMEOUT_MS);
 			if (!ready)
 				continue;
-			DEBUG(_logger, "I/O multiplexer signaled " + common::core::utils::toString(ready) + " ready file descriptors");
 		} catch (const std::exception &e) {
 			ERROR(_logger, "I/O multiplexer wait failed: " + std::string(e.what()));
 		}
@@ -172,7 +171,7 @@ void	HTTPServer::run()
 					}
 
 					try {
-						connectClient(*socketIt);
+						connectClient(*socketIt, it->getConfig());
 					} catch (const std::exception &e) {
 						continue;
 					}
@@ -225,7 +224,7 @@ void	HTTPServer::loadConfig()
 /**
  * @brief [TODO:description]
  */
-void HTTPServer::connectClient(const t_SocketPairServer &socket) //TODO: log with getsockname to log client IP and port and getpeername to log server IP and port
+void HTTPServer::connectClient(const t_SocketPairServer &socket, const config::ServerConfig &serverConfig)
 {
 	try {
 		t_SocketPairClient client = socket.first.accept<sockaddr_storage>();
@@ -235,7 +234,7 @@ void HTTPServer::connectClient(const t_SocketPairServer &socket) //TODO: log wit
 			} catch (const std::exception &e) {
 				WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
 			}
-		_clientHandler.addClient(client);
+		_clientHandler.addClient(client, serverConfig);
 	} catch (const std::exception &e) {
 		ERROR(_logger, "Failed connect client connection: " + std::string(e.what()));
 		throw;

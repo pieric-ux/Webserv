@@ -21,7 +21,7 @@ RequestHandler::RequestHandler()
 		_parser()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.requesthandler");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "RequestHandler instance created");
 }
 

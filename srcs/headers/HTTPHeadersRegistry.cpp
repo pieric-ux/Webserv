@@ -21,7 +21,7 @@ namespace HTTPheaders
 HTTPHeadersRegistry::HTTPHeadersRegistry()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.headersregistry");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "HTTPHeadersRegistry instance created.");
 	// A
 	_headers["a-im"] = HTTPHeader("A-IM", "Used with Response code to indicate partial instance manipulations.");
