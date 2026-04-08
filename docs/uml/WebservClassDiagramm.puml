@@ -263,6 +263,7 @@ namespace webserv.handler {
 		- isFileExisting(requestTarget : string) : bool
 		- deleteFile(filePath : string) : void
 		- deleteDirectory(dirPath : string) : void
+		- isDirectory(requestTarget : string) : bool
 	}
 }
 
