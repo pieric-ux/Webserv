@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <cstdio>
 
 namespace webserv
 {
@@ -314,7 +315,7 @@ bool ExecutionHandler::isFileExisting(const std::string& requestTarget)
  */
 void ExecutionHandler::deleteFile(const std::string& filePath)
 {
-	if (unlink(filePath.c_str()) != 0)
+	if (std::remove(filePath.c_str()) != 0)
 		INFO(_logger, "deleteFile: failed to remove " + filePath);
 }
 
@@ -353,7 +354,7 @@ void ExecutionHandler::deleteDirectory(const std::string& dirPath)
 		ERROR(_logger, "deleteDirectory: " + std::string(e.what()));
 		return;
 	}
-	if (rmdir(dirPath.c_str()) != 0) // not allowed ?
+	if (std::remove(dirPath.c_str()) != 0)
 		ERROR(_logger, "deleteDirectory: failed to rmdir " + dirPath);
 }
 
