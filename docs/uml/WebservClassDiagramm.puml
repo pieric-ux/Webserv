@@ -91,6 +91,9 @@ namespace webserv.client {
 		- _requestTarget : string
 		- _httpVersion : string
 		- _absolutePath : string
+		- _authority : string
+		- _path : string
+		- _query : string
 		- _headers : vector<list<HTTPHeader>>
 		- _body : vector<unsigned char>
 		- _flags : e_RequestFlags
@@ -104,6 +107,12 @@ namespace webserv.client {
 		+ setHttpVersion(httpVersion : string) : void
 		+ getAbsolutePath() : string
 		+ setAbsolutePath(absolutePath : string) : void
+		+ getAuthority() : string
+		+ setAuthority(authority : string) : void
+		+ getPath() : string
+		+ setPath(path : string) : void
+		+ getQuery() : string
+		+ setQuery(query : string) : void
 		+ getHeaders() : vector<list<HTTPHeader>>
 		+ setHeaders(headers : vector<list<HTTPHeader>>) : void
 		+ findHeader(headerName : string, headerValue : string) : HTTPHeader
@@ -203,8 +212,9 @@ namespace webserv.handler {
 		- _parser : Parser
 		- _serverConfig : ServerConfig
 		--
-		- validateHeaders(serverConfig : ServerConfig) : void
-		- buildAbsolutPath(requestTarget : string, locationConfig : LocationConfig) : void
+		- validateHeaders() : void
+		- buildAbsolutPath() : void
+		- normalizePath(path : string) : string
 		+ RequestHandler()
 		+ parseHeaders() : void
 		+ parseBody() : void
@@ -214,7 +224,6 @@ namespace webserv.handler {
 		+ appendToBufferRequest(buffer : string) : void
 		+ clearBufferRequest() : void
 		+ getParser() : Parser
-		+ getBodyReceived() : int
 	}
 
 	class "ResponseHandler" as ResponseHandler {

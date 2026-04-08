@@ -5,12 +5,7 @@
  * @brief [TODO:description]
  */
 
-#include "webserv/client/HTTPError.hpp"
-#include "webserv/client/Request.hpp"
-#include "webserv/parser/Parser.hpp"
 #include <webserv/handler/RequestHandler.hpp>
-#include <webserv/client/HTTPError.hpp>
-#include <algorithm>
 
 namespace webserv
 {
@@ -136,17 +131,7 @@ void RequestHandler::appendToBufferRequest(const t_raw &buffer)
  */
 void RequestHandler::clearBufferRequest()
 {
-
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-int RequestHandler::getBodyReceived() const
-{
-	return 0;
+	_bufferRequest.clear();
 }
 
 /**
@@ -185,7 +170,7 @@ void RequestHandler::parseHeaders()
 		t_raw::iterator end = std::search(_bufferRequest.begin(), _bufferRequest.end(), CRLF, CRLF + 4);
 		_bufferRequest.erase(_bufferRequest.begin(), end + 4);
 
-		buildAbsolutPath(_request.getRequestTarget(), _serverConfig.findLocationConfig(_request.getRequestTarget()));
+		buildAbsolutPath();
 
 		_request.setFlags(static_cast<client::e_RequestFlags>(_request.getFlags() | client::E_REQ_HEADERS_VALIDATED));
 
@@ -267,23 +252,83 @@ void RequestHandler::validateHeaders()
 
 /**
  * @brief [TODO:description]
- *
- * @param serverConfig [TODO:parameter]
  */
 void RequestHandler::parseBody()
 {
+	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getRequestTarget());
+
+	t_clientMaxBodySize contentLength = 0;
+	const t_Headers &headers = _request.getHeaders();
+	t_Headers::const_iterator it = headers.find("content-length");
+	if (it != headers.end() && !it->second.empty())
+	{
+		std::istringstream iss(it->second.front().getValue());
+		iss >> contentLength;
+	}
+
+	t_clientMaxBodySize maxBodySize = locationConfig.getClientMaxBodySize();
+	if (contentLength > maxBodySize)
+		throw client::HTTPError(413);
+
+	_request.setFlags(static_cast<client::e_RequestFlags>(_request.getFlags() | client::E_REQ_BODY_STARTED));
+	DEBUG(_logger, "Body started, Content-Length=" + common::core::utils::toString(contentLength));
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void RequestHandler::buildAbsolutPath()
+{
+	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getRequestTarget());
+	std::string root = locationConfig.getRoot();
+
+	while (root.size() > 1 && root[root.size() - 1] == '/')
+		root = root.substr(0, root.size() - 1);
+
+	std::string absolutePath = normalizePath(root + common::core::utils::urlDecode(_request.getPath()));
+
+	if (absolutePath != root &&
+		absolutePath.substr(0, root.size() + 1) != root + "/")
+		throw client::HTTPError(403);
+
+	_request.setAbsolutePath(absolutePath);
+	DEBUG(_logger, "Absolute path: " + absolutePath);
 }
 
 /**
  * @brief [TODO:description]
  *
- * @param requestTarget [TODO:parameter]
- * @param locationConfig [TODO:parameter]
+ * @param path [TODO:parameter]
+ * @return [TODO:return]
  */
-void RequestHandler::buildAbsolutPath(const std::string &requestTarget, const config::LocationConfig &locationConfig)
+std::string RequestHandler::normalizePath(const std::string &path)
 {
-	(void)requestTarget;
-	(void)locationConfig;
+	std::vector<std::string> segments;
+	std::istringstream ss(path);
+	std::string segment;
+
+	while (std::getline(ss, segment, '/'))
+	{
+		if (segment.empty() || segment == ".")
+			continue;
+		else if (segment == "..")
+		{
+			if (!segments.empty())
+				segments.pop_back();
+		}
+		else
+			segments.push_back(segment);
+	}
+
+	std::string result;
+	std::vector<std::string>::const_iterator it = segments.begin();
+	for (; it != segments.end(); ++it)
+		result += "/" + *it;
+
+	if (result.empty())
+		result = "/";
+
+	return result;
 }
 
 } // !handler

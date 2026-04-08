@@ -606,8 +606,36 @@ void Parser::parseRequestLine(const std::string &line, client::Request &request)
 	else
 		throw client::HTTPError(501);
 
+	std::string authority;
+	std::string path;
+	std::string query;
+
+	if (_abnf.match("origin-form", "HTTP", target))
+	{
+		_abnf.extractSubRule("origin-form", "HTTP", target, "absolute-path", path);
+		_abnf.extractSubRule("origin-form", "HTTP", target, "query", query);
+	}
+	else if (_abnf.match("absolute-form", "HTTP", target))
+	{
+		std::string scheme;
+		_abnf.extractSubRule("absolute-form", "HTTP", target, "scheme", scheme);
+		if (scheme != "http" && scheme != "https")
+			throw client::HTTPError(400);
+
+		_abnf.extractSubRule("absolute-form", "HTTP", target, "authority", authority);
+		_abnf.extractSubRule("absolute-form", "HTTP", target, "path-abempty", path);
+		_abnf.extractSubRule("absolute-form", "HTTP", target, "query", query);
+	}
+	else if (_abnf.match("authority-form", "HTTP", target))
+		throw client::HTTPError(400);
+	else if (_abnf.match("asterisk-form", "HTTP", target))
+		throw client::HTTPError(400);
+
 	request.setMethod(method);
 	request.setRequestTarget(target);
+	request.setAuthority(authority);
+	request.setPath(path);
+	request.setQuery(query);
 	request.setHttpVersion(version);
 }
 
@@ -638,6 +666,157 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		if (!_abnf.extractSubRule("field-line", "HTTP", line, "field-name", name)
 			|| !_abnf.extractSubRule("field-line", "HTTP", line, "field-value", value))
 			throw client::HTTPError(400);
+
+		value = common::core::utils::toLower(common::core::utils::trim(value));
+		name = common::core::utils::toLower(name);
+
+		if (name == "host")
+		{
+			if (getFlags() & E_PARS_HOST)
+			{
+				INFO(_logger, "Multiple Host headers found");
+				throw client::HTTPError(400);
+			}
+			if (!_abnf.match("Host", "HTTP", value))
+			{
+				INFO(_logger, "Invalid Host header format");
+				throw client::HTTPError(400);
+			}
+			if (!request.getAuthority().empty())
+				value = request.getAuthority();
+
+			DEBUG(_logger, "Parsed Host header: " + value);
+			
+			setFlags(getFlags() | E_PARS_HOST);
+		}
+		else if (name == "connection")
+		{
+			if (!_abnf.match("Connection", "HTTP", common::core::utils::toLower(value)))
+			{
+				INFO(_logger, "Invalid Connection header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Connection header: " + value);
+			setFlags(getFlags() | E_PARS_CONNECTION);
+		}
+		else if (name == "content-length")
+		{
+			if (!_abnf.match("Content-Length", "HTTP", value))
+			{
+				INFO(_logger, "Invalid Content-Length header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Content-Length header: " + value);
+			if (getFlags() & E_PARS_CONTENT_LENGTH)
+			{
+				INFO(_logger, "Multiple Content-Length headers found");
+				throw client::HTTPError(400);
+			}
+			setFlags(getFlags() | E_PARS_CONTENT_LENGTH);
+		}
+		else if (name == "content-type")
+		{
+			if (!_abnf.match("Content-Type", "HTTP", value))
+			{
+				INFO(_logger, "Invalid Content-Type header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Content-Type header: " + value);
+			if (getFlags() & E_PARS_CONTENT_TYPE)
+			{
+				INFO(_logger, "Multiple Content-Type headers found");
+				throw client::HTTPError(400);
+			}
+			setFlags(getFlags() | E_PARS_CONTENT_TYPE);
+		}
+		else if (name == "content-encoding")
+		{
+			if (!_abnf.match("Content-Encoding", "HTTP", common::core::utils::toLower(value)))
+			{
+				INFO(_logger, "Invalid Content-Encoding header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Content-Encoding header: " + value);
+			setFlags(getFlags() | E_PARS_CONTENT_ENCODING);
+		}
+		else if (name == "expect")
+		{
+			if (!_abnf.match("Expect", "HTTP", common::core::utils::toLower(value)))
+			{
+				INFO(_logger, "Invalid Expect header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Expect header: " + value);
+			setFlags(getFlags() | E_PARS_EXPECT);
+		}
+		else if (name =="last-modified")
+		{
+			if (!_abnf.match("Last-Modified", "HTTP", value))
+			{
+				INFO(_logger, "Invalid Last-Modified header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Last-Modified header: " + value);
+		}
+		else if (name == "date")
+		{
+			if (!_abnf.match("Date", "HTTP", value))
+			{
+				INFO(_logger, "Invalid Date header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Date header: " + value);
+		}
+		else if (name == "max-forwards")
+		{
+			if (!_abnf.match("Max-Forwards", "HTTP", value))
+			{
+				INFO(_logger, "Invalid Max-Forwards header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Max-Forwards header: " + value);
+		}
+		else if (name == "via")
+		{
+			if (!_abnf.match("Via", "HTTP", value))
+			{
+				INFO(_logger, "Invalid Via header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Via header: " + value);
+		}
+		if (name == "transfer-encoding")
+		{
+			if (!_abnf.match("Transfer-Encoding", "HTTP", common::core::utils::toLower(value)))
+			{
+				INFO(_logger, "Invalid Transfer-Encoding header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Transfer-Encoding header: " + value);
+			throw client::HTTPError(501);
+		}
+			
+		if (name == "range")
+		{
+			if (!_abnf.match("Range", "HTTP", value))
+			{
+				INFO(_logger, "Invalid Range header format");
+				throw client::HTTPError(400);
+			}
+			else
+				DEBUG(_logger, "Parsed Range header: " + value);
+			throw client::HTTPError(501);
+		}
 
 		HTTPheaders::HTTPHeader header = HTTPheaders::HTTPHeadersRegistry::getInstance().getHeader(name);
 		header.setValue(value);
