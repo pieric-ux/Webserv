@@ -223,7 +223,6 @@ namespace webserv.handler {
 		+ getResponse() : Response
 		+ setResponse(response : Response) : void
 		+ appendToBufferResponse(buffer : string) : void
-		+ addResponseHeader(response : Response, name : string, value : string) : void
 		+ clearBufferResponse() : void
 		+ buildHeadersResponse(request : Request) : void
 		+ buildBodyResponse() : void
