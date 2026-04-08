@@ -223,6 +223,7 @@ namespace webserv.handler {
 		+ getResponse() : Response
 		+ setResponse(response : Response) : void
 		+ appendToBufferResponse(buffer : string) : void
+		+ addResponseHeader(response : Response, name : string, value : string) : void
 		+ clearBufferResponse() : void
 		+ buildHeadersResponse(request : Request) : void
 		+ buildBodyResponse() : void
@@ -263,6 +264,7 @@ namespace webserv.handler {
 		- isFileExisting(requestTarget : string) : bool
 		- deleteFile(filePath : string) : void
 		- deleteDirectory(dirPath : string) : void
+		- isDirectory(requestTarget : string) : bool
 	}
 }
 
