@@ -6,6 +6,12 @@
  */
 
 #include <webserv/handler/ExecutionHandler.hpp>
+#include <common/core/utils/Directory.hpp>
+#include <common/core/utils/fileUtils.hpp>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
 
 namespace webserv
 {
@@ -256,66 +262,106 @@ void ExecutionHandler::writeChunk(const int fd, client::Request &request)
  * @param fd [TODO:parameter]
  * @return [TODO:return]
  */
-int ExecutionHandler::getFileSize(const int fd)
+int ExecutionHandler::getFileSize(const std::string &requestTarget)
 {
-	(void)fd;
-	return 0;
+	struct stat	st;
+
+	if (stat(requestTarget.c_str(), &st) != 0)
+		return -1;
+	return static_cast<int>(st.st_size);
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the file extension (without the dot) of the given path.
  *
- * @param requestTarget [TODO:parameter]
- * @return [TODO:return]
+ * @param requestTarget Path to inspect.
+ * @return Extension string, or empty if none found.
  */
 std::string ExecutionHandler::getFileExtension(const std::string &requestTarget)
 {
-	(void)requestTarget;
-	return "";
+	std::string				name = common::core::utils::filenameNoPath(requestTarget);
+	std::string::size_type	dotPos = name.rfind('.');
+
+	if (dotPos == std::string::npos || dotPos == 0)
+		return "";
+	return name.substr(dotPos + 1);
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Checks whether the given path points to a regular file.
  *
- * @param requestTarget [TODO:parameter]
- * @return [TODO:return]
+ * @param requestTarget Path to check.
+ * @return true if it is a regular file, false otherwise.
  */
 bool ExecutionHandler::isFile(const std::string& requestTarget)
 {
-	(void)requestTarget;
-	return false;
+	struct stat	st;
+
+	if (stat(requestTarget.c_str(), &st) != 0)
+		return false;
+	return S_ISREG(st.st_mode);
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Checks whether the given path exists on disk.
  *
- * @param requestTarget [TODO:parameter]
- * @return [TODO:return]
+ * @param requestTarget Path to check.
+ * @return true if the path exists, false otherwise.
  */
 bool ExecutionHandler::isFileExisting(const std::string& requestTarget)
 {
-	(void)requestTarget;
-	return false;
+	struct stat	st;
+
+	return (stat(requestTarget.c_str(), &st) == 0);
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Deletes the given file from disk.
  *
- * @param filePath [TODO:parameter]
+ * @param filePath Path to the file to delete.
  */
 void ExecutionHandler::deleteFile(const std::string& filePath)
 {
-	(void)filePath;
+	if (unlink(filePath.c_str()) != 0)
+		INFO(_logger, "deleteFile: failed to remove " + filePath);
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Recursively deletes the given directory and its contents.
  *
- * @param dirPath [TODO:parameter]
+ * @param dirPath Path to the directory to delete.
  */
 void ExecutionHandler::deleteDirectory(const std::string& dirPath)
 {
-	(void)dirPath;
+	try
+	{
+		common::core::utils::Directory				dir(dirPath);
+		common::core::utils::DirectoryIterator		it = dir.begin();
+		common::core::utils::DirectoryIterator		end = dir.end();
+
+		for (; it != end; ++it)
+		{
+			std::string	name((*it)->d_name);
+			if (name == "." || name == "..")
+				continue;
+			std::string	path = dirPath;
+			if (!path.empty() && path[path.size() - 1] != '/')
+				path += "/";
+			path += name;
+
+			if (isFile(path))
+				deleteFile(path);
+			else
+				deleteDirectory(path);
+		}
+	}
+	catch (const std::exception &e)
+	{
+		ERROR(_logger, "deleteDirectory: " + std::string(e.what()));
+		return;
+	}
+	if (rmdir(dirPath.c_str()) != 0) // not allowed ?
+		ERROR(_logger, "deleteDirectory: failed to rmdir " + dirPath);
 }
 
 /**

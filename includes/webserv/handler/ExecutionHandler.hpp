@@ -66,7 +66,7 @@ class ExecutionHandler
 		void						readChunk(const int fd, client::Response &response);
 		void						writeChunk(const int fd, client::Request &request);
 
-		int							getFileSize(const int fd);
+		int							getFileSize(const std::string &requestTarget);
 		std::string					getFileExtension(const std::string &requestTarget);
 		bool						isFile(const std::string& requestTarget);
 		bool						isFileExisting(const std::string& requestTarget);
