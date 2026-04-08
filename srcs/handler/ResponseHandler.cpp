@@ -98,6 +98,22 @@ void ResponseHandler::appendToBufferResponse(const t_raw &buffer)
 }
 
 /**
+ * @brief Adds a header to the response.
+ * 
+ * @param response The response to which the header will be added.
+ * @param name The name of the header.
+ * @param value The value of the header.
+ */
+void	ResponseHandler::addResponseHeader(client::Response &response, const std::string &name, const std::string &value)
+{
+	t_Headers headers = response.getHeaders();
+	std::list<HTTPheaders::HTTPHeader> entry;
+	entry.push_back(HTTPheaders::HTTPHeader(name, value, ""));
+	headers.push_back(entry);
+	response.setHeaders(headers);
+}
+
+/**
  * @brief [TODO:description]
  */
 void ResponseHandler::clearBufferResponse()
