@@ -9,16 +9,22 @@
  */
 
 #include <cerrno>
-#include <climits>
-#include <vector>
 #include <string>
+#include <sstream>
+#include <cctype>
 #include <abnf/Abnf.hpp>
 #include <webserv/headers/HTTPHeader.hpp>
-#include <webserv/client/Request.hpp>
+#include <webserv/config/Listen.hpp>
+#include <webserv/config/ErrorPage.hpp>
 #include <webserv/config/HTTPConfig.hpp>
-#include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
+#include <webserv/config/ServerConfig.hpp>
+#include <webserv/config/Return.hpp>
+#include <webserv/client/HTTPError.hpp>
 #include <webserv/client/Request.hpp>
+#include <webserv/headers/HTTPHeader.hpp>
+#include <webserv/headers/HTTPHeadersRegistry.hpp>
+#include <webserv/status/StatusCode.hpp>
 #include <webserv/types.hpp>
 
 namespace webserv

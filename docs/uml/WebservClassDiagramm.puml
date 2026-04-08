@@ -106,6 +106,8 @@ namespace webserv.client {
 		+ setAbsolutePath(absolutePath : string) : void
 		+ getHeaders() : vector<list<HTTPHeader>>
 		+ setHeaders(headers : vector<list<HTTPHeader>>) : void
+		+ findHeader(headerName : string, headerValue : string) : HTTPHeader
+		+ addHeader(headerName : string, headerValue : string) : void
 		+ getBody() : vector<unsigned char>
 		+ setBody(body : vector<unsigned char>) : void
 		+ getFlags() : e_RequestFlags
@@ -130,6 +132,8 @@ namespace webserv.client {
 		+ setStatusCode(statusCode : StatusCode) : void
 		+ getHeaders() : vector<list<HTTPHeader>>
 		+ setHeaders(headers : vector<list<HTTPHeader>>) : void
+		+ addHeader(headerName : string, headerValue : string) : void
+		+ findHeader(headerName : string, headerValue : string) : HTTPHeader
 		+ getBody() : vector<unsigned char>
 		+ setBody(body : vector<unsigned char>) : void
 		+ getFlags() : e_RequestFlags
@@ -263,6 +267,7 @@ namespace webserv.handler {
 		- isFileExisting(requestTarget : string) : bool
 		- deleteFile(filePath : string) : void
 		- deleteDirectory(dirPath : string) : void
+		- isDirectory(requestTarget : string) : bool
 	}
 }
 

@@ -183,6 +183,44 @@ void Request::setHeaders(const t_Headers &headers)
 /**
  * @brief [TODO:description]
  *
+ * @param headerName [TODO:parameter]
+ * @param headerValue [TODO:parameter]
+ * @return [TODO:return]
+ */
+const HTTPheaders::HTTPHeader &Request::findHeader(const std::string &headerName, const std::string &headerValue) const
+{
+	static HTTPheaders::HTTPHeader emptyHeader;
+
+	t_Headers::const_iterator it = _headers.find(common::core::utils::toLower(headerName));
+	if (it == _headers.end())
+		return emptyHeader;
+
+	const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+	std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
+	for (;lit != headerList.end(); ++lit)
+	{
+		if (lit->getValue() == headerValue)
+			return *lit;
+	}
+	return emptyHeader;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param headerName [TODO:parameter]
+ * @param headerValue [TODO:parameter]
+ */
+void Request::addHeader(const std::string &headerName, const std::string &headerValue)
+{
+	HTTPheaders::HTTPHeader header = HTTPheaders::HTTPHeadersRegistry::getInstance().getHeader(headerName);
+	header.setValue(headerValue);
+	_headers[common::core::utils::toLower(headerName)].push_back(header);
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 t_raw	Request::getBody() const
