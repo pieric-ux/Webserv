@@ -162,11 +162,12 @@ void RequestHandler::parseHeaders()
 	if (it == bufferStr.end())
 		throw client::HTTPError(400);
 
-	_parser.setFlags(parser::E_PARS_CLRF);
-
 	std::string::iterator lineEnd = std::find(bufferStr.begin(), bufferStr.end(), '\n');
-	std::string line(bufferStr.begin(), lineEnd);
+	std::string::iterator lineStop = lineEnd;
+	if (lineStop != bufferStr.begin() && *(lineStop - 1) == '\r')
+		--lineStop;
 
+	std::string line(bufferStr.begin(), lineStop);
 	std::string headersBlock(lineEnd + 1, it + 2);
 
 	if (!(_request.getFlags() & client::E_REQ_REQUEST_LINE))
@@ -180,12 +181,15 @@ void RequestHandler::parseHeaders()
 	if (_parser.getFlags() & parser::E_PARS_CLRF && !(_request.getFlags() & client::E_REQ_HEADERS_VALIDATED))
 	{
 		validateHeaders();
-		if (_request.getFlags() & client::E_REQ_HEADERS_VALIDATED)
-		{
-			t_raw::iterator end = std::search(_bufferRequest.begin(), _bufferRequest.end(), CRLF, CRLF + 4);
-			_bufferRequest.erase(_bufferRequest.begin(), end + 4);
-			INFO(_logger, "Headers parsed and validated, buffer request updated (remaining bytes: " + common::core::utils::toString(_bufferRequest.size()) + ")");
-		}
+
+		t_raw::iterator end = std::search(_bufferRequest.begin(), _bufferRequest.end(), CRLF, CRLF + 4);
+		_bufferRequest.erase(_bufferRequest.begin(), end + 4);
+
+		buildAbsolutPath(_request.getRequestTarget(), _serverConfig.findLocationConfig(_request.getRequestTarget()));
+
+		_request.setFlags(static_cast<client::e_RequestFlags>(_request.getFlags() | client::E_REQ_HEADERS_VALIDATED));
+
+		INFO(_logger, "Headers parsed and validated, buffer request updated (remaining bytes: " + common::core::utils::toString(_bufferRequest.size()) + ")");
 	}
 }
 
@@ -196,7 +200,69 @@ void RequestHandler::parseHeaders()
  */
 void RequestHandler::validateHeaders()
 {
+	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getRequestTarget());
 
+	t_AllowedMethods::const_iterator it = std::find(locationConfig.getAllowedMethods().begin(), locationConfig.getAllowedMethods().end(), _request.getMethod());
+	if (it == locationConfig.getAllowedMethods().end())
+		throw client::HTTPError(405);
+
+	if (!(_parser.getFlags() & parser::E_PARS_HOST))
+		throw client::HTTPError(400);
+
+	if (_request.getMethod() == config::POST || _request.getMethod() == config::PUT)
+	{
+		if (!(_parser.getFlags() & parser::E_PARS_CONTENT_LENGTH))
+			throw client::HTTPError(411);
+
+		if (_parser.getFlags() & parser::E_PARS_CONTENT_TYPE)
+		{
+			if (!_request.findHeader("Content-Type", "multipart/form-data").getName().empty())
+			{
+				bool cgiMatch = false;
+				const t_CgiExtensions &cgiExt = locationConfig.getCgiExtensions();
+				t_CgiExtensions::const_iterator cit = cgiExt.begin();
+				for (; cit != cgiExt.end(); ++cit)
+				{
+					if (common::core::utils::hasExtension(_request.getRequestTarget(), cit->first))
+					{
+						cgiMatch = true;
+						break;
+					}
+				}
+				if (!locationConfig.getEnableCGI() || !cgiMatch)
+					throw client::HTTPError(415);
+			}
+			else
+			{
+				bool found = false;
+				const t_MimeTypes &types = locationConfig.getTypes();
+				t_MimeTypes::const_iterator mit = types.begin();
+				for (; mit != types.end(); ++mit)
+				{
+					if (!_request.findHeader("Content-Type", mit->second).getName().empty())
+					{
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+					throw client::HTTPError(415);
+			}
+		}
+		else
+		{
+			_request.addHeader("Content-Type", "application/octet-stream");
+			_parser.setFlags(_parser.getFlags() | parser::E_PARS_CONTENT_TYPE);
+		}
+
+		if (_parser.getFlags() & parser::E_PARS_CONTENT_ENCODING)
+		{
+			if (!_request.findHeader("Content-Encoding", "chunked").getName().empty())
+			{
+				throw client::HTTPError(415);
+			}
+		}
+	}
 }
 
 /**

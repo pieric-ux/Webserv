@@ -4,6 +4,7 @@
 #define WEBSERV_TYPES_HPP
 
 #include <list>
+#include <map>
 #include <sys/socket.h>
 #include <vector>
 #include <log42/Log42.hpp>
@@ -37,7 +38,7 @@ typedef common::core::raii::SharedPtr<log42::logger::Logger>								t_Logger;
 
 typedef common::core::raii::SharedPtr<common::core::io::IEventIO>							t_ioMultiplexer;
 
-typedef std::vector<std::list<HTTPheaders::HTTPHeader> >									t_Headers;
+typedef std::map<std::string, std::list<HTTPheaders::HTTPHeader> >							t_Headers;
 
 typedef std::map<std::string, std::string>													t_MimeTypes;
 

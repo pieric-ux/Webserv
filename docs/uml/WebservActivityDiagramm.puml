@@ -312,7 +312,6 @@ start
 						if (`E_PARS_CLRF` is set AND `E_REQ_HEADERS_VALIDATED` is NOT set) then (yes)
 							:Call `validateHeaders(serverConfig)`;
 							:Call `findLocationConfig(requestTarget)`;
-							:Call `buildAbsolutPath(requestTarget, LocationConfig)`;
 							if (`method` is allowed in `LocationConfig`) then (no)
 								:Throw HTTPError(405);
 								#red:(E)
@@ -325,7 +324,7 @@ start
 								detach
 							else (yes)
 							endif
-							if (`method` is `POST` or `DELETE`) then (yes)
+							if (`method` is `POST` or 'PUT') then (yes)
 								if (`E_PARS_CONTENT_LENGTH` is set) then (no)
 									:Throw HTTPError(411);
 									#red:(E)
@@ -333,10 +332,13 @@ start
 								else (yes)
 								endif
 								if (`E_PARS_CONTENT_TYPE` is set) then (yes)
-									if (`media-type` is `mutlipart/form-data`) then (yes)
-										:Throw HTTPError(501);
-										#red:(E)
-										detach
+									if (`media-type` is `multipart/form-data`) then (yes)
+										if (`enableCGI` is set in `LocationConfig` AND `requestTarget` extension is contains in `cgiExtensions`) then (yes)
+										else (no)
+											:Throw HTTPError(415);
+											#red:(E)
+											detach
+										endif
 									else (no)
 										if (`media-type` is allowed in `LocationConfig`) then (no)
 											:Throw HTTPError(415);
@@ -360,6 +362,8 @@ start
 								endif
 							else (no)
 							endif
+							:Erase `bufferRequest` up to and including CRLF CRLF;
+							:Call `buildAbsolutPath(requestTarget, LocationConfig)`;
 							:Call `setFlags(E_REQ_HEADERS_VALIDATED)`;
 						else(no)
 						endif

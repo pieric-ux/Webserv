@@ -5,14 +5,6 @@
  * @brief [TODO:description]
  */
 #include <webserv/parser/Parser.hpp>
-#include <webserv/config/ErrorPage.hpp>
-#include <webserv/config/Listen.hpp>
-#include <webserv/config/Return.hpp>
-#include <webserv/status/StatusCode.hpp>
-#include <webserv/client/HTTPError.hpp>
-#include <webserv/headers/HTTPHeader.hpp>
-#include <sys/types.h>
-#include <sstream>
 
 namespace webserv
 {
@@ -647,42 +639,9 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 			|| !_abnf.extractSubRule("field-line", "HTTP", line, "field-value", value))
 			throw client::HTTPError(400);
 
-		HTTPheaders::HTTPHeader header(name, value, "");
-
-		// group by field-name, add in following order 
-		bool grouped = false;
-		for (t_Headers::iterator it = headers.begin(); it != headers.end(); ++it)
-		{
-			if (!it->empty())
-			{
-				const std::string &existing = it->front().getName();
-				if (existing.size() == name.size())
-				{
-					bool same = true;
-					for (std::size_t i = 0; i < name.size(); ++i)
-					{
-						if (std::tolower(static_cast<unsigned char>(existing[i]))
-							!= std::tolower(static_cast<unsigned char>(name[i])))
-						{
-							same = false;
-							break;
-						}
-					}
-					if (same)
-					{
-						it->push_back(header);
-						grouped = true;
-						break;
-					}
-				}
-			}
-		}
-		if (!grouped)
-		{
-			std::list<HTTPheaders::HTTPHeader> bucket;
-			bucket.push_back(header);
-			headers.push_back(bucket);
-		}
+		HTTPheaders::HTTPHeader header = HTTPheaders::HTTPHeadersRegistry::getInstance().getHeader(name);
+		header.setValue(value);
+		headers[common::core::utils::toLower(name)].push_back(header);
 	}
 	request.setHeaders(headers);
 }
