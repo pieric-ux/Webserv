@@ -43,7 +43,7 @@ ExecutionHandler::~ExecutionHandler() {}
  */
 ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
 	:	_logger(rhs._logger),
-		_fd(rhs._fd),
+		_fd(),
 		_bodyReceived(rhs._bodyReceived),
 		_flags(rhs._flags)
 {}
@@ -59,7 +59,6 @@ ExecutionHandler &ExecutionHandler::operator=(const ExecutionHandler &rhs)
 	if (this != &rhs)
 	{
 		_logger = rhs._logger;
-		_fd = rhs._fd;
 		_bodyReceived = rhs._bodyReceived;
 		_flags = rhs._flags;
 	}
@@ -83,17 +82,7 @@ t_Logger	ExecutionHandler::getLogger()
  */
 int ExecutionHandler::getFd() const
 {
-	return _fd;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param fd [TODO:parameter]
- */
-void ExecutionHandler::setFd(const int fd)
-{
-	_fd = fd;
+	return _fd.get();
 }
 
 /**
@@ -257,10 +246,10 @@ void ExecutionHandler::writeChunk(const int fd, client::Request &request)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the size of the file at the given path, or -1 if it cannot be accessed.
  *
- * @param fd [TODO:parameter]
- * @return [TODO:return]
+ * @param requestTarget Path to the file.
+ * @return Size of the file, or -1 if it cannot be accessed.
  */
 int ExecutionHandler::getFileSize(const std::string &requestTarget)
 {
@@ -276,6 +265,7 @@ int ExecutionHandler::getFileSize(const std::string &requestTarget)
  *
  * @param requestTarget Path to inspect.
  * @return Extension string, or empty if none found.
+ * @todo TODO: add it to common utils ?
  */
 std::string ExecutionHandler::getFileExtension(const std::string &requestTarget)
 {
@@ -292,6 +282,7 @@ std::string ExecutionHandler::getFileExtension(const std::string &requestTarget)
  *
  * @param requestTarget Path to check.
  * @return true if it is a regular file, false otherwise.
+ * @todo TODO: add it to common utils ?
  */
 bool ExecutionHandler::isFile(const std::string& requestTarget)
 {
@@ -307,6 +298,7 @@ bool ExecutionHandler::isFile(const std::string& requestTarget)
  *
  * @param requestTarget Path to check.
  * @return true if the path exists, false otherwise.
+ * @todo TODO: add it to common utils ?
  */
 bool ExecutionHandler::isFileExisting(const std::string& requestTarget)
 {
@@ -330,6 +322,7 @@ void ExecutionHandler::deleteFile(const std::string& filePath)
  * @brief Recursively deletes the given directory and its contents.
  *
  * @param dirPath Path to the directory to delete.
+ * @todo TODO: add it to common utils ?
  */
 void ExecutionHandler::deleteDirectory(const std::string& dirPath)
 {
@@ -362,6 +355,37 @@ void ExecutionHandler::deleteDirectory(const std::string& dirPath)
 	}
 	if (rmdir(dirPath.c_str()) != 0) // not allowed ?
 		ERROR(_logger, "deleteDirectory: failed to rmdir " + dirPath);
+}
+
+/**
+ * @brief Checks whether the given path points to a directory.
+ *
+ * @param path Path to check.
+ * @return true if it is a directory, false otherwise.
+ */
+bool	ExecutionHandler::isDirectory(const std::string &path)
+{
+	struct stat st;
+	if (::stat(path.c_str(), &st) != 0)
+	return false;
+	return S_ISDIR(st.st_mode);
+}
+
+/**
+ * @brief Joins a directory path with a file name.
+ *
+ * @param dir Directory path.
+ * @param name File name.
+ * @return Combined path.
+ * @todo TODO: add it to common utils / move to validations headers
+ */
+std::string	ExecutionHandler::joinPath(const std::string &dir, const std::string &name)
+{
+	if (dir.empty())
+	return name;
+	if (dir[dir.size() - 1] == '/')
+	return dir + name;
+	return dir + "/" + name;
 }
 
 /**
