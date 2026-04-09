@@ -163,8 +163,9 @@ t_DavMethods Parser::parseDavMethodsValue(const std::string &val) const
 	t_DavMethods methods;
 	for (size_t i = 0; i < methodStrs.size(); ++i)
 	{
-		if (methodStrs[i] == "PUT") methods.push_back(config::PUT);
-		else methods.push_back(config::DELETE);
+		config::e_Method m;
+		if (config::strToMethod(methodStrs[i], m))
+			methods.push_back(m);
 	}
 	return methods;
 }
@@ -413,9 +414,9 @@ void Parser::parseListenDirectives(const std::string &serverBlockStr,
 		if (listen.defaultServer) lOss << " default_server";
 		if (listen.reuseport) lOss << " reuseport";
 		if (listen.ipv6only) lOss << " ipv6only=on";
-			else lOss << " ipv6only=off";
+		else lOss << " ipv6only=off";
 		if (listen.so_keepalive) lOss << " so_keepalive=on";
-			else lOss << " so_keepalive=off";
+		else lOss << " so_keepalive=off";
 		if (listen.backlog >= 0) lOss << " backlog=" << listen.backlog;
 		if (listen.rcvbuf >= 0) lOss << " rcvbuf=" << listen.rcvbuf;
 		if (listen.sndbuf >= 0) lOss << " sndbuf=" << listen.sndbuf;
@@ -527,23 +528,15 @@ void Parser::parseAllowedMethodsDirective(const std::string &locationBlockStr,
 		t_AllowedMethods methods;
 		for (size_t i = 0; i < methodStrs.size(); ++i)
 		{
-			if (methodStrs[i] == "GET") methods.push_back(config::GET);
-			else if (methodStrs[i] == "HEAD") methods.push_back(config::HEAD);
-			else if (methodStrs[i] == "POST") methods.push_back(config::POST);
-			else if (methodStrs[i] == "PUT") methods.push_back(config::PUT);
-			else if (methodStrs[i] == "DELETE") methods.push_back(config::DELETE);
+			config::e_Method m;
+			if (config::strToMethod(methodStrs[i], m))
+				methods.push_back(m);
 		}
 		config.setAllowedMethods(methods);
 		std::ostringstream amOss;
 		amOss << "[location-block] Allowed methods:";
 		for (size_t i = 0; i < methods.size(); ++i)
-		{
-			if (methods[i] == config::GET) amOss << " GET";
-			else if (methods[i] == config::HEAD) amOss << " HEAD";
-			else if (methods[i] == config::POST) amOss << " POST";
-			else if (methods[i] == config::PUT) amOss << " PUT";
-			else if (methods[i] == config::DELETE) amOss << " DELETE";
-		}
+			amOss << " " << config::methodToStr(methods[i]);
 		DEBUG(_logger, amOss.str());
 	}
 }
@@ -580,7 +573,10 @@ void Parser::parseReturnDirective(const std::string &locationBlockStr,
 void Parser::parseRequestLine(const std::string &line, client::Request &request)
 {
 	if (!_abnf.match("request-line", "HTTP", line))
+	{
+		INFO(_logger, "400: invalid request-line: " + line.substr(0, 80));
 		throw client::HTTPError(400);
+	}
 
 	std::string methodStr;
 	std::string target;
@@ -589,22 +585,31 @@ void Parser::parseRequestLine(const std::string &line, client::Request &request)
 	if (!_abnf.extractSubRule("request-line", "HTTP", line, "method", methodStr)
 		|| !_abnf.extractSubRule("request-line", "HTTP", line, "request-target", target)
 		|| !_abnf.extractSubRule("request-line", "HTTP", line, "HTTP-version", version))
+	{
+		INFO(_logger, "400: failed to extract method/target/version from request-line");
 		throw client::HTTPError(400);
+	}
 
 	if (target.size() > 8192)
+	{
+		std::ostringstream oss;
+		oss << "414: URI too long (" << target.size() << " bytes)";
+		INFO(_logger, oss.str());
 		throw client::HTTPError(414);
+	}
 
 	if (version != "HTTP/1.1")
+	{
+		INFO(_logger, "505: unsupported HTTP version: " + version);
 		throw client::HTTPError(505);
+	}
 
 	config::e_Method method;
-	if (methodStr == "GET") method = config::GET;
-	else if (methodStr == "HEAD") method = config::HEAD;
-	else if (methodStr == "POST") method = config::POST;
-	else if (methodStr == "PUT") method = config::PUT;
-	else if (methodStr == "DELETE") method = config::DELETE;
-	else
+	if (!config::strToMethod(methodStr, method))
+	{
+		INFO(_logger, "501: unimplemented method: " + methodStr);
 		throw client::HTTPError(501);
+	}
 
 	std::string authority;
 	std::string path;
@@ -620,23 +625,40 @@ void Parser::parseRequestLine(const std::string &line, client::Request &request)
 		std::string scheme;
 		_abnf.extractSubRule("absolute-form", "HTTP", target, "scheme", scheme);
 		if (scheme != "http" && scheme != "https")
+		{
+			INFO(_logger, "400: unsupported scheme in absolute-form: " + scheme);
 			throw client::HTTPError(400);
+		}
 
 		_abnf.extractSubRule("absolute-form", "HTTP", target, "authority", authority);
 		_abnf.extractSubRule("absolute-form", "HTTP", target, "path-abempty", path);
 		_abnf.extractSubRule("absolute-form", "HTTP", target, "query", query);
 	}
 	else if (_abnf.match("authority-form", "HTTP", target))
+	{
+		INFO(_logger, "400: authority-form not supported");
 		throw client::HTTPError(400);
+	}
 	else if (_abnf.match("asterisk-form", "HTTP", target))
+	{
+		INFO(_logger, "400: asterisk-form not supported");
 		throw client::HTTPError(400);
+	}
 
 	request.setMethod(method);
 	request.setRequestTarget(target);
 	request.setAuthority(authority);
-	request.setPath(path);
+	request.setPath(common::core::utils::urlDecode(path));
 	request.setQuery(query);
 	request.setHttpVersion(version);
+
+	std::ostringstream rlOss;
+	rlOss << "Request-line: " << methodStr << " " << path;
+	if (!query.empty()) rlOss << "?" << request.getQuery();
+	if (!authority.empty()) rlOss << " (authority: " << request.getAuthority() << ")";
+	if (!path.empty()) rlOss << " path: " << common::core::utils::urlDecode(request.getPath());
+	rlOss << " " << request.getHttpVersion();
+	DEBUG(_logger, rlOss.str());
 }
 
 /**
@@ -652,20 +674,29 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 	{
 		std::string::size_type eol = headersBlock.find("\r\n", pos);
 		if (eol == std::string::npos)
+		{
+			INFO(_logger, "400: missing CRLF in headers block");
 			throw client::HTTPError(400);
+		}
 		if (eol == pos)
 			break;
 		std::string line = headersBlock.substr(pos, eol - pos);
 		pos = eol + 2;
 
 		if (!_abnf.match("field-line", "HTTP", line))
+		{
+			INFO(_logger, "400: invalid header field-line: " + line.substr(0, 80));
 			throw client::HTTPError(400);
+		}
 
 		std::string name;
 		std::string value;
 		if (!_abnf.extractSubRule("field-line", "HTTP", line, "field-name", name)
 			|| !_abnf.extractSubRule("field-line", "HTTP", line, "field-value", value))
+		{
+			INFO(_logger, "400: failed to extract field-name/field-value from: " + line.substr(0, 80));
 			throw client::HTTPError(400);
+		}
 
 		value = common::core::utils::toLower(common::core::utils::trim(value));
 		name = common::core::utils::toLower(name);
@@ -674,12 +705,12 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (getFlags() & E_PARS_HOST)
 			{
-				INFO(_logger, "Multiple Host headers found");
+				INFO(_logger, "400: multiple Host headers found");
 				throw client::HTTPError(400);
 			}
 			if (!_abnf.match("Host", "HTTP", value))
 			{
-				INFO(_logger, "Invalid Host header format");
+				INFO(_logger, "400: invalid Host header format: " + value);
 				throw client::HTTPError(400);
 			}
 			if (!request.getAuthority().empty())
@@ -693,7 +724,7 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Connection", "HTTP", common::core::utils::toLower(value)))
 			{
-				INFO(_logger, "Invalid Connection header format");
+				INFO(_logger, "400: Invalid Connection header format");
 				throw client::HTTPError(400);
 			}
 			else
@@ -704,14 +735,14 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Content-Length", "HTTP", value))
 			{
-				INFO(_logger, "Invalid Content-Length header format");
+				INFO(_logger, "400: Invalid Content-Length header format");
 				throw client::HTTPError(400);
 			}
 			else
 				DEBUG(_logger, "Parsed Content-Length header: " + value);
 			if (getFlags() & E_PARS_CONTENT_LENGTH)
 			{
-				INFO(_logger, "Multiple Content-Length headers found");
+				INFO(_logger, "400: Multiple Content-Length headers found");
 				throw client::HTTPError(400);
 			}
 			setFlags(getFlags() | E_PARS_CONTENT_LENGTH);
@@ -720,14 +751,14 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Content-Type", "HTTP", value))
 			{
-				INFO(_logger, "Invalid Content-Type header format");
+				INFO(_logger, "400: Invalid Content-Type header format");
 				throw client::HTTPError(400);
 			}
 			else
 				DEBUG(_logger, "Parsed Content-Type header: " + value);
 			if (getFlags() & E_PARS_CONTENT_TYPE)
 			{
-				INFO(_logger, "Multiple Content-Type headers found");
+				INFO(_logger, "400: Multiple Content-Type headers found");
 				throw client::HTTPError(400);
 			}
 			setFlags(getFlags() | E_PARS_CONTENT_TYPE);
@@ -736,7 +767,7 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Content-Encoding", "HTTP", common::core::utils::toLower(value)))
 			{
-				INFO(_logger, "Invalid Content-Encoding header format");
+				INFO(_logger, "400: Invalid Content-Encoding header format");
 				throw client::HTTPError(400);
 			}
 			else
@@ -747,7 +778,7 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Expect", "HTTP", common::core::utils::toLower(value)))
 			{
-				INFO(_logger, "Invalid Expect header format");
+				INFO(_logger, "400: Invalid Expect header format");
 				throw client::HTTPError(400);
 			}
 			else
@@ -758,7 +789,7 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Last-Modified", "HTTP", value))
 			{
-				INFO(_logger, "Invalid Last-Modified header format");
+				INFO(_logger, "400: Invalid Last-Modified header format");
 				throw client::HTTPError(400);
 			}
 			else
@@ -768,7 +799,7 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Date", "HTTP", value))
 			{
-				INFO(_logger, "Invalid Date header format");
+				INFO(_logger, "400: Invalid Date header format");
 				throw client::HTTPError(400);
 			}
 			else
@@ -778,7 +809,7 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Max-Forwards", "HTTP", value))
 			{
-				INFO(_logger, "Invalid Max-Forwards header format");
+				INFO(_logger, "400: Invalid Max-Forwards header format");
 				throw client::HTTPError(400);
 			}
 			else
@@ -788,7 +819,7 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Via", "HTTP", value))
 			{
-				INFO(_logger, "Invalid Via header format");
+				INFO(_logger, "400: Invalid Via header format");
 				throw client::HTTPError(400);
 			}
 			else
@@ -798,11 +829,10 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Transfer-Encoding", "HTTP", common::core::utils::toLower(value)))
 			{
-				INFO(_logger, "Invalid Transfer-Encoding header format");
+				INFO(_logger, "400: invalid Transfer-Encoding header format: " + value);
 				throw client::HTTPError(400);
 			}
-			else
-				DEBUG(_logger, "Parsed Transfer-Encoding header: " + value);
+			INFO(_logger, "501: Transfer-Encoding not supported");
 			throw client::HTTPError(501);
 		}
 			
@@ -810,11 +840,10 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		{
 			if (!_abnf.match("Range", "HTTP", value))
 			{
-				INFO(_logger, "Invalid Range header format");
+				INFO(_logger, "400: invalid Range header format: " + value);
 				throw client::HTTPError(400);
 			}
-			else
-				DEBUG(_logger, "Parsed Range header: " + value);
+			INFO(_logger, "501: Range not supported");
 			throw client::HTTPError(501);
 		}
 
@@ -823,6 +852,12 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 		headers[common::core::utils::toLower(name)].push_back(header);
 	}
 	request.setHeaders(headers);
+
+	setFlags(getFlags() | E_PARS_CLRF);
+
+	std::ostringstream hdrsOss;
+	hdrsOss << "Parsed " << headers.size() << " header(s)";
+	DEBUG(_logger, hdrsOss.str());
 }
 
 } // !parser

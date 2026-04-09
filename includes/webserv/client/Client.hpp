@@ -72,10 +72,10 @@ class Client
 		common::core::net::TcpClient		_socket;
 		sockaddr_storage					_sockaddr_storage;
 		e_ClientStatus						_status;
+		config::ServerConfig				_serverConfig;
 		handler::ExecutionHandler			_executionHandler;
 		handler::RequestHandler				_requestHandler;
 		handler::ResponseHandler			_responseHandler;
-		config::ServerConfig				_serverConfig;
 		HTTPError							_HTTPError;
 		std::time_t							_lastActivityTime;
 		std::time_t							_effectiveKeepaliveTimeout;
