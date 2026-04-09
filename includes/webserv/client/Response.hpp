@@ -39,7 +39,7 @@ class Response
 		void							setHttpVersion(const std::string &httpVersion);
 		status::StatusCode				getStatusCode() const;
 		void							setStatusCode(const status::StatusCode &statusCode);
-		t_Headers						getHeaders() const;
+		const t_Headers					&getHeaders() const;
 		void							setHeaders(const t_Headers &headers);
 		const HTTPheaders::HTTPHeader	&findHeader(const std::string &headerName, const std::string &headerValue) const;
 		void							addHeader(const std::string &headerName, const std::string &headerValue);

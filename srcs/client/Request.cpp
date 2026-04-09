@@ -231,7 +231,7 @@ void Request::setQuery(const std::string &query)
  *
  * @return [TODO:return]
  */
-t_Headers Request::getHeaders() const
+const t_Headers &Request::getHeaders() const
 {
 	return _headers;
 }

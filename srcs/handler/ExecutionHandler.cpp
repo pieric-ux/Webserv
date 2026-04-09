@@ -19,11 +19,6 @@
 #include <cstdio>
 #include <cstring>
 
-namespace
-{
-	const std::size_t	EXECUTION_CHUNK_SIZE = 8 * 1024;
-}
-
 namespace webserv
 {
 namespace handler
@@ -323,7 +318,7 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 		throw client::HTTPError(500);
 	}
 
-	unsigned char	buf[EXECUTION_CHUNK_SIZE];
+	unsigned char	buf[config::DefaultConfig::BUFFER_SIZE];
 	ssize_t			rd;
 
 	rd = ::read(_fd.get(), buf, sizeof(buf));
@@ -362,16 +357,16 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 	const t_raw		&buf = requestHandler.getBufferRequest();
 	std::size_t		offset = _bodyReceived;
 
-	t_Headers::iterator it;
-	it = requestHandler.getRequest().getHeaders().find("Content-Length");
-	if (it == requestHandler.getRequest().getHeaders().end())
+	const t_Headers					&headers = requestHandler.getRequest().getHeaders();
+	t_Headers::const_iterator		it = headers.find("Content-Length");
+	if (it == headers.end())
 	{
 		ERROR(_logger, "writeChunk: missing Content-Length header");
 		throw client::HTTPError(411);
 	}
 
 	std::size_t		remaining = std::stoul(it->second.front().getValue()) - offset;
-	std::size_t		toWrite = remaining < EXECUTION_CHUNK_SIZE ? remaining : EXECUTION_CHUNK_SIZE;
+	std::size_t		toWrite = remaining < config::DefaultConfig::BUFFER_SIZE ? remaining : config::DefaultConfig::BUFFER_SIZE;
 	ssize_t			wr;
 
 	wr = ::write(_fd.get(), &buf[offset], toWrite);
