@@ -357,9 +357,9 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 	const t_raw		&buf = requestHandler.getBufferRequest();
 	std::size_t		offset = _bodyReceived;
 
-	const t_Headers					&headers = requestHandler.getRequest().getHeaders();
-	t_Headers::const_iterator		it = headers.find("Content-Length");
-	if (it == headers.end())
+	const t_Headers	&headers = requestHandler.getRequest().getHeaders();
+	t_Headers::const_iterator it = headers.find("Content-Length");
+	if (it == headers.end() && !it->second.empty())
 	{
 		ERROR(_logger, "writeChunk: missing Content-Length header");
 		throw client::HTTPError(411);
@@ -505,7 +505,7 @@ bool	ExecutionHandler::isDirectory(const std::string &path)
 {
 	struct stat st;
 	if (::stat(path.c_str(), &st) != 0)
-	return false;
+		return false;
 	return S_ISDIR(st.st_mode);
 }
 
@@ -520,9 +520,9 @@ bool	ExecutionHandler::isDirectory(const std::string &path)
 std::string	ExecutionHandler::joinPath(const std::string &dir, const std::string &name)
 {
 	if (dir.empty())
-	return name;
+		return name;
 	if (dir[dir.size() - 1] == '/')
-	return dir + name;
+		return dir + name;
 	return dir + "/" + name;
 }
 
