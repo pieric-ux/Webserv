@@ -160,6 +160,25 @@ start
 								:Extract `requestTarget`;
 								endif
 							endif
+							if (requestTarget is `asterisk-form` or `authority-form`?) then (yes)
+								:Throw HTTPError(400);
+								#red:(E)
+								detach
+							else (no)
+							endif
+							if (requestTarget is `origin-form`?) then (origin-form)
+								:Extract `path` and `query` via ABNF;
+							else (absolute-form)
+								:Validate scheme is `http` or `https`;
+								if (Valid scheme?) then (no)
+									:Throw HTTPError(400);
+									#red:(E)
+									detach
+								else (yes)
+								endif
+								:Extract `authority`, `path-abempty` and `query` via ABNF;
+							endif
+							:Set `authority`, `path` and `query` on `request`;
 							:Use ABNF to parse `httpVersion` token;
 							if (Valid httpVersion?) then (no)
 								:Throw HTTPError(400);
@@ -200,11 +219,16 @@ start
 									#red:(E)
 									detach
 								else (yes)
+								if (`authority` is set on `request`?) then (yes)
+									note right: absolute-form\noverride Host with authority
+									:Use `authority` as `Host` value;
+								else (no)
+								endif
 								:Extract `Host` header;
 								:Call `setFlags(E_PARS_HOST)`;
 								endif
 							endif
-						else (no)	
+						else (no)
 						endif
 						if (`Connection` header is present?) then (yes)
 							if (Valid `Connection` header?) then (no)
@@ -363,7 +387,7 @@ start
 							else (no)
 							endif
 							:Erase `bufferRequest` up to and including CRLF CRLF;
-							:Call `buildAbsolutPath(requestTarget, LocationConfig)`;
+							:Call `buildAbsolutPath()`;
 							:Call `setFlags(E_REQ_HEADERS_VALIDATED)`;
 						else(no)
 						endif

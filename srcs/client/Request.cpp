@@ -20,6 +20,9 @@ Request::Request()
 		_requestTarget(),
 		_httpVersion(),
 		_absolutePath(),
+		_authority(),
+		_path(),
+		_query(),
 		_headers(),
 		_body(),
 		_flags(static_cast<e_RequestFlags>(0))
@@ -44,6 +47,9 @@ Request::Request(const Request &rhs)
 		_requestTarget(rhs._requestTarget),
 		_httpVersion(rhs._httpVersion),
 		_absolutePath(rhs._absolutePath),
+		_authority(rhs._authority),
+		_path(rhs._path),
+		_query(rhs._query),
 		_headers(rhs._headers),
 		_body(rhs._body),
 		_flags(rhs._flags)
@@ -63,6 +69,9 @@ Request &Request::operator=(const Request &rhs)
 		_requestTarget = rhs._requestTarget;
 		_httpVersion = rhs._httpVersion;
 		_absolutePath = rhs._absolutePath;
+		_authority = rhs._authority;
+		_path = rhs._path;
+		_query = rhs._query;
 		_headers = rhs._headers;
 		_body = rhs._body;
 		_flags = rhs._flags;
@@ -158,6 +167,66 @@ std::string Request::getAbsolutePath() const
 void Request::setAbsolutePath(const std::string &absolutePath)
 {
 	_absolutePath = absolutePath;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::string Request::getAuthority() const
+{
+	return _authority;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param authority [TODO:parameter]
+ */
+void Request::setAuthority(const std::string &authority)
+{
+	_authority = authority;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::string Request::getPath() const
+{
+	return _path;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param path [TODO:parameter]
+ */
+void Request::setPath(const std::string &path)
+{
+	_path = path;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::string Request::getQuery() const
+{
+	return _query;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param query [TODO:parameter]
+ */
+void Request::setQuery(const std::string &query)
+{
+	_query = query;
 }
 
 /**

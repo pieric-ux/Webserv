@@ -8,7 +8,12 @@
  * @brief [TODO:description]
  */
 
+#include <algorithm>
+#include <sstream>
+#include <vector>
 #include <string>
+#include <common/common.hpp>
+#include <webserv/client/HTTPError.hpp>
 #include <webserv/client/Request.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
@@ -40,7 +45,6 @@ class RequestHandler
 		void					appendToBufferRequest(const t_raw &buffer);
 		void					clearBufferRequest();
 		parser::Parser			&getParser();
-		int						getBodyReceived() const;
 
 	private:
 		t_Logger				_logger;
@@ -50,7 +54,8 @@ class RequestHandler
 		config::ServerConfig	&_serverConfig;
 
 		void					validateHeaders();
-		void					buildAbsolutPath(const std::string &requestTarget, const config::LocationConfig &locationConfig);
+		void					buildAbsolutPath();
+		std::string				normalizePath(const std::string &path);
 };
 
 } // !handler

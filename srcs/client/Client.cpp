@@ -20,10 +20,10 @@ Client::Client()
 	:	_id(-1),
 		_socket(),
 		_status(E_CLI_REQUEST),
+		_serverConfig(),
 		_executionHandler(),
 		_requestHandler(_serverConfig),
 		_responseHandler(),
-		_serverConfig(),
 		_HTTPError(),
 		_lastActivityTime(0),
 		_effectiveKeepaliveTimeout(0)
@@ -45,10 +45,10 @@ Client::Client(const t_SocketPairClient &client, const config::ServerConfig &ser
 		_socket(client.first),
 		_sockaddr_storage(client.second),
 		_status(E_CLI_REQUEST),
+		_serverConfig(serverConfig),
 		_executionHandler(),
 		_requestHandler(_serverConfig),
 		_responseHandler(),
-		_serverConfig(serverConfig),
 		_HTTPError(),
 		_lastActivityTime(std::time(NULL)),
 		_effectiveKeepaliveTimeout(static_cast<std::time_t>(serverConfig.getKeepAliveTimeout()))
@@ -74,14 +74,16 @@ Client::Client(const Client &rhs)
 		_socket(rhs._socket),
 		_sockaddr_storage(rhs._sockaddr_storage),
 		_status(rhs._status),
-		_executionHandler(rhs._executionHandler),
-		_requestHandler(rhs._requestHandler),
-		_responseHandler(rhs._responseHandler),
 		_serverConfig(rhs._serverConfig),
+		_executionHandler(rhs._executionHandler),
+		_requestHandler(_serverConfig),
+		_responseHandler(rhs._responseHandler),
 		_HTTPError(rhs._HTTPError),
 		_lastActivityTime(rhs._lastActivityTime),
 		_effectiveKeepaliveTimeout(rhs._effectiveKeepaliveTimeout)
-{}
+{
+	_requestHandler = rhs._requestHandler;
+}
 
 /**
  * @brief [TODO:description]

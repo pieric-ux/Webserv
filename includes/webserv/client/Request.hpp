@@ -47,6 +47,12 @@ class Request
 		void							setHttpVersion(const std::string &httpVersion);
 		std::string						getAbsolutePath() const;
 		void							setAbsolutePath(const std::string &absolutePath);
+		std::string						getAuthority() const;
+		void							setAuthority(const std::string &authority);
+		std::string						getPath() const;
+		void							setPath(const std::string &path);
+		std::string						getQuery() const;
+		void							setQuery(const std::string &query);
 		t_Headers						getHeaders() const;
 		void							setHeaders(const t_Headers &headers);
 		const HTTPheaders::HTTPHeader	&findHeader(const std::string &headerName, const std::string &headerValue) const;
@@ -62,6 +68,9 @@ class Request
 		std::string						_requestTarget;
 		std::string						_httpVersion;
 		std::string						_absolutePath;
+		std::string 					_authority;
+		std::string						_path;
+		std::string						_query;
 		t_Headers						_headers;
 		t_raw							_body;
 		e_RequestFlags					_flags;

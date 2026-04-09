@@ -356,6 +356,12 @@ void Parser::parseLocationBlock(const std::string &locationBlockStr,
 
 	t_SubRules nested = extractDirectives("location-block", locationBlockStr,
 	                                      "location-block", 2);
+	if (!nested.empty())
+	{
+		std::ostringstream nestOss;
+		nestOss << "[location-block] " << nested.size() << " nested location(s) under " << loc.getUri();
+		DEBUG(_logger, nestOss.str());
+	}
 	for (size_t n = 0; n < nested.size(); ++n)
 		parseLocationBlock(nested[n], locationConfigs, loc);
 }

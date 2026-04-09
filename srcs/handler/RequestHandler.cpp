@@ -5,12 +5,7 @@
  * @brief [TODO:description]
  */
 
-#include "webserv/client/HTTPError.hpp"
-#include "webserv/client/Request.hpp"
-#include "webserv/parser/Parser.hpp"
 #include <webserv/handler/RequestHandler.hpp>
-#include <webserv/client/HTTPError.hpp>
-#include <algorithm>
 
 namespace webserv
 {
@@ -136,17 +131,7 @@ void RequestHandler::appendToBufferRequest(const t_raw &buffer)
  */
 void RequestHandler::clearBufferRequest()
 {
-
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-int RequestHandler::getBodyReceived() const
-{
-	return 0;
+	_bufferRequest.clear();
 }
 
 /**
@@ -155,12 +140,17 @@ int RequestHandler::getBodyReceived() const
  */
 void RequestHandler::parseHeaders()
 {
+	DEBUG(_logger, "buffer size=" + common::core::utils::toString(_bufferRequest.size()));
+
 	std::string bufferStr(_bufferRequest.begin(), _bufferRequest.end());
 
 	static const unsigned char CRLF[4] = {'\r', '\n', '\r', '\n'};
 	std::string::iterator it = std::search(bufferStr.begin(), bufferStr.end(), CRLF, CRLF + 4);
 	if (it == bufferStr.end())
+	{
+		INFO(_logger, "400: CRLFCRLF not found in buffer");
 		throw client::HTTPError(400);
+	}
 
 	std::string::iterator lineEnd = std::find(bufferStr.begin(), bufferStr.end(), '\n');
 	std::string::iterator lineStop = lineEnd;
@@ -172,24 +162,30 @@ void RequestHandler::parseHeaders()
 
 	if (!(_request.getFlags() & client::E_REQ_REQUEST_LINE))
 	{
+		DEBUG(_logger, "parsing request line: \"" + line + "\"");
 		_parser.parseRequestLine(line, _request);
 		_request.setFlags(client::E_REQ_REQUEST_LINE);
+		DEBUG(_logger, "request line parsed: method=" + config::methodToStr(_request.getMethod()) + " target=" + _request.getRequestTarget());
 	}
 	if (_request.getFlags() & client::E_REQ_REQUEST_LINE)
+	{
+		DEBUG(_logger, "parsing headers block (" + common::core::utils::toString(headersBlock.size()) + " bytes)");
 		_parser.parseHeaders(headersBlock, _request);
+	}
 
 	if (_parser.getFlags() & parser::E_PARS_CLRF && !(_request.getFlags() & client::E_REQ_HEADERS_VALIDATED))
 	{
+		DEBUG(_logger, "CRLFCRLF detected, starting validation");
 		validateHeaders();
 
 		t_raw::iterator end = std::search(_bufferRequest.begin(), _bufferRequest.end(), CRLF, CRLF + 4);
 		_bufferRequest.erase(_bufferRequest.begin(), end + 4);
 
-		buildAbsolutPath(_request.getRequestTarget(), _serverConfig.findLocationConfig(_request.getRequestTarget()));
+		buildAbsolutPath();
 
 		_request.setFlags(static_cast<client::e_RequestFlags>(_request.getFlags() | client::E_REQ_HEADERS_VALIDATED));
 
-		INFO(_logger, "Headers parsed and validated, buffer request updated (remaining bytes: " + common::core::utils::toString(_bufferRequest.size()) + ")");
+		INFO(_logger, "headers validated, remaining buffer=" + common::core::utils::toString(_bufferRequest.size()) + " bytes");
 	}
 }
 
@@ -200,24 +196,36 @@ void RequestHandler::parseHeaders()
  */
 void RequestHandler::validateHeaders()
 {
-	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getRequestTarget());
+	DEBUG(_logger, "method=" + config::methodToStr(_request.getMethod()) + " target=" + _request.getRequestTarget());
+
+	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getPath());
 
 	t_AllowedMethods::const_iterator it = std::find(locationConfig.getAllowedMethods().begin(), locationConfig.getAllowedMethods().end(), _request.getMethod());
 	if (it == locationConfig.getAllowedMethods().end())
+	{
+		INFO(_logger, "405: " + config::methodToStr(_request.getMethod()) + " not allowed on " + _request.getRequestTarget());
 		throw client::HTTPError(405);
+	}
 
 	if (!(_parser.getFlags() & parser::E_PARS_HOST))
+	{
+		INFO(_logger, "400: missing Host header");
 		throw client::HTTPError(400);
+	}
 
 	if (_request.getMethod() == config::POST || _request.getMethod() == config::PUT)
 	{
 		if (!(_parser.getFlags() & parser::E_PARS_CONTENT_LENGTH))
+		{
+			INFO(_logger, "411: missing Content-Length on " + config::methodToStr(_request.getMethod()));
 			throw client::HTTPError(411);
+		}
 
 		if (_parser.getFlags() & parser::E_PARS_CONTENT_TYPE)
 		{
 			if (!_request.findHeader("Content-Type", "multipart/form-data").getName().empty())
 			{
+				DEBUG(_logger, "multipart/form-data detected, checking CGI");
 				bool cgiMatch = false;
 				const t_CgiExtensions &cgiExt = locationConfig.getCgiExtensions();
 				t_CgiExtensions::const_iterator cit = cgiExt.begin();
@@ -230,7 +238,10 @@ void RequestHandler::validateHeaders()
 					}
 				}
 				if (!locationConfig.getEnableCGI() || !cgiMatch)
+				{
+					INFO(_logger, "415: multipart/form-data requires CGI but CGI disabled or no extension match");
 					throw client::HTTPError(415);
+				}
 			}
 			else
 			{
@@ -246,11 +257,15 @@ void RequestHandler::validateHeaders()
 					}
 				}
 				if (!found)
+				{
+					INFO(_logger, "415: Content-Type not in allowed MIME types");
 					throw client::HTTPError(415);
+				}
 			}
 		}
 		else
 		{
+			DEBUG(_logger, "no Content-Type, defaulting to application/octet-stream");
 			_request.addHeader("Content-Type", "application/octet-stream");
 			_parser.setFlags(_parser.getFlags() | parser::E_PARS_CONTENT_TYPE);
 		}
@@ -259,31 +274,99 @@ void RequestHandler::validateHeaders()
 		{
 			if (!_request.findHeader("Content-Encoding", "chunked").getName().empty())
 			{
+				INFO(_logger, "415: chunked Content-Encoding not supported");
 				throw client::HTTPError(415);
 			}
 		}
 	}
+
+	DEBUG(_logger, "all checks passed");
 }
 
 /**
  * @brief [TODO:description]
- *
- * @param serverConfig [TODO:parameter]
  */
 void RequestHandler::parseBody()
 {
+	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getPath());
+
+	t_clientMaxBodySize contentLength = 0;
+	const t_Headers &headers = _request.getHeaders();
+	t_Headers::const_iterator it = headers.find("content-length");
+	if (it != headers.end() && !it->second.empty())
+	{
+		std::istringstream iss(it->second.front().getValue());
+		iss >> contentLength;
+	}
+
+	t_clientMaxBodySize maxBodySize = locationConfig.getClientMaxBodySize();
+	if (contentLength > maxBodySize)
+		throw client::HTTPError(413);
+
+	_request.setFlags(static_cast<client::e_RequestFlags>(_request.getFlags() | client::E_REQ_BODY_STARTED));
+	DEBUG(_logger, "Body started, Content-Length=" + common::core::utils::toString(contentLength));
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void RequestHandler::buildAbsolutPath()
+{
+	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getPath());
+	std::string root = locationConfig.getRoot();
+
+	while (root.size() > 1 && root[root.size() - 1] == '/')
+		root = root.substr(0, root.size() - 1);
+
+	std::string absolutePath = normalizePath(root + _request.getPath());
+
+	DEBUG(_logger, "root=" + root + " path=" + _request.getPath() + " -> " + absolutePath);
+
+	if (absolutePath != root &&
+		absolutePath.substr(0, root.size() + 1) != root + "/")
+	{
+		INFO(_logger, "403: path traversal detected: " + absolutePath + " escapes root " + root);
+		throw client::HTTPError(403);
+	}
+
+	_request.setAbsolutePath(absolutePath);
+	DEBUG(_logger, "absolute path set: " + absolutePath);
 }
 
 /**
  * @brief [TODO:description]
  *
- * @param requestTarget [TODO:parameter]
- * @param locationConfig [TODO:parameter]
+ * @param path [TODO:parameter]
+ * @return [TODO:return]
  */
-void RequestHandler::buildAbsolutPath(const std::string &requestTarget, const config::LocationConfig &locationConfig)
+std::string RequestHandler::normalizePath(const std::string &path)
 {
-	(void)requestTarget;
-	(void)locationConfig;
+	std::vector<std::string> segments;
+	std::istringstream ss(path);
+	std::string segment;
+
+	while (std::getline(ss, segment, '/'))
+	{
+		if (segment.empty() || segment == ".")
+			continue;
+		else if (segment == "..")
+		{
+			if (!segments.empty())
+				segments.pop_back();
+		}
+		else
+			segments.push_back(segment);
+	}
+
+	std::string result;
+	std::vector<std::string>::const_iterator it = segments.begin();
+	for (; it != segments.end(); ++it)
+		result += "/" + *it;
+
+	if (result.empty())
+		result = "/";
+
+	return result;
 }
 
 } // !handler

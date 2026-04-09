@@ -337,18 +337,18 @@ void ServerConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
  * @param requestTarget [TODO:parameter]
  * @return [TODO:return]
  */
-const LocationConfig &ServerConfig::findLocationConfig(const std::string &requestTarget)
+const LocationConfig &ServerConfig::findLocationConfig(const std::string &path)
 {
 	t_LocationConfigs::iterator it = _locationConfigs.begin();
 	for (; it != _locationConfigs.end(); ++it)
 	{
-		if (requestTarget == it->getUri())
+		if (path == it->getUri())
 		{
 			INFO(_logger, "Exact match found for location: " + it->getUri());
 			return (*it);
 		}
 	}
-	INFO(_logger, "No exact match found for request target: " + requestTarget);
+	INFO(_logger, "No exact match found for request target path: " + path);
 	return _locationConfigs.front();
 }
 
