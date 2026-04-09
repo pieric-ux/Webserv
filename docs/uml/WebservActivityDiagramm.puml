@@ -357,7 +357,7 @@ start
 								endif
 								if (`E_PARS_CONTENT_TYPE` is set) then (yes)
 									if (`media-type` is `multipart/form-data`) then (yes)
-										if (`enableCGI` is set in `LocationConfig` AND `requestTarget` extension is contains in `cgiExtensions`) then (yes)
+										if (`enableCGI` is set in `LocationConfig` AND `path` extension is contains in `cgiExtensions`) then (yes)
 										else (no)
 											:Throw HTTPError(415);
 											#red:(E)
@@ -410,10 +410,10 @@ start
 					| __Client__ |
 					if (`E_REQ_HEADERS_VALIDATED` is set) then(yes)
 						| __ExecutionHandler__ |
-						:Call `execute(requestHandler, responseHandler, serverConfig)`;
 						:Call `findLocationConfig(path)`;
-						:Call `executeRequest(requestHandler, responseHandler, LocationConfig)`;
-						if (`enableCGI` is set in `LocationConfig` AND `cgiExtensions` contains `requestTarget` extension) then (yes)
+						:Call `execute(requestHandler, responseHandler, locationConfig)`;
+						if (`enableCGI` is set in `LocationConfig` AND `cgiExtensions` contains `path` extension) then (yes)
+							:Call `executeCGI(requestHandler, LocationConfig)`;
 							if (`method` is `POST` or 'PUT' or `DELETE`) then (yes)
 									:Send `bufferRequest` to CGI process stdin;
 							else (no)
@@ -424,7 +424,6 @@ start
 								else (yes)
 								endif
 							endif
-							:Call `executeCGI(requestHandler, LocationConfig)`;
 							| __CGIHandler__ |
 							:Initialize meta-variables;
 							:Call `setCGIEnvironmentVariables(request, LocationConfig)`;
@@ -528,16 +527,17 @@ start
 							endif
 							| __ExecutionHandler__ |
 						else (no)
+							:Call `executeRequest(requestHandler, responseHandler, LocationConfig)`;
 							switch (`method`)
 								case (`HEAD` or `GET`)
 									:Call `executeHEADorGET(requestHandler, responseHandler, LocationConfig)`;
-									if (isFile(requestTarget)) then (yes)
+									if (isFile(path)) then (yes)
 										if (`E_EXEC_FILE_OPENED` is set) then (no)
 											:Call `openFile(requestHandler, LocationConfig)`;
 											if (fd > 0) then (yes)
 												:Call `setFlags(E_EXEC_FILE_OPENED)`;
 												:Call `getFileSize(fd)` to set `Content-Length` header in `response`;
-												:Call `getFileExtension(requestTarget)` to set `Content-Type` header in `response`;
+												:Call `getFileExtension(path)` to set `Content-Type` header in `response`;
 											else if (EACCESS) then (yes)
 												:Throw HTTPError(403);
 												#red:(E)
@@ -567,7 +567,7 @@ start
 										else (no)
 										endif
 									else (no)
-										if (`requestTarget` is a directory without end `/`) then (yes)
+										if (`path` is a directory without end `/`) then (yes)
 											:Throw HTTPError(301);
 											#red:(E)
 											detach
@@ -578,7 +578,7 @@ start
 													if (fd > 0) then (yes)
 														:Call `setFlags(E_EXEC_FILE_OPENED)`;
 														:Call `getFileSize(fd)` to set `Content-Length` header in `response`;
-														:Call `getFileExtension(requestTarget)` to set `Content-Type` header in `response`;
+														:Call `getFileExtension(path)` to set `Content-Type` header in `response`;
 													else if (EACCESS) then (yes)
 														:Throw HTTPError(403);
 														#red:(E)
@@ -609,7 +609,7 @@ start
 												endif
 											else (no)
 												if (`autoindex` is set in `LocationConfig` AND `E_RESP_HEADERS_SENT` is NOT set) then (yes)
-													:Call `generateAutoindexHTML(requestTarget)`;
+													:Call `generateAutoindexHTML(path)`;
 													floating note: Uses Directory and DirectoryIterator\nfrom common lib to iterate entries.
 													:Append `htmlString` to `bufferAutoindex`;
 													:Set `Content-Length` with `htmlString` length;
@@ -626,8 +626,8 @@ start
 									endif
 								case (`POST`)
 									:Call `executePOST(requestHandler, responseHandler, LocationConfig)`;
-									if (isFile(requestTarget)) then (yes)
-										:Call `isFileExisting(requestTarget)`;
+									if (isFile(path)) then (yes)
+										:Call `isFileExisting(path)`;
 										if (file exists?) then (yes)
 											:Throw HTTPError(405);
 											#red:(E)
@@ -638,12 +638,12 @@ start
 											detach
 										endif
 									else (no)
-										if (`requestTarget` is root) then (yes)
+										if (`path` is root) then (yes)
 											:Throw HTTPError(403);
 											#red:(E)
 											detach
 										else (no)
-											if (`requesetTarget` is a directory whithout end `/`) then (yes)
+											if (`path` is a directory whithout end `/`) then (yes)
 												:Throw HTTPError(301);
 												#red:(E)
 												detach
@@ -663,7 +663,7 @@ start
 								case (`PUT`)
 									:Call `executePUT(requestHandler, LocationConfig)`;
 									if (`davMethods` is set in `LocationConfig`) then (yes)
-										if (isFile(requestTarget)) then (yes)
+										if (isFile(path)) then (yes)
 											if (`E_EXEC_FILE_OPENED` is set) then (no)
 												:Call `openFile(requestHandler, LocationConfig)` with `O_TRUNC` flag;
 												if (fd > 0) then (yes)
@@ -739,7 +739,7 @@ start
 											detach
 										else (no)
 										endif
-										if (isFile(requestTarget)) then (yes)
+										if (isFile(path)) then (yes)
 											:Call `deleteFile(filePath)`;
 											if (successfully deleted?) then (yes)
 												:Call `setFlags(E_EXEC_NOCONTENT)`;

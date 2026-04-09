@@ -138,11 +138,20 @@ void ExecutionHandler::setFlags(const int flags)
  * @param response [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-void ExecutionHandler::execute(const RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::ServerConfig &serverConfig)
+void ExecutionHandler::execute(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
-	(void)requestHandler;
-	(void)responseHandler;
-	(void)serverConfig;
+	if (locationConfig.getEnableCGI())
+	{
+		std::string ext = getFileExtension(requestHandler.getRequest().getAbsolutePath());
+		const t_CgiExtensions &cgiExts = locationConfig.getCgiExtensions();
+
+		if (cgiExts.find(ext) != cgiExts.end())
+		{
+			executeCGI(requestHandler, locationConfig);
+			return ;
+		}
+	}
+	executeRequest(requestHandler, responseHandler, locationConfig);
 }
 
 /**
@@ -151,10 +160,10 @@ void ExecutionHandler::execute(const RequestHandler &requestHandler, ResponseHan
  * @param request [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-void ExecutionHandler::executeCGI(client::Request &request, const config::ServerConfig &serverConfig)
+void ExecutionHandler::executeCGI(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
-	(void)request;
-	(void)serverConfig;
+	(void)requestHandler;
+	(void)locationConfig;
 }
 
 /**
@@ -164,11 +173,30 @@ void ExecutionHandler::executeCGI(client::Request &request, const config::Server
  * @param response [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-void ExecutionHandler::executeRequest(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig)
+void ExecutionHandler::executeRequest(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
-	(void)request;
-	(void)response;
-	(void)serverConfig;
+	switch (requestHandler.getRequest().getMethod())
+	{
+		case config::GET:
+		case config::HEAD:
+			DEBUG(_logger, "executeRequest: executeHEADorGET for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
+			executeHEADorGET(requestHandler, responseHandler, locationConfig);
+			break;
+		case config::POST:
+			DEBUG(_logger, "executeRequest: executePOST for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
+			executePOST(requestHandler, responseHandler, locationConfig);
+			break;
+		case config::DELETE:
+			DEBUG(_logger, "executeRequest: executeDELETE for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
+			executeDELETE(requestHandler, responseHandler, locationConfig);
+			break;
+		case config::PUT:
+			DEBUG(_logger, "executeRequest: executePUT for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
+			executePUT(requestHandler, responseHandler, locationConfig);
+			break;
+		default:
+			throw client::HTTPError(405);
+	}
 }
 
 /**
@@ -178,10 +206,10 @@ void ExecutionHandler::executeRequest(client::Request &request, client::Response
  * @param response [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executeHEADorGET(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeHEADorGET(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
-	(void)request;
-	(void)response;
+	(void)requestHandler;
+	(void)responseHandler;
 	(void)locationConfig;
 
 	// if isfile()
@@ -232,10 +260,10 @@ void ExecutionHandler::executeHEADorGET(client::Request &request, client::Respon
  * @param response [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executePOST(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
-	(void)request;
-	(void)response;
+	(void)requestHandler;
+	(void)responseHandler;
 	(void)locationConfig;
 }
 
@@ -246,13 +274,25 @@ void ExecutionHandler::executePOST(client::Request &request, client::Response &r
  * @param response [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executeDELETE(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
-	(void)request;
-	(void)response;
+	(void)requestHandler;
+	(void)responseHandler;
 	(void)locationConfig;
 }
 
+
+/**
+ * @brief 
+ * 
+ */
+
+void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+{
+	(void)requestHandler;
+	(void)responseHandler;
+	(void)locationConfig;
+}
 /**
  * @brief [TODO:description]
  *
@@ -288,11 +328,11 @@ void ExecutionHandler::executeDELETE(client::Request &request, client::Response 
  * @return The opened file descriptor (also stored in _fd).
  * @throws client::HTTPError on failure.
  */
-void ExecutionHandler::openFile(const client::Request &request, const config::LocationConfig &locationConfig)
+void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
-	const std::string	&absPath = request.getAbsolutePath();
+	const std::string	&absPath = requestHandler.getRequest().getAbsolutePath();
 	const t_Perms		perms = locationConfig.getDavAccess();
-	config::e_Method	method = request.getMethod();
+	config::e_Method	method = requestHandler.getRequest().getMethod();
 	int					flags = 0;
 	mode_t				mode = 0;
 	int					fd;
@@ -379,14 +419,14 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 }
 
 /**
- * @brief Writes at most one EXECUTION_CHUNK_SIZE chunk from the request body
+ * @brief Writes at most one BUFFER_SIZE chunk from the request body
  *        (starting at offset _bodyReceived) to the owned _fd. Updates
  *        _bodyReceived on success, throws HTTPError(500) on error or if _fd
  *        is not open.
  *
  * @param request Request whose body provides the bytes to flush.
  */
-void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
+void ExecutionHandler::writeChunk(const handler::RequestHandler &requestHandler)
 {
 	if (!_fd.valid())
 	{
@@ -399,7 +439,7 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 
 	const t_Headers	&headers = requestHandler.getRequest().getHeaders();
 	t_Headers::const_iterator it = headers.find("Content-Length");
-	if (it == headers.end() && !it->second.empty())
+	if (it == headers.end() || it->second.empty())
 	{
 		ERROR(_logger, "writeChunk: missing Content-Length header");
 		throw client::HTTPError(411);
@@ -426,14 +466,14 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 /**
  * @brief Returns the size of the file at the given path, or -1 if it cannot be accessed.
  *
- * @param requestTarget Path to the file.
+ * @param path Path to the file.
  * @return Size of the file, or -1 if it cannot be accessed.
  */
-int ExecutionHandler::getFileSize(const std::string &requestTarget)
+int ExecutionHandler::getFileSize(const std::string &path)
 {
 	struct stat	st;
 
-	if (stat(requestTarget.c_str(), &st) != 0)
+	if (stat(path.c_str(), &st) != 0)
 		return -1;
 	return static_cast<int>(st.st_size);
 }
@@ -441,13 +481,13 @@ int ExecutionHandler::getFileSize(const std::string &requestTarget)
 /**
  * @brief Returns the file extension (without the dot) of the given path.
  *
- * @param requestTarget Path to inspect.
+ * @param path Path to inspect.
  * @return Extension string, or empty if none found.
  * @todo TODO: add it to common utils ?
  */
-std::string ExecutionHandler::getFileExtension(const std::string &requestTarget)
+std::string ExecutionHandler::getFileExtension(const std::string &path)
 {
-	std::string				name = common::core::utils::filenameNoPath(requestTarget);
+	std::string				name = common::core::utils::filenameNoPath(path);
 	std::string::size_type	dotPos = name.rfind('.');
 
 	if (dotPos == std::string::npos || dotPos == 0)
@@ -458,15 +498,15 @@ std::string ExecutionHandler::getFileExtension(const std::string &requestTarget)
 /**
  * @brief Checks whether the given path points to a regular file.
  *
- * @param requestTarget Path to check.
+ * @param path Path to check.
  * @return true if it is a regular file, false otherwise.
  * @todo TODO: add it to common utils ?
  */
-bool ExecutionHandler::isFile(const std::string& requestTarget)
+bool ExecutionHandler::isFile(const std::string& path)
 {
 	struct stat	st;
 
-	if (stat(requestTarget.c_str(), &st) != 0)
+	if (stat(path.c_str(), &st) != 0)
 		return false;
 	return S_ISREG(st.st_mode);
 }
@@ -474,15 +514,15 @@ bool ExecutionHandler::isFile(const std::string& requestTarget)
 /**
  * @brief Checks whether the given path exists on disk.
  *
- * @param requestTarget Path to check.
+ * @param path Path to check.
  * @return true if the path exists, false otherwise.
  * @todo TODO: add it to common utils ?
  */
-bool ExecutionHandler::isFileExisting(const std::string& requestTarget)
+bool ExecutionHandler::isFileExisting(const std::string& path)
 {
 	struct stat	st;
 
-	return (stat(requestTarget.c_str(), &st) == 0);
+	return (stat(path.c_str(), &st) == 0);
 }
 
 /**
@@ -547,23 +587,6 @@ bool	ExecutionHandler::isDirectory(const std::string &path)
 	if (::stat(path.c_str(), &st) != 0)
 		return false;
 	return S_ISDIR(st.st_mode);
-}
-
-/**
- * @brief Joins a directory path with a file name.
- *
- * @param dir Directory path.
- * @param name File name.
- * @return Combined path.
- * @todo TODO: add it to common utils / move to validations headers
- */
-std::string	ExecutionHandler::joinPath(const std::string &dir, const std::string &name)
-{
-	if (dir.empty())
-		return name;
-	if (dir[dir.size() - 1] == '/')
-		return dir + name;
-	return dir + "/" + name;
 }
 
 /**

@@ -358,7 +358,7 @@ void Client::processHTTPCycle()
 		}
 	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED)
 		try{
-			_executionHandler.execute(_requestHandler, _responseHandler, _serverConfig);
+			_executionHandler.execute(_requestHandler, _responseHandler, _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath()));
 		} catch (const HTTPError &e) {
 			INFO(_logger, "While executing request: " + std::string(e.what()));
 			setHTTPError(e);
