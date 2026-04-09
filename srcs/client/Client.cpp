@@ -289,7 +289,7 @@ void Client::setEffectiveKeepaliveTimeout(const std::time_t timeout)
  */
 void	Client::receiveData()
 {
-	unsigned char	buf[4096];
+	unsigned char	buf[config::DefaultConfig::BUFFER_SIZE];
 	ssize_t			rd;
 
 	try
