@@ -95,7 +95,6 @@ namespace webserv.client {
 		- _path : string
 		- _query : string
 		- _headers : vector<list<HTTPHeader>>
-		- _body : vector<unsigned char>
 		- _flags : e_RequestFlags
 		--
 		+ Request()
@@ -117,8 +116,6 @@ namespace webserv.client {
 		+ setHeaders(headers : vector<list<HTTPHeader>>) : void
 		+ findHeader(headerName : string, headerValue : string) : HTTPHeader
 		+ addHeader(headerName : string, headerValue : string) : void
-		+ getBody() : vector<unsigned char>
-		+ setBody(body : vector<unsigned char>) : void
 		+ getFlags() : e_RequestFlags
 		+ setFlags(flags : e_RequestFlags) : void
 	}
@@ -131,7 +128,6 @@ namespace webserv.client {
 		- _httpVersion : string
 		- _statusCode : StatusCode
 		- _headers : vector<HTTPHeader>
-		- _body : vector<unsigned char>
 		- _flags : e_ResponseFlags
 		--
 		+ Response()
@@ -143,8 +139,6 @@ namespace webserv.client {
 		+ setHeaders(headers : vector<list<HTTPHeader>>) : void
 		+ addHeader(headerName : string, headerValue : string) : void
 		+ findHeader(headerName : string, headerValue : string) : HTTPHeader
-		+ getBody() : vector<unsigned char>
-		+ setBody(body : vector<unsigned char>) : void
 		+ getFlags() : e_RequestFlags
 		+ setFlags(flags : e_RequestFlags) : void
 
@@ -252,6 +246,7 @@ namespace webserv.handler {
 		- _fd : int
 		- _bodyReceived : int
 		- _flags : e_ExecutionFlags
+		- _bufferAutoindex : vector<unsigned char>
 		--
 		+ ExecutionHandler()
 		+ getFd() : int
@@ -260,18 +255,21 @@ namespace webserv.handler {
 		+ setBodyReceived(bodyReceived : int) : void
 		+ getFlags() : e_ExecutionFlags
 		+ setFlags(flags : e_ExecutionFlags) : void
+		+ appendToBufferAutoindex(buffer : string) : void
+		+ clearBufferAutoindex() : void
 		+ execute(requestHandler : requestHandler, responseHandler : ResponseHandler, serverConfig : ServerConfig) : void
-		+ executeCGI(request : Request, serverConfig : ServerConfig) : void
+		+ executeCGI(requestHandler : RequestHandler, serverConfig : ServerConfig) : void
 		+ executeRequest(request : Request, response : Response, serverConfig : ServerConfig) : void
-		- executeHEADorGET(request : Request, response : Response, locationConfig : LocationConfig) : void
-		- executePOST(request : Request, response : Response, locationConfig : LocationConfig) : void
-		- executeDELETE(request : Request, response : Response, locationConfig : LocationConfig) : void
-		- openFile(request : Request, locationConfig : LocationConfig) : int
-		- readChunk(fd : int, response : Response) : void
-		- writeChunk(fd : int, request : Request) : void
+		- executeHEADorGET(requestHandler : RequestHandler, responseHandler : Response, locationConfig : LocationConfig) : void
+		- executePOST(requestHandler : RequestHandler, responseHandler : Response, locationConfig : LocationConfig) : void
+		- executeDELETE(requestHandler : RequestHandler, responseHandler : Response, locationConfig : LocationConfig) : void
+		- openFile(request : Request, locationConfig : LocationConfig) : void
+		- readChunk(requestHandler : RequestHandler) : void
+		- writeChunk(requestHandler : RequestHandler) : void
 		- getFileSize(fd : int) : int
 		- getFileExtension(requestTarget : string) : string
 		- generateAutoindexHTML(dirPath : string) : string
+		- appendAutoindexbufferToBufferResponse() : void
 		- isFile(requestTarget : string) : bool
 		- isFileExisting(requestTarget : string) : bool
 		- deleteFile(filePath : string) : void

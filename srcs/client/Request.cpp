@@ -24,7 +24,6 @@ Request::Request()
 		_path(),
 		_query(),
 		_headers(),
-		_body(),
 		_flags(static_cast<e_RequestFlags>(0))
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.request");
@@ -51,7 +50,6 @@ Request::Request(const Request &rhs)
 		_path(rhs._path),
 		_query(rhs._query),
 		_headers(rhs._headers),
-		_body(rhs._body),
 		_flags(rhs._flags)
 {}
 
@@ -73,7 +71,6 @@ Request &Request::operator=(const Request &rhs)
 		_path = rhs._path;
 		_query = rhs._query;
 		_headers = rhs._headers;
-		_body = rhs._body;
 		_flags = rhs._flags;
 	}
 	return (*this);
@@ -285,26 +282,6 @@ void Request::addHeader(const std::string &headerName, const std::string &header
 	HTTPheaders::HTTPHeader header = HTTPheaders::HTTPHeadersRegistry::getInstance().getHeader(headerName);
 	header.setValue(headerValue);
 	_headers[common::core::utils::toLower(headerName)].push_back(header);
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-t_raw	Request::getBody() const
-{
-	return _body;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param body [TODO:parameter]
- */
-void Request::setBody(const t_raw &body)
-{
-	_body = body;
 }
 
 /**

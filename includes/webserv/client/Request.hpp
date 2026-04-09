@@ -57,8 +57,6 @@ class Request
 		void							setHeaders(const t_Headers &headers);
 		const HTTPheaders::HTTPHeader	&findHeader(const std::string &headerName, const std::string &headerValue) const;
 		void							addHeader(const std::string &headerName, const std::string &headerValue);
-		std::vector<unsigned char>		getBody() const;
-		void							setBody(const t_raw &body);
 		e_RequestFlags					getFlags() const;
 		void							setFlags(const e_RequestFlags flags);
 
@@ -72,7 +70,6 @@ class Request
 		std::string						_path;
 		std::string						_query;
 		t_Headers						_headers;
-		t_raw							_body;
 		e_RequestFlags					_flags;
 };
 

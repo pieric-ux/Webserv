@@ -21,6 +21,7 @@ Client::Client()
 		_socket(),
 		_status(E_CLI_REQUEST),
 		_serverConfig(),
+
 		_executionHandler(),
 		_requestHandler(_serverConfig),
 		_responseHandler(),
@@ -373,7 +374,7 @@ void Client::processHTTPCycle()
 			setStatus(E_CLI_ERR_PARSING);
 			return ;
 		}
-	if (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT && _responseHandler.getResponse().getBody().size() > 0)
+	if (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT && _responseHandler.getBufferResponse().size() > 0)
 		try{
 			_responseHandler.buildBodyResponse();
 		} catch (const HTTPError &e) {
