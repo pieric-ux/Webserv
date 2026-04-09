@@ -188,6 +188,46 @@ void ExecutionHandler::executeHEADorGET(client::Request &request, client::Respon
 	(void)request;
 	(void)response;
 	(void)locationConfig;
+
+	// if isfile()
+
+	// if E_EXEC_FILE_OPENED is not set
+	// open file
+
+	// set E_EXEC_FILE_OPENED
+
+	// call get file size and set Content-Length header in response
+
+	// call getfilextension and set Content-Type header in response
+	
+	// else
+
+	// method is GET and E_RESP_HEADERS_SENT is set
+
+	// read chunk
+
+	// else if isdir()
+
+	// if request target doesn't end with '/' -> redirect with 301 to request target + '/'
+
+	// if index file is present
+
+	//open file
+
+	// method is get
+	
+	// read chunk
+
+	// else if autoindex on and E_RESP_HEADEES_SENT is NOT set
+
+	// generate autoindex HTML
+
+	// else if autoindex on or E_RESP_HEADERS_SENT is set
+
+	// appendautoindexbuffertobufferresponse
+
+	// else 403
+
 }
 
 /**
