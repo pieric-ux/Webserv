@@ -88,6 +88,16 @@ client::Request &RequestHandler::getRequest()
 /**
  * @brief [TODO:description]
  *
+ * @return [TODO:return]
+ */
+const client::Request &RequestHandler::getRequest() const
+{
+	return _request;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @param request [TODO:parameter]
  */
 void RequestHandler::setRequest(const client::Request &request)
@@ -203,7 +213,7 @@ void RequestHandler::validateHeaders()
 	t_AllowedMethods::const_iterator it = std::find(locationConfig.getAllowedMethods().begin(), locationConfig.getAllowedMethods().end(), _request.getMethod());
 	if (it == locationConfig.getAllowedMethods().end())
 	{
-		INFO(_logger, "405: " + config::methodToStr(_request.getMethod()) + " not allowed on " + _request.getRequestTarget());
+		INFO(_logger, "405: " + config::methodToStr(_request.getMethod()) + " not allowed on " + _request.getPath());
 		throw client::HTTPError(405);
 	}
 
@@ -231,7 +241,7 @@ void RequestHandler::validateHeaders()
 				t_CgiExtensions::const_iterator cit = cgiExt.begin();
 				for (; cit != cgiExt.end(); ++cit)
 				{
-					if (common::core::utils::hasExtension(_request.getRequestTarget(), cit->first))
+					if (common::core::utils::hasExtension(_request.getPath(), cit->first))
 					{
 						cgiMatch = true;
 						break;

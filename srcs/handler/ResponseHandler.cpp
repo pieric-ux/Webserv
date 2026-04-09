@@ -81,6 +81,16 @@ client::Response &ResponseHandler::getResponse()
 /**
  * @brief [TODO:description]
  *
+ * @return [TODO:return]
+ */
+const client::Response &ResponseHandler::getResponse() const
+{
+	return _response;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @param response [TODO:parameter]
  */
 void ResponseHandler::setResponse(const client::Response &response)

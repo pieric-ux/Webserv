@@ -47,31 +47,31 @@ class ExecutionHandler
 		void							setBodyReceived(const std::size_t bodyReceived);
 		int								getFlags() const;
 
-		void							execute(const RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::ServerConfig &serverConfig);
-		void							executeCGI(client::Request &request, const config::ServerConfig &serverConfig);
-		void							executeRequest(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
+		void							execute(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executeCGI(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							executeRequest(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 
-	private:	
+	private:
 		t_Logger						_logger;
 		common::core::raii::UniqueFd	_fd;
 		ssize_t							_bodyReceived;
 		e_ExecutionHandlerFlags			_flags;
 
-		void							executeHEADorGET(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
-		void							executePOST(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
-		void							executeDELETE(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
+		void							executeHEADorGET(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executePOST(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executeDELETE(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executePUT(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 
-		void							openFile(const client::Request &request, const config::LocationConfig &locationConfig);
-		void							readChunk(handler::ResponseHandler &responseHandler);
-		void							writeChunk(handler::RequestHandler &requestHandler);
-		int								getFileSize(const std::string &requestTarget);
-		std::string						getFileExtension(const std::string &requestTarget);
-		bool							isFile(const std::string& requestTarget);
-		bool							isFileExisting(const std::string& requestTarget);
+		void							openFile(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							readChunk(ResponseHandler &responseHandler);
+		void							writeChunk(const RequestHandler &requestHandler);
+		int								getFileSize(const std::string &path);
+		std::string						getFileExtension(const std::string &path);
+		bool							isFile(const std::string& path);
+		bool							isFileExisting(const std::string& path);
 		void							deleteFile(const std::string& filePath);
 		void							deleteDirectory(const std::string& dirPath);
 		bool							isDirectory(const std::string &path);
-		std::string						joinPath(const std::string &dir, const std::string &name);
 		std::string						generateAutoindexHTML(const std::string &dirPath);
 };
 
