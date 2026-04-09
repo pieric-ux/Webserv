@@ -116,7 +116,7 @@ void Response::setStatusCode(const status::StatusCode &statusCode)
  *
  * @return [TODO:return]
  */
-t_Headers Response::getHeaders() const
+const t_Headers &Response::getHeaders() const
 {
 	return _headers;
 }

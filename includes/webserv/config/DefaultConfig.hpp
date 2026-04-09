@@ -30,6 +30,7 @@ namespace config
 struct DefaultConfig
 {
 	// HTTPSERVER
+	static const std::size_t			BUFFER_SIZE = 8 * 1024;
 	static const std::string			defaultConfigPath;
 
 	// HTTPCONFIG, SERVERCONFIG, LOCATIONCONFIG
