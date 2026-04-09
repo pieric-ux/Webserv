@@ -34,6 +34,8 @@ class ResponseHandler
 		void				setResponse(const client::Response &response);
 		void				appendToBufferResponse(const t_raw &buffer);
 		void				clearBufferResponse();
+		const t_raw			&getBufferResponse() const;
+		void				eraseBufferResponseFront(std::size_t n);
 		void				buildHeadersResponse(const client::Request &request);
 		void				buildBodyResponse();
 

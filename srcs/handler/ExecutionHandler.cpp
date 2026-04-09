@@ -6,13 +6,23 @@
  */
 
 #include <webserv/handler/ExecutionHandler.hpp>
+#include <webserv/client/HTTPError.hpp>
+#include <webserv/status/StatusCodeRegistry.hpp>
 #include <common/core/utils/Directory.hpp>
 #include <common/core/utils/fileUtils.hpp>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <cstdio>
+#include <cstring>
+
+namespace
+{
+	const std::size_t	EXECUTION_CHUNK_SIZE = 8 * 1024;
+}
 
 namespace webserv
 {
@@ -44,7 +54,7 @@ ExecutionHandler::~ExecutionHandler() {}
  */
 ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
 	:	_logger(rhs._logger),
-		_fd(),
+		_fd(rhs._fd.get()),
 		_bodyReceived(rhs._bodyReceived),
 		_flags(rhs._flags)
 {}
@@ -91,7 +101,7 @@ int ExecutionHandler::getFd() const
  *
  * @return [TODO:return]
  */
-int ExecutionHandler::getBodyReceived() const
+std::size_t ExecutionHandler::getBodyReceived() const
 {
 	return _bodyReceived;
 }
@@ -101,7 +111,7 @@ int ExecutionHandler::getBodyReceived() const
  *
  * @param bodyReceived [TODO:parameter]
  */
-void ExecutionHandler::setBodyReceived(const int bodyReceived)
+void ExecutionHandler::setBodyReceived(const std::size_t bodyReceived)
 {
 	_bodyReceived = bodyReceived;
 }
@@ -215,35 +225,167 @@ void ExecutionHandler::executeDELETE(client::Request &request, client::Response 
  * @param locationConfig [TODO:parameter]
  * @return [TODO:return]
  */
-int ExecutionHandler::openFile(const client::Request &request, const config::LocationConfig &locationConfig)
+/**
+ * @brief Opens the file targeted by @p request and stores the resulting fd
+ *        in the owned _fd (UniqueFd). Sets E_EXEC_FILE_OPENED on success.
+ *
+ *        The flow is "check before open" so we never touch open() unless we
+ *        already know the operation is allowed both by the webserv config
+ *        and by the underlying filesystem:
+ *
+ *        1. Check the location's `dav_access` bits (config-level rule).
+ *           Only the 'all' triplet (least significant 3 bits) is consulted
+ *           because HTTP has no authenticated user concept here.
+ *           - GET / HEAD require the read bit  (0004) -> else 403
+ *           - PUT        requires the write bit (0002) -> else 403
+ *
+ *        2. Probe the filesystem with access():
+ *           - GET / HEAD : access(R_OK) -> ENOENT=404, EACCES=403, else=500
+ *           - PUT        : access(F_OK) to distinguish create vs overwrite,
+ *                          then access(W_OK) on overwrite.
+ *
+ *        3. Only then call open() with the appropriate flags. mode for
+ *           PUT is derived from `dav_access` directly (mode_t-compatible).
+ *
+ * @param request        Request providing method and absolute path.
+ * @param locationConfig Location whose `dav_access` drives both the
+ *                       allow check and the create mode.
+ * @return The opened file descriptor (also stored in _fd).
+ * @throws client::HTTPError on failure.
+ */
+void ExecutionHandler::openFile(const client::Request &request, const config::LocationConfig &locationConfig)
 {
-	(void)request;
-	(void)locationConfig;
-	return -1;
+	const std::string	&absPath = request.getAbsolutePath();
+	const t_Perms		perms = locationConfig.getDavAccess();
+	config::e_Method	method = request.getMethod();
+	int					flags = 0;
+	mode_t				mode = 0;
+	int					fd;
+	bool				isCreated = false;
+
+	if (method == config::GET || method == config::HEAD)
+	{
+		flags = O_RDONLY;
+		if ((fd = ::open(absPath.c_str(), flags, mode)) < 0)
+		{
+			int e = errno;
+			INFO(_logger, "openFile: open failed on \"" + absPath + "\": " + std::string(std::strerror(e)));
+			if (e == ENOENT)
+				throw client::HTTPError(404);
+			if (e == EACCES)
+				throw client::HTTPError(403);
+			throw client::HTTPError(500);
+		}
+		setFlags(getFlags() | E_EXEC_FILE_OPENED);
+	}
+	else if (method == config::PUT)
+	{
+		flags = O_WRONLY | O_CREAT | O_TRUNC;
+		mode = static_cast<mode_t>(perms);
+		if (::access(absPath.c_str(), F_OK) == 0)
+		{
+			isCreated = false;
+		}
+		if ((fd = ::open(absPath.c_str(), flags, mode)) < 0)
+		{
+			int e = errno;
+			INFO(_logger, "openFile: open failed on \"" + absPath + "\": " + std::string(std::strerror(e)));
+			if (e != ENOENT)
+				throw client::HTTPError(500);
+		}
+		if (isCreated)
+			setFlags(getFlags() | E_EXEC_CREATED);
+		else
+			setFlags(getFlags() | E_EXEC_NOCONTENT);
+	}
+	else
+	{
+		ERROR(_logger, "openFile: unsupported method " + config::methodToStr(method));
+		throw client::HTTPError(500);
+	}
+
+	_fd.reset(fd);
+	DEBUG(_logger, "openFile: opened \"" + absPath + "\" fd=" + common::core::utils::toString(fd));
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reads at most one EXECUTION_CHUNK_SIZE chunk from the owned _fd and
+ *        appends it to the response body. Sets E_EXEC_COMPLETE on EOF, throws
+ *        HTTPError(500) on read error or if _fd is not open.
  *
- * @param fd [TODO:parameter]
- * @param response [TODO:parameter]
+ * @param response Response whose body buffer is appended to.
  */
-void ExecutionHandler::readChunk(const int fd, client::Response &response)
+void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 {
-	(void)fd;
-	(void)response;
+	if (!_fd.valid())
+	{
+		ERROR(_logger, "readChunk: _fd is not open");
+		throw client::HTTPError(500);
+	}
+
+	unsigned char	buf[EXECUTION_CHUNK_SIZE];
+	ssize_t			rd;
+
+	rd = ::read(_fd.get(), buf, sizeof(buf));
+	if (rd > 0)
+	{
+		t_raw	chunk(buf, buf + rd);
+		responseHandler.appendToBufferResponse(chunk);
+		return ;
+	}
+	if (rd == 0)
+	{
+		setFlags(getFlags() | E_EXEC_COMPLETE);
+		DEBUG(_logger, "readChunk: EOF on fd=" + common::core::utils::toString(_fd.get()));
+		return ;
+	}
+	ERROR(_logger, "readChunk: read() failed on fd=" + common::core::utils::toString(_fd.get()));
+	throw client::HTTPError(500);
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Writes at most one EXECUTION_CHUNK_SIZE chunk from the request body
+ *        (starting at offset _bodyReceived) to the owned _fd. Updates
+ *        _bodyReceived on success, throws HTTPError(500) on error or if _fd
+ *        is not open.
  *
- * @param fd [TODO:parameter]
- * @param request [TODO:parameter]
+ * @param request Request whose body provides the bytes to flush.
  */
-void ExecutionHandler::writeChunk(const int fd, client::Request &request)
+void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 {
-	(void)fd;
-	(void)request;
+	if (!_fd.valid())
+	{
+		ERROR(_logger, "writeChunk: _fd is not open");
+		throw client::HTTPError(500);
+	}
+
+	const t_raw		&buf = requestHandler.getBufferRequest();
+	std::size_t		offset = _bodyReceived;
+
+	t_Headers::iterator it;
+	it = requestHandler.getRequest().getHeaders().find("Content-Length");
+	if (it == requestHandler.getRequest().getHeaders().end())
+	{
+		ERROR(_logger, "writeChunk: missing Content-Length header");
+		throw client::HTTPError(411);
+	}
+
+	std::size_t		remaining = std::stoul(it->second.front().getValue()) - offset;
+	std::size_t		toWrite = remaining < EXECUTION_CHUNK_SIZE ? remaining : EXECUTION_CHUNK_SIZE;
+	ssize_t			wr;
+
+	wr = ::write(_fd.get(), &buf[offset], toWrite);
+
+	if (wr > 0)
+	{
+		_bodyReceived += wr;
+		DEBUG(_logger, "writeChunk: wrote " + common::core::utils::toString(wr) + " bytes to fd=" + common::core::utils::toString(_fd.get()));
+		if (_bodyReceived >= static_cast<ssize_t>(std::stoul(it->second.front().getValue())))
+			setFlags(getFlags() | E_EXEC_COMPLETE);
+		return ;
+	}
+	ERROR(_logger, "writeChunk: write() failed on fd=" + common::core::utils::toString(_fd.get()));
+	throw client::HTTPError(500);
 }
 
 /**

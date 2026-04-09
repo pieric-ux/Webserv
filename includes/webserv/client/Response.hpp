@@ -43,8 +43,6 @@ class Response
 		void							setHeaders(const t_Headers &headers);
 		const HTTPheaders::HTTPHeader	&findHeader(const std::string &headerName, const std::string &headerValue) const;
 		void							addHeader(const std::string &headerName, const std::string &headerValue);
-		t_raw							getBody() const;
-		void							setBody(const t_raw &body);
 		e_ResponseFlags					getFlags() const;
 		void							setFlags(const e_ResponseFlags flags);
 
@@ -53,7 +51,6 @@ class Response
 		std::string						_httpVersion;
 		status::StatusCode				_statusCode;
 		t_Headers						_headers;
-		t_raw							_body;
 		e_ResponseFlags					_flags;
 };
 

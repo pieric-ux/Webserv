@@ -19,7 +19,6 @@ Response::Response()
 	:	_httpVersion(),
 		_statusCode(),
 		_headers(),
-		_body(),
 		_flags(static_cast<e_ResponseFlags>(0))
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.response");
@@ -41,7 +40,6 @@ Response::Response(const Response &rhs)
 	:	_httpVersion(rhs._httpVersion),
 		_statusCode(rhs._statusCode),
 		_headers(rhs._headers),
-		_body(rhs._body),
 		_flags(rhs._flags)
 {}
 
@@ -58,7 +56,6 @@ Response &Response::operator=(const Response &rhs)
 		_httpVersion = rhs._httpVersion;
 		_statusCode = rhs._statusCode;
 		_headers = rhs._headers;
-		_body = rhs._body;
 		_flags = rhs._flags;
 	}
 	return (*this);
@@ -172,25 +169,6 @@ void	Response::addHeader(const std::string &headerName, const std::string &heade
 	_headers[common::core::utils::toLower(headerName)].push_back(header);
 }
 
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-t_raw	Response::getBody() const
-{
-	return _body;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param body [TODO:parameter]
- */
-void Response::setBody(const t_raw &body)
-{
-	_body = body;
-}
 
 /**
  * @brief [TODO:description]

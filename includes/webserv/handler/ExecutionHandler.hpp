@@ -42,9 +42,9 @@ class ExecutionHandler
 		static t_Logger					getLogger();
 
 		int								getFd() const;
-		int								getBodyReceived() const;
+		std::size_t						getBodyReceived() const;
 		void							setFlags(const int flags);
-		void							setBodyReceived(const int bodyReceived);
+		void							setBodyReceived(const std::size_t bodyReceived);
 		int								getFlags() const;
 
 		void							execute(const RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::ServerConfig &serverConfig);
@@ -54,17 +54,16 @@ class ExecutionHandler
 	private:	
 		t_Logger						_logger;
 		common::core::raii::UniqueFd	_fd;
-		int								_bodyReceived;
+		ssize_t							_bodyReceived;
 		e_ExecutionHandlerFlags			_flags;
 
 		void							executeHEADorGET(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
 		void							executePOST(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
 		void							executeDELETE(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
 
-		int								openFile(const client::Request &request, const config::LocationConfig &locationConfig);
-		void							readChunk(const int fd, client::Response &response);
-		void							writeChunk(const int fd, client::Request &request);
-
+		void							openFile(const client::Request &request, const config::LocationConfig &locationConfig);
+		void							readChunk(handler::ResponseHandler &responseHandler);
+		void							writeChunk(handler::RequestHandler &requestHandler);
 		int								getFileSize(const std::string &requestTarget);
 		std::string						getFileExtension(const std::string &requestTarget);
 		bool							isFile(const std::string& requestTarget);

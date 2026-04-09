@@ -335,7 +335,7 @@ start
 						| __RequestHandler__ |
 						if (`E_PARS_CLRF` is set AND `E_REQ_HEADERS_VALIDATED` is NOT set) then (yes)
 							:Call `validateHeaders(serverConfig)`;
-							:Call `findLocationConfig(requestTarget)`;
+							:Call `findLocationConfig(path)`;
 							if (`method` is allowed in `LocationConfig`) then (no)
 								:Throw HTTPError(405);
 								#red:(E)
@@ -397,7 +397,7 @@ start
 					if (`E_REQ_HEADERS_VALIDATED` is set and `method` is `POST` or `PUT` or `DELETE`) then (yes)
 						| __RequestHandler__ |
 						:Call `parseBody(serverConfig)`;
-						:Call `findLocationConfig(requestTarget)`;
+						:Call `findLocationConfig(path)`;
 						if (`Content-Length` > `clientMaxBodySize`) then (yes)
 							:Throw HTTPError(413);
 							#red:(E)
@@ -411,7 +411,7 @@ start
 					if (`E_REQ_HEADERS_VALIDATED` is set) then(yes)
 						| __ExecutionHandler__ |
 						:Call `execute(requestHandler, responseHandler, serverConfig)`;
-						:Call `findLocationConfig(requestTarget)`;
+						:Call `findLocationConfig(path)`;
 						:Call `executeRequest(requestHandler, responseHandler, LocationConfig)`;
 						if (`enableCGI` is set in `LocationConfig` AND `cgiExtensions` contains `requestTarget` extension) then (yes)
 							if (`method` is `POST` or 'PUT' or `DELETE`) then (yes)
@@ -424,7 +424,7 @@ start
 								else (yes)
 								endif
 							endif
-							:Call `executeCGI(request, LocationConfig)`;
+							:Call `executeCGI(requestHandler, LocationConfig)`;
 							| __CGIHandler__ |
 							:Initialize meta-variables;
 							:Call `setCGIEnvironmentVariables(request, LocationConfig)`;
@@ -530,10 +530,10 @@ start
 						else (no)
 							switch (`method`)
 								case (`HEAD` or `GET`)
-									:Call `executeHEADorGET(request, response, LocationConfig)`;
+									:Call `executeHEADorGET(requestHandler, responseHandler, LocationConfig)`;
 									if (isFile(requestTarget)) then (yes)
 										if (`E_EXEC_FILE_OPENED` is set) then (no)
-											:Call `openFile(request, LocationConfig)`;
+											:Call `openFile(requestHandler, LocationConfig)`;
 											if (fd > 0) then (yes)
 												:Call `setFlags(E_EXEC_FILE_OPENED)`;
 												:Call `getFileSize(fd)` to set `Content-Length` header in `response`;
@@ -553,10 +553,10 @@ start
 											endif
 										else (yes)
 										endif
-										if (`method` is `GET`) then (yes)
+										if (`method` is `GET` AND `E_RESP_HEADERS_SENT` is set) then (yes)
 											:Call `readChunk(fd, response)`;
 											if (rd > 0) then (yes)
-												:Append `buffer` to `body`;
+												:Append `buffer` to `bufferResponse`;
 											else if (EOF reached?) then (yes)
 												:Call `setFlags(E_EXEC_COMPLETE)`;
 											else (no)
@@ -574,7 +574,7 @@ start
 										else (no)
 											if ('index' file is present in directory) then (yes)
 												if (`E_EXEC_FILE_OPENED` is set) then (no)
-													:Call `openFile(request, LocationConfig)`;
+													:Call `openFile(requestHandler, LocationConfig)`;
 													if (fd > 0) then (yes)
 														:Call `setFlags(E_EXEC_FILE_OPENED)`;
 														:Call `getFileSize(fd)` to set `Content-Length` header in `response`;
@@ -594,10 +594,10 @@ start
 													endif
 												else (yes)
 												endif
-												if (`method` is `GET`) then (yes)
+												if (`method` is `GET` AND `E_RESP_HEADERS_SENT` is set) then (yes)
 													:Call `readChunk(fd, response)`;
 													if (rd > 0) then (yes)
-														:Append `buffer` to `body`;
+														:Append `buffer` to `bufferResponse`;
 													else if (EOF reached?) then (yes)
 														:Call `setFlags(E_EXEC_COMPLETE)`;
 													else (no)
@@ -608,12 +608,14 @@ start
 												else (no)
 												endif
 											else (no)
-												if (`autoindex` is set in `LocationConfig`) then (yes)
+												if (`autoindex` is set in `LocationConfig` AND `E_RESP_HEADERS_SENT` is NOT set) then (yes)
 													:Call `generateAutoindexHTML(requestTarget)`;
 													floating note: Uses Directory and DirectoryIterator\nfrom common lib to iterate entries.
-													:Append `htmlString` to `body`;
+													:Append `htmlString` to `bufferAutoindex`;
 													:Set `Content-Length` with `htmlString` length;
 													:Set `Content-Type: text/html; charset=utf-8`;
+												else if (`autoindex` is set in `LocationConfig` AND `E_RESP_HEADERS_SENT` is set) then (yes)
+													:Call `appendAutoindexbufferToBufferResponse()`;
 												else (no)
 													:Throw HTTPError(403);
 													#red:(E)
@@ -623,7 +625,7 @@ start
 										endif
 									endif
 								case (`POST`)
-									:Call `executePOST(request, LocationConfig)`;
+									:Call `executePOST(requestHandler, responseHandler, LocationConfig)`;
 									if (isFile(requestTarget)) then (yes)
 										:Call `isFileExisting(requestTarget)`;
 										if (file exists?) then (yes)
@@ -659,16 +661,16 @@ start
 										endif
 									endif
 								case (`PUT`)
-									:Call `executePUT(request, LocationConfig)`;
+									:Call `executePUT(requestHandler, LocationConfig)`;
 									if (`davMethods` is set in `LocationConfig`) then (yes)
 										if (isFile(requestTarget)) then (yes)
 											if (`E_EXEC_FILE_OPENED` is set) then (no)
-												:Call `openFile(request, LocationConfig)` with `O_TRUNC` flag;
+												:Call `openFile(requestHandler, LocationConfig)` with `O_TRUNC` flag;
 												if (fd > 0) then (yes)
 													:Call `setFlags(E_EXEC_FILE_OPENED)`;
 													:Call `setFlags(E_EXEC_NOCONTENT)`;
 													if (`bodyReceived` < `Content-Length`) then (yes)
-														:Call `writeChunk(fd, request)`;
+														:Call `writeChunk(fd, requestHandler)`;
 														if (wr > 0) then (yes)
 															:Update `bodyReceived`;
 														else (no)
@@ -694,7 +696,7 @@ start
 															:Call `setFlags(E_EXEC_FILE_OPENED)`;
 															:Call `setFlags(E_EXEC_CREATED)`;
 															if (`bodyReceived` < `Content-Length`) then (yes)
-																:Call `writeChunk(fd, request)`;
+																:Call `writeChunk(fd, requestHandler)`;
 																if (wr > 0) then (yes)
 																	:Update `bodyReceived`;
 																else (no)
@@ -729,7 +731,7 @@ start
 										detach
 									endif
 								case (`DELETE`)
-									:Call `executeDELETE(request, LocationConfig)`;
+									:Call `executeDELETE(requestHandler, responseHandler, LocationConfig)`;
 									if (`davMethods` is set in `LocationConfig`) then (yes)
 										if (`Content-Length` header is present and not null) then (yes)
 											:Throw HTTPError(415);
@@ -811,7 +813,7 @@ start
 					else (yes)
 					endif
 					| __Client__ |
-					if (E_RESP_HEADERS_SENT is set AND `body` is not empty) then (yes)
+					if (E_RESP_HEADERS_SENT is set AND `bufferResponse` is not empty) then (yes)
 						| __ResponseHandler__ |
 						:Call `buildBodyResponse()`;
 						:Append `body` to `bufferResponse`;

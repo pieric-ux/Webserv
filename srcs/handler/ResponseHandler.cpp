@@ -6,6 +6,7 @@
  */
 
 #include <webserv/handler/ResponseHandler.hpp>
+#include <sstream>
 
 namespace webserv
 {
@@ -94,7 +95,7 @@ void ResponseHandler::setResponse(const client::Response &response)
  */
 void ResponseHandler::appendToBufferResponse(const t_raw &buffer)
 {
-	(void)buffer;
+	_bufferResponse.insert(_bufferResponse.end(), buffer.begin(), buffer.end());
 }
 
 /**
@@ -102,7 +103,28 @@ void ResponseHandler::appendToBufferResponse(const t_raw &buffer)
  */
 void ResponseHandler::clearBufferResponse()
 {
+	_bufferResponse.clear();
+}
 
+/**
+ * @brief Returns a const reference to the outgoing response buffer.
+ */
+const t_raw &ResponseHandler::getBufferResponse() const
+{
+	return _bufferResponse;
+}
+
+/**
+ * @brief Erases the first @p n bytes from the outgoing response buffer.
+ *
+ * @param n Number of bytes to drop from the front of the buffer.
+ */
+void ResponseHandler::eraseBufferResponseFront(std::size_t n)
+{
+	if (n >= _bufferResponse.size())
+		_bufferResponse.clear();
+	else
+		_bufferResponse.erase(_bufferResponse.begin(), _bufferResponse.begin() + n);
 }
 
 /**
@@ -116,7 +138,7 @@ void ResponseHandler::buildHeadersResponse(const client::Request &request)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Appends the response body bytes to the outgoing buffer.
  */
 void ResponseHandler::buildBodyResponse()
 {
