@@ -257,24 +257,25 @@ namespace webserv.handler {
 		+ setFlags(flags : e_ExecutionFlags) : void
 		+ appendToBufferAutoindex(buffer : string) : void
 		+ clearBufferAutoindex() : void
-		+ execute(requestHandler : requestHandler, responseHandler : ResponseHandler, serverConfig : ServerConfig) : void
-		+ executeCGI(requestHandler : RequestHandler, serverConfig : ServerConfig) : void
-		+ executeRequest(request : Request, response : Response, serverConfig : ServerConfig) : void
-		- executeHEADorGET(requestHandler : RequestHandler, responseHandler : Response, locationConfig : LocationConfig) : void
-		- executePOST(requestHandler : RequestHandler, responseHandler : Response, locationConfig : LocationConfig) : void
-		- executeDELETE(requestHandler : RequestHandler, responseHandler : Response, locationConfig : LocationConfig) : void
+		+ execute(requestHandler : requestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
+		+ executeCGI(requestHandler : RequestHandler, locationConfig : LocationConfig) : void
+		+ executeRequest(requestHandler : requestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
+		- executeHEADorGET(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
+		- executePOST(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
+		- executePUT(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
+		- executeDELETE(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
 		- openFile(request : Request, locationConfig : LocationConfig) : void
 		- readChunk(requestHandler : RequestHandler) : void
 		- writeChunk(requestHandler : RequestHandler) : void
 		- getFileSize(fd : int) : int
-		- getFileExtension(requestTarget : string) : string
+		- getFileExtension(path : string) : string
 		- generateAutoindexHTML(dirPath : string) : string
 		- appendAutoindexbufferToBufferResponse() : void
-		- isFile(requestTarget : string) : bool
-		- isFileExisting(requestTarget : string) : bool
+		- isFile(path : string) : bool
+		- isFileExisting(path : string) : bool
 		- deleteFile(filePath : string) : void
 		- deleteDirectory(dirPath : string) : void
-		- isDirectory(requestTarget : string) : bool
+		- isDirectory(path : string) : bool
 	}
 }
 
@@ -423,7 +424,7 @@ namespace webserv.config {
 		+ getTypes() : map<string, string>
 		+ getEnableCGI() : bool
 		+ getCgiExtensions() : map<string, string>
-		+ findLocationConfig(requestTarget : string) : LocationConfig
+		+ findLocationConfig(path : string) : LocationConfig
 	}
 
 	class "LocationConfig" as LocationConfig {

@@ -40,6 +40,7 @@ class RequestHandler
 		void					parseBody();
 
 		client::Request			&getRequest();
+		const client::Request	&getRequest() const;
 		void					setRequest(const client::Request &request);
 		const t_raw				&getBufferRequest() const;
 		void					appendToBufferRequest(const t_raw &buffer);
