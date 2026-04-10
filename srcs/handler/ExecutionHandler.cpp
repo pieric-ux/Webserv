@@ -240,39 +240,6 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 		+ " flags=0x" + common::core::utils::toString(getFlags())
 		+ " respFlags=0x" + common::core::utils::toString(response.getFlags()));
 
-	// file
-	if (isFile(absPath))
-	{
-		DEBUG(_logger, "executeHEADorGET: target is a file");
-		if (!(getFlags() & E_EXEC_FILE_OPENED)) //E_EXEC_FILE_OPENED is NOT set
-		{
-			openFile(requestHandler, locationConfig);
-			int fileSize = getFileSize(absPath);
-			response.addHeader("Content-Length", common::core::utils::toString(fileSize));
-			const t_MimeTypes &types = locationConfig.getTypes();
-			t_MimeTypes::const_iterator mimeIt = types.find( getFileExtension(absPath));
-			if (mimeIt != types.end())
-				response.addHeader("Content-Type", mimeIt->second);
-			else
-				response.addHeader("Content-Type", locationConfig.getDefaultType()); // octet-stream
-			DEBUG(_logger, "executeHEADorGET: file opened, size=" + common::core::utils::toString(fileSize)
-				+ " ext=\"" + getFileExtension(absPath) + "\"");
-		}
-		if (request.getMethod() == config::GET
-			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
-		{
-			DEBUG(_logger, "executeHEADorGET: reading chunk (GET body phase)");
-			readChunk(responseHandler);
-		}
-		if (request.getMethod() == config::HEAD
-			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
-		{
-			DEBUG(_logger, "executeHEADorGET: HEAD complete (no body)");
-			setFlags(getFlags() | E_EXEC_COMPLETE);
-		}
-		return ;
-	}
-
 	// dir
 	if (isDirectory(absPath))
 	{
@@ -290,7 +257,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 		for (t_Index::const_iterator it = indexes.begin(); it != indexes.end(); ++it) // index file is present in dir?
 		{
 			std::string indexPath = absPath + *it;
-			if (isFile(indexPath)) // index file found
+			if (isExisting(indexPath) && !isDirectory(indexPath)) // index file found
 			{
 				DEBUG(_logger, "executeHEADorGET: index file found: \"" + indexPath + "\"");
 				request.setAbsolutePath(indexPath);
@@ -323,7 +290,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 			}
 		}
 
-		// autoindex and no index  file found
+		// autoindex and no index file found
 		if (locationConfig.getAutoindex())
 		{
 			if (!(response.getFlags() & client::E_RESP_HEADERS_SENT)) // E_RESP_HEADERS_SENT is NOT set
@@ -332,23 +299,21 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 				std::string html = generateAutoindexHTML(absPath);
 				setAutoindexBuffer(t_raw(html.begin(), html.end()));
 				response.addHeader("Content-Length",common::core::utils::toString(static_cast<int>(_autoindexBuffer.size())));
-				response.addHeader("Content-Type", "text/html");
+				response.addHeader("Content-Type", "text/html; charset=utf-8");
 			}
 			else // E_RESP_HEADERS_SENT is set
 			{
 				if (request.getMethod() == config::HEAD)
 				{
 					DEBUG(_logger, "executeHEADorGET: HEAD autoindex complete (no body)");
-					_autoindexBuffer.clear();
-					setFlags(getFlags() | E_EXEC_COMPLETE);
 				}
 				else
 				{
 					DEBUG(_logger, "executeHEADorGET: appending autoindex buffer to response");
 					responseHandler.appendToBufferResponse(_autoindexBuffer);
-					_autoindexBuffer.clear();
-					setFlags(getFlags() | E_EXEC_COMPLETE);
 				}
+				_autoindexBuffer.clear();
+				setFlags(getFlags() | E_EXEC_COMPLETE);
 			}
 			return ;
 		}
@@ -356,6 +321,39 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 		//403
 		INFO(_logger, "executeHEADorGET: no index, no autoindex -> 403");
 		throw client::HTTPError(403);
+	}
+
+	// file
+	if (isExisting(absPath))
+	{
+		DEBUG(_logger, "executeHEADorGET: target is a file");
+		if (!(getFlags() & E_EXEC_FILE_OPENED)) //E_EXEC_FILE_OPENED is NOT set
+		{
+			openFile(requestHandler, locationConfig);
+			int fileSize = getFileSize(absPath);
+			response.addHeader("Content-Length", common::core::utils::toString(fileSize));
+			const t_MimeTypes &types = locationConfig.getTypes();
+			t_MimeTypes::const_iterator mimeIt = types.find( getFileExtension(absPath));
+			if (mimeIt != types.end())
+				response.addHeader("Content-Type", mimeIt->second);
+			else
+				response.addHeader("Content-Type", locationConfig.getDefaultType()); // octet-stream
+			DEBUG(_logger, "executeHEADorGET: file opened, size=" + common::core::utils::toString(fileSize)
+				+ " ext=\"" + getFileExtension(absPath) + "\"");
+		}
+		if (request.getMethod() == config::GET
+			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
+		{
+			DEBUG(_logger, "executeHEADorGET: reading chunk (GET body phase)");
+			readChunk(responseHandler);
+		}
+		if (request.getMethod() == config::HEAD
+			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
+		{
+			DEBUG(_logger, "executeHEADorGET: HEAD complete (no body)");
+			setFlags(getFlags() | E_EXEC_COMPLETE);
+		}
+		return ;
 	}
 
 	// default 404
