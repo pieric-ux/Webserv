@@ -21,7 +21,7 @@ HTTPHeader::HTTPHeader() : _name(), _value(), _description()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.httpheader");
 	_logger->setLevel(log42::logRecord::DEBUG);
-	INFO (_logger, "HTTPHeader instance created with default constructor");
+	DEBUG(_logger, "HTTPHeader instance created with default constructor");
 }
 
 /**
@@ -34,7 +34,7 @@ HTTPHeader::HTTPHeader(const std::string name, const std::string description) : 
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.httpheader");
 	_logger->setLevel(log42::logRecord::DEBUG);
-	INFO (_logger, "HTTPHeader instance created with name: " + name + " and description: " + description);
+	DEBUG(_logger, "HTTPHeader instance created with name: " + name + " and description: " + description);
 }
 
 /**
@@ -48,7 +48,7 @@ HTTPHeader::HTTPHeader(const std::string name, const std::string value, const st
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.httpheader");
 	_logger->setLevel(log42::logRecord::DEBUG);
-	INFO (_logger, "HTTPHeader instance created with name: " + name + ", value: " + value + " and description: " + description);
+	DEBUG(_logger, "HTTPHeader instance created with name: " + name + ", value: " + value + " and description: " + description);
 }
 
 /**

@@ -51,7 +51,8 @@ ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
 	:	_logger(rhs._logger),
 		_fd(rhs._fd.get()),
 		_bodyReceived(rhs._bodyReceived),
-		_flags(rhs._flags)
+		_flags(rhs._flags),
+		_autoindexBuffer(rhs._autoindexBuffer)
 {}
 
 /**
@@ -67,6 +68,7 @@ ExecutionHandler &ExecutionHandler::operator=(const ExecutionHandler &rhs)
 		_logger = rhs._logger;
 		_bodyReceived = rhs._bodyReceived;
 		_flags = rhs._flags;
+		_autoindexBuffer = rhs._autoindexBuffer;
 	}
 	return (*this);
 }
@@ -133,12 +135,33 @@ void ExecutionHandler::setFlags(const int flags)
 
 /**
  * @brief [TODO:description]
+ * 
+ * @param buffer [TODO:parameter]
+ * @return t_raw 
+ */
+ t_raw ExecutionHandler::getAutoindexBuffer(t_raw &buffer) const
+{
+	buffer = _autoindexBuffer;
+	return _autoindexBuffer;
+}
+/**
+ * @brief [TODO:description]
+ *
+ * @param buffer [TODO:parameter]
+ */
+void ExecutionHandler::setAutoindexBuffer(const t_raw &buffer)
+{
+	_autoindexBuffer = buffer;
+}
+
+/**
+ * @brief [TODO:description]
  *
  * @param requestHandler [TODO:parameter]
  * @param responseHandler [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::execute(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	if (locationConfig.getEnableCGI())
 	{
@@ -160,7 +183,7 @@ void ExecutionHandler::execute(const RequestHandler &requestHandler, const Respo
  * @param request [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-void ExecutionHandler::executeCGI(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeCGI(RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
 	(void)locationConfig;
@@ -173,7 +196,7 @@ void ExecutionHandler::executeCGI(const RequestHandler &requestHandler, const co
  * @param responseHandler [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executeRequest(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeRequest(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	switch (requestHandler.getRequest().getMethod())
 	{
@@ -206,11 +229,136 @@ void ExecutionHandler::executeRequest(const RequestHandler &requestHandler, cons
  * @param response [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executeHEADorGET(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
-	(void)requestHandler;
-	(void)responseHandler;
-	(void)locationConfig;
+	client::Request		&request = requestHandler.getRequest();
+	client::Response	&response = responseHandler.getResponse();
+	std::string			absPath = request.getAbsolutePath();
+
+	DEBUG(_logger, "executeHEADorGET: method=" + config::methodToStr(request.getMethod())
+		+ " absPath=\"" + absPath + "\""
+		+ " flags=0x" + common::core::utils::toString(getFlags())
+		+ " respFlags=0x" + common::core::utils::toString(response.getFlags()));
+
+	// dir
+	if (isDirectory(absPath))
+	{
+		DEBUG(_logger, "executeHEADorGET: target is a directory");
+
+		// 301
+		if (absPath[absPath.size() - 1] != '/')
+		{
+			INFO(_logger, "executeHEADorGET: directory without trailing slash, 301 redirect");
+			throw client::HTTPError(301);
+		}
+
+		// index
+		const t_Index &indexes = locationConfig.getIndex();
+		for (t_Index::const_iterator it = indexes.begin(); it != indexes.end(); ++it) // index file is present in dir?
+		{
+			std::string indexPath = absPath + *it;
+			if (isExisting(indexPath) && !isDirectory(indexPath)) // index file found
+			{
+				DEBUG(_logger, "executeHEADorGET: index file found: \"" + indexPath + "\"");
+				request.setAbsolutePath(indexPath);
+				if (!(getFlags() & E_EXEC_FILE_OPENED))
+				{
+					openFile(requestHandler, locationConfig);
+					int fileSize = getFileSize(indexPath);
+					response.addHeader("Content-Length", common::core::utils::toString(fileSize)); // set content-length for index file  
+					const t_MimeTypes &types = locationConfig.getTypes();
+					t_MimeTypes::const_iterator mimeIt = types.find(getFileExtension(indexPath));
+					if (mimeIt != types.end())
+						response.addHeader("Content-Type", mimeIt->second);
+					else
+						response.addHeader("Content-Type", locationConfig.getDefaultType());
+					DEBUG(_logger, "executeHEADorGET: index opened, size=" + common::core::utils::toString(fileSize));
+				}
+				if (request.getMethod() == config::GET
+					&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
+				{
+					DEBUG(_logger, "executeHEADorGET: reading chunk for index file");
+					readChunk(responseHandler);
+				}
+				if (request.getMethod() == config::HEAD
+					&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
+				{
+					DEBUG(_logger, "executeHEADorGET: HEAD complete for index file");
+					setFlags(getFlags() | E_EXEC_COMPLETE);
+				}
+				return ;
+			}
+		}
+
+		// autoindex and no index file found
+		if (locationConfig.getAutoindex())
+		{
+			if (!(response.getFlags() & client::E_RESP_HEADERS_SENT)) // E_RESP_HEADERS_SENT is NOT set
+			{
+				DEBUG(_logger, "executeHEADorGET: generating autoindex HTML");
+				std::string html = generateAutoindexHTML(absPath);
+				setAutoindexBuffer(t_raw(html.begin(), html.end()));
+				response.addHeader("Content-Length",common::core::utils::toString(static_cast<int>(_autoindexBuffer.size())));
+				response.addHeader("Content-Type", "text/html; charset=utf-8");
+			}
+			else // E_RESP_HEADERS_SENT is set
+			{
+				if (request.getMethod() == config::HEAD)
+				{
+					DEBUG(_logger, "executeHEADorGET: HEAD autoindex complete (no body)");
+				}
+				else
+				{
+					DEBUG(_logger, "executeHEADorGET: appending autoindex buffer to response");
+					responseHandler.appendToBufferResponse(_autoindexBuffer);
+				}
+				_autoindexBuffer.clear();
+				setFlags(getFlags() | E_EXEC_COMPLETE);
+			}
+			return ;
+		}
+
+		//403
+		INFO(_logger, "executeHEADorGET: no index, no autoindex -> 403");
+		throw client::HTTPError(403);
+	}
+
+	// file
+	if (isExisting(absPath))
+	{
+		DEBUG(_logger, "executeHEADorGET: target is a file");
+		if (!(getFlags() & E_EXEC_FILE_OPENED)) //E_EXEC_FILE_OPENED is NOT set
+		{
+			openFile(requestHandler, locationConfig);
+			int fileSize = getFileSize(absPath);
+			response.addHeader("Content-Length", common::core::utils::toString(fileSize));
+			const t_MimeTypes &types = locationConfig.getTypes();
+			t_MimeTypes::const_iterator mimeIt = types.find( getFileExtension(absPath));
+			if (mimeIt != types.end())
+				response.addHeader("Content-Type", mimeIt->second);
+			else
+				response.addHeader("Content-Type", locationConfig.getDefaultType()); // octet-stream
+			DEBUG(_logger, "executeHEADorGET: file opened, size=" + common::core::utils::toString(fileSize)
+				+ " ext=\"" + getFileExtension(absPath) + "\"");
+		}
+		if (request.getMethod() == config::GET
+			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
+		{
+			DEBUG(_logger, "executeHEADorGET: reading chunk (GET body phase)");
+			readChunk(responseHandler);
+		}
+		if (request.getMethod() == config::HEAD
+			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
+		{
+			DEBUG(_logger, "executeHEADorGET: HEAD complete (no body)");
+			setFlags(getFlags() | E_EXEC_COMPLETE);
+		}
+		return ;
+	}
+
+	// default 404
+	INFO(_logger, "executeHEADorGET: path not found -> 404");
+	throw client::HTTPError(404);
 }
 
 /**
@@ -256,7 +404,7 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
  * 
  */
 
-void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executePUT(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
 	(void)responseHandler;
@@ -270,7 +418,7 @@ void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const Re
  * @param response [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeDELETE(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
 	(void)responseHandler;
@@ -574,8 +722,47 @@ bool	ExecutionHandler::isDirectory(const std::string &path)
  */
 std::string ExecutionHandler::generateAutoindexHTML(const std::string &dirPath)
 {
-	(void)dirPath;
-	return "";
+	std::string html = "#!DOCTYPE html><html><head><title>Index of "
+						+ dirPath
+						+ "</title></head><body><h1>Index of "
+						+ dirPath
+						+ "</h1><ul>";
+	DEBUG(_logger, "generateAutoindexHTML: generating autoindex HTML for \"" + dirPath + "\"");
+	DEBUG(_logger, "generateAutoindexHTML: " + html);
+
+	try
+	{
+		common::core::utils::Directory				dir(dirPath);
+		common::core::utils::DirectoryIterator		it = dir.begin();
+		common::core::utils::DirectoryIterator		end = dir.end();
+
+		for (; it != end; ++it)
+		{
+			std::string	name((*it)->d_name);
+			if (name == ".")
+				continue;
+			std::string	path = dirPath;
+			if (!path.empty() && path[path.size() - 1] != '/')
+				path += "/";
+			path += name;
+			std::string tmp = "<li><a href=\"" + name + (S_ISDIR((*it)->d_type) ? "/" : "") + "\">" + name + "</a></li>";
+			DEBUG(_logger, "generateAutoindexHTML: " + tmp);
+			html += tmp;
+		}
+	}
+	catch (const std::exception &e)
+	{
+		ERROR(_logger, "generateAutoindexHTML: " + std::string(e.what()));
+		throw client::HTTPError(500);
+		return "";
+	}
+
+	std::string tail = "</ul></body></html>";
+	DEBUG(_logger, "generateAutoindexHTML: " + tail);	
+	html += tail;
+	DEBUG(_logger, "generateAutoindexHTML: generated autoindex HTML for \"" + dirPath + "\"");
+ 
+	return html;
 }
 
 } // !handler
