@@ -250,6 +250,19 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
 		throw client::HTTPError(404);
 }
 
+
+/**
+ * @brief 
+ * 
+ */
+
+void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+{
+	(void)requestHandler;
+	(void)responseHandler;
+	(void)locationConfig;
+}
+
 /**
  * @brief [TODO:description]
  *
@@ -258,19 +271,6 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
  * @param locationConfig [TODO:parameter]
  */
 void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
-{
-	(void)requestHandler;
-	(void)responseHandler;
-	(void)locationConfig;
-}
-
-
-/**
- * @brief 
- * 
- */
-
-void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
 	(void)responseHandler;

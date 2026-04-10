@@ -165,7 +165,7 @@ t_DavMethods Parser::parseDavMethodsValue(const std::string &val) const
 	{
 		config::e_Method m;
 		if (config::strToMethod(methodStrs[i], m))
-			methods.push_back(m);
+			methods.insert(m);
 	}
 	return methods;
 }
@@ -530,13 +530,14 @@ void Parser::parseAllowedMethodsDirective(const std::string &locationBlockStr,
 		{
 			config::e_Method m;
 			if (config::strToMethod(methodStrs[i], m))
-				methods.push_back(m);
+				methods.insert(m);
 		}
 		config.setAllowedMethods(methods);
 		std::ostringstream amOss;
 		amOss << "[location-block] Allowed methods:";
-		for (size_t i = 0; i < methods.size(); ++i)
-			amOss << " " << config::methodToStr(methods[i]);
+		t_AllowedMethods::const_iterator it = methods.begin();
+		for (; it != methods.end(); ++it)
+			amOss << " " << config::methodToStr(*it);
 		DEBUG(_logger, amOss.str());
 	}
 }

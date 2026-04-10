@@ -210,8 +210,7 @@ void RequestHandler::validateHeaders()
 
 	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getPath());
 
-	t_AllowedMethods::const_iterator it = std::find(locationConfig.getAllowedMethods().begin(), locationConfig.getAllowedMethods().end(), _request.getMethod());
-	if (it == locationConfig.getAllowedMethods().end())
+	if (locationConfig.getAllowedMethods().find(_request.getMethod()) == locationConfig.getAllowedMethods().end())
 	{
 		INFO(_logger, "405: " + config::methodToStr(_request.getMethod()) + " not allowed on " + _request.getPath());
 		throw client::HTTPError(405);
