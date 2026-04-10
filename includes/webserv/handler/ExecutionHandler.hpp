@@ -58,7 +58,7 @@ class ExecutionHandler
 		e_ExecutionHandlerFlags			_flags;
 
 		void							executeHEADorGET(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
-		void							executePOST(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 		void							executeDELETE(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executePUT(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 
@@ -68,7 +68,7 @@ class ExecutionHandler
 		int								getFileSize(const std::string &path);
 		std::string						getFileExtension(const std::string &path);
 		bool							isFile(const std::string& path);
-		bool							isFileExisting(const std::string& path);
+		bool							isExisting(const std::string& path);
 		void							deleteFile(const std::string& filePath);
 		void							deleteDirectory(const std::string& dirPath);
 		bool							isDirectory(const std::string &path);

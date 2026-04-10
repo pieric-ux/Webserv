@@ -261,7 +261,7 @@ namespace webserv.handler {
 		+ executeCGI(requestHandler : RequestHandler, locationConfig : LocationConfig) : void
 		+ executeRequest(requestHandler : requestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
 		- executeHEADorGET(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
-		- executePOST(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
+		- executePOST(requestHandler : RequestHandler, locationConfig : LocationConfig) : void
 		- executePUT(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
 		- executeDELETE(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
 		- openFile(request : Request, locationConfig : LocationConfig) : void

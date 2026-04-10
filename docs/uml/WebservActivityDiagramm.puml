@@ -625,7 +625,7 @@ start
 										endif
 									endif
 								case (`POST`)
-									:Call `executePOST(requestHandler, responseHandler, LocationConfig)`;
+									:Call `executePOST(requestHandler, LocationConfig)`;
 									if (isFile(path)) then (yes)
 										:Call `isFileExisting(path)`;
 										if (file exists?) then (yes)
