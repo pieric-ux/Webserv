@@ -46,6 +46,8 @@ class ExecutionHandler
 		void							setFlags(const int flags);
 		void							setBodyReceived(const std::size_t bodyReceived);
 		int								getFlags() const;
+		t_raw 							getAutoindexBuffer(t_raw &buffer) const;
+		void							setAutoindexBuffer(const t_raw &buffer);
 
 		void							execute(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executeCGI(RequestHandler &requestHandler, const config::LocationConfig &locationConfig);

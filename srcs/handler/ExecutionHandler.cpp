@@ -135,6 +135,27 @@ void ExecutionHandler::setFlags(const int flags)
 
 /**
  * @brief [TODO:description]
+ * 
+ * @param buffer [TODO:parameter]
+ * @return t_raw 
+ */
+ t_raw ExecutionHandler::getAutoindexBuffer(t_raw &buffer) const
+{
+	buffer = _autoindexBuffer;
+	return _autoindexBuffer;
+}
+/**
+ * @brief [TODO:description]
+ *
+ * @param buffer [TODO:parameter]
+ */
+void ExecutionHandler::setAutoindexBuffer(const t_raw &buffer)
+{
+	_autoindexBuffer = buffer;
+}
+
+/**
+ * @brief [TODO:description]
  *
  * @param requestHandler [TODO:parameter]
  * @param responseHandler [TODO:parameter]
@@ -228,15 +249,14 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 			openFile(requestHandler, locationConfig);
 			int fileSize = getFileSize(absPath);
 			response.addHeader("Content-Length", common::core::utils::toString(fileSize));
-			std::string ext = getFileExtension(absPath);
 			const t_MimeTypes &types = locationConfig.getTypes();
-			t_MimeTypes::const_iterator mimeIt = types.find(ext);
+			t_MimeTypes::const_iterator mimeIt = types.find( getFileExtension(absPath));
 			if (mimeIt != types.end())
 				response.addHeader("Content-Type", mimeIt->second);
 			else
 				response.addHeader("Content-Type", locationConfig.getDefaultType()); // octet-stream
 			DEBUG(_logger, "executeHEADorGET: file opened, size=" + common::core::utils::toString(fileSize)
-				+ " ext=\"" + ext + "\"");
+				+ " ext=\"" + getFileExtension(absPath) + "\"");
 		}
 		if (request.getMethod() == config::GET
 			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
@@ -280,7 +300,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 					int fileSize = getFileSize(indexPath);
 					response.addHeader("Content-Length", common::core::utils::toString(fileSize)); // set content-length for index file  
 					const t_MimeTypes &types = locationConfig.getTypes();
-					t_MimeTypes::const_iterator mimeIt = types.find(ext);
+					t_MimeTypes::const_iterator mimeIt = types.find(getFileExtension(indexPath));
 					if (mimeIt != types.end())
 						response.addHeader("Content-Type", mimeIt->second);
 					else
@@ -310,9 +330,8 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 			{
 				DEBUG(_logger, "executeHEADorGET: generating autoindex HTML");
 				std::string html = generateAutoindexHTML(absPath);
-				_autoindexBuffer.assign(html.begin(), html.end());
-				response.addHeader("Content-Length",
-					common::core::utils::toString(static_cast<int>(_autoindexBuffer.size())));
+				setAutoindexBuffer(t_raw(html.begin(), html.end()));
+				response.addHeader("Content-Length",common::core::utils::toString(static_cast<int>(_autoindexBuffer.size())));
 				response.addHeader("Content-Type", "text/html");
 			}
 			else // E_RESP_HEADERS_SENT is set
@@ -705,8 +724,47 @@ bool	ExecutionHandler::isDirectory(const std::string &path)
  */
 std::string ExecutionHandler::generateAutoindexHTML(const std::string &dirPath)
 {
-	(void)dirPath;
-	return "";
+	std::string html = "#!DOCTYPE html><html><head><title>Index of "
+						+ dirPath
+						+ "</title></head><body><h1>Index of "
+						+ dirPath
+						+ "</h1><ul>";
+	DEBUG(_logger, "generateAutoindexHTML: generating autoindex HTML for \"" + dirPath + "\"");
+	DEBUG(_logger, "generateAutoindexHTML: " + html);
+
+	try
+	{
+		common::core::utils::Directory				dir(dirPath);
+		common::core::utils::DirectoryIterator		it = dir.begin();
+		common::core::utils::DirectoryIterator		end = dir.end();
+
+		for (; it != end; ++it)
+		{
+			std::string	name((*it)->d_name);
+			if (name == ".")
+				continue;
+			std::string	path = dirPath;
+			if (!path.empty() && path[path.size() - 1] != '/')
+				path += "/";
+			path += name;
+			std::string tmp = "<li><a href=\"" + name + (S_ISDIR((*it)->d_type) ? "/" : "") + "\">" + name + "</a></li>";
+			DEBUG(_logger, "generateAutoindexHTML: " + tmp);
+			html += tmp;
+		}
+	}
+	catch (const std::exception &e)
+	{
+		ERROR(_logger, "generateAutoindexHTML: " + std::string(e.what()));
+		throw client::HTTPError(500);
+		return "";
+	}
+
+	std::string tail = "</ul></body></html>";
+	DEBUG(_logger, "generateAutoindexHTML: " + tail);	
+	html += tail;
+	DEBUG(_logger, "generateAutoindexHTML: generated autoindex HTML for \"" + dirPath + "\"");
+ 
+	return html;
 }
 
 } // !handler
