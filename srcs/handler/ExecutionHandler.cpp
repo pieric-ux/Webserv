@@ -227,38 +227,25 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
 	while(root.size() > 1 && root[root.size() - 1] == '/')
 		root = root.substr(0, root.size() - 1);
 
-	if (isFile(absPath))
-	{
-		if (isFileExisting(absPath))
-			throw client::HTTPError(405);
-		throw client::HTTPError(404);
-	}
-	else if (isDirectory(absPath))
+	if (isDirectory(absPath))
 	{
 		if (absPath == root + '/')
 			throw client::HTTPError(403);
-		else if (absPath[absPath.size() - 1] != '/')
+		if (absPath[absPath.size() - 1] != '/')
 			throw client::HTTPError(301);
-		else
-		{
-			bool indexFound = false;
-			const t_Index &indexes = locationConfig.getIndex();
+		
+		const t_Index &indexes = locationConfig.getIndex();
 
-			t_Index::const_iterator it = indexes.begin();
-			for (; it != indexes.end(); ++it)
-			{
-				if (isFileExisting(absPath + *it))
-				{
-					indexFound = true;
-					break;
-				}
-			}
-			if (indexFound)
+		t_Index::const_iterator it = indexes.begin();
+		for (; it != indexes.end(); ++it)
+		{
+			if (isExisting(absPath + *it))
 				throw client::HTTPError(403);
-			else
-				throw client::HTTPError(405);
 		}
+		throw client::HTTPError(405);
 	}
+	else if (isExisting(absPath))
+		throw client::HTTPError(405);
 	else
 		throw client::HTTPError(404);
 }
@@ -508,7 +495,7 @@ bool ExecutionHandler::isFile(const std::string& path)
  * @return true if the path exists, false otherwise.
  * @todo TODO: add it to common utils ?
  */
-bool ExecutionHandler::isFileExisting(const std::string& path)
+bool ExecutionHandler::isExisting(const std::string& path)
 {
 	struct stat	st;
 
