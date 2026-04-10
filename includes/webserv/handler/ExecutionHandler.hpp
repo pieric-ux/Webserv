@@ -47,9 +47,9 @@ class ExecutionHandler
 		void							setBodyReceived(const std::size_t bodyReceived);
 		int								getFlags() const;
 
-		void							execute(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							execute(RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executeCGI(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
-		void							executeRequest(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executeRequest(RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 
 	private:
 		t_Logger						_logger;
@@ -57,7 +57,7 @@ class ExecutionHandler
 		ssize_t							_bodyReceived;
 		e_ExecutionHandlerFlags			_flags;
 
-		void							executeHEADorGET(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executeHEADorGET(RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 		void							executePUT(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executeDELETE(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
