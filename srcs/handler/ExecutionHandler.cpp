@@ -51,7 +51,8 @@ ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
 	:	_logger(rhs._logger),
 		_fd(rhs._fd.get()),
 		_bodyReceived(rhs._bodyReceived),
-		_flags(rhs._flags)
+		_flags(rhs._flags),
+		_autoindexBuffer(rhs._autoindexBuffer)
 {}
 
 /**
@@ -67,6 +68,7 @@ ExecutionHandler &ExecutionHandler::operator=(const ExecutionHandler &rhs)
 		_logger = rhs._logger;
 		_bodyReceived = rhs._bodyReceived;
 		_flags = rhs._flags;
+		_autoindexBuffer = rhs._autoindexBuffer;
 	}
 	return (*this);
 }
@@ -138,7 +140,7 @@ void ExecutionHandler::setFlags(const int flags)
  * @param response [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-void ExecutionHandler::execute(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	if (locationConfig.getEnableCGI())
 	{
@@ -173,7 +175,7 @@ void ExecutionHandler::executeCGI(const RequestHandler &requestHandler, const co
  * @param response [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-void ExecutionHandler::executeRequest(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeRequest(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	switch (requestHandler.getRequest().getMethod())
 	{
@@ -206,51 +208,141 @@ void ExecutionHandler::executeRequest(const RequestHandler &requestHandler, cons
  * @param response [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executeHEADorGET(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
-	(void)requestHandler;
-	(void)responseHandler;
-	(void)locationConfig;
+	client::Request		&request = requestHandler.getRequest();
+	client::Response	&response = responseHandler.getResponse();
+	std::string			absPath = request.getAbsolutePath();
 
-	// if isfile()
+	DEBUG(_logger, "executeHEADorGET: method=" + config::methodToStr(request.getMethod())
+		+ " absPath=\"" + absPath + "\""
+		+ " flags=0x" + common::core::utils::toString(getFlags())
+		+ " respFlags=0x" + common::core::utils::toString(response.getFlags()));
 
-	// if E_EXEC_FILE_OPENED is not set
-	// open file
+	// ── Case 1: target is a regular file ──
+	if (isFile(absPath))
+	{
+		DEBUG(_logger, "executeHEADorGET: target is a file");
+		if (!(getFlags() & E_EXEC_FILE_OPENED))
+		{
+			openFile(requestHandler, locationConfig);
+			int fileSize = getFileSize(absPath);
+			response.addHeader("Content-Length", common::core::utils::toString(fileSize));
+			std::string ext = getFileExtension(absPath);
+			const t_MimeTypes &types = locationConfig.getTypes();
+			t_MimeTypes::const_iterator mimeIt = types.find(ext);
+			if (mimeIt != types.end())
+				response.addHeader("Content-Type", mimeIt->second);
+			else
+				response.addHeader("Content-Type", locationConfig.getDefaultType());
+			DEBUG(_logger, "executeHEADorGET: file opened, size=" + common::core::utils::toString(fileSize)
+				+ " ext=\"" + ext + "\"");
+		}
+		if (request.getMethod() == config::GET
+			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
+		{
+			DEBUG(_logger, "executeHEADorGET: reading chunk (GET body phase)");
+			readChunk(responseHandler);
+		}
+		if (request.getMethod() == config::HEAD
+			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
+		{
+			DEBUG(_logger, "executeHEADorGET: HEAD complete (no body)");
+			setFlags(getFlags() | E_EXEC_COMPLETE);
+		}
+		return ;
+	}
 
-	// set E_EXEC_FILE_OPENED
+	// ── Case 2: target is a directory ──
+	if (isDirectory(absPath))
+	{
+		DEBUG(_logger, "executeHEADorGET: target is a directory");
 
-	// call get file size and set Content-Length header in response
+		// 2a. Redirect if missing trailing slash
+		if (absPath.empty() || absPath[absPath.size() - 1] != '/')
+		{
+			INFO(_logger, "executeHEADorGET: directory without trailing slash, 301 redirect");
+			throw client::HTTPError(301);
+		}
 
-	// call getfilextension and set Content-Type header in response
-	
-	// else
+		// 2b. Try index files
+		const t_Index &indexes = locationConfig.getIndex();
+		for (t_Index::const_iterator it = indexes.begin(); it != indexes.end(); ++it)
+		{
+			std::string indexPath = absPath + *it;
+			if (isFile(indexPath))
+			{
+				DEBUG(_logger, "executeHEADorGET: index file found: \"" + indexPath + "\"");
+				request.setAbsolutePath(indexPath);
+				if (!(getFlags() & E_EXEC_FILE_OPENED))
+				{
+					openFile(requestHandler, locationConfig);
+					int fileSize = getFileSize(indexPath);
+					response.addHeader("Content-Length", common::core::utils::toString(fileSize));
+					std::string ext = getFileExtension(indexPath);
+					const t_MimeTypes &types = locationConfig.getTypes();
+					t_MimeTypes::const_iterator mimeIt = types.find(ext);
+					if (mimeIt != types.end())
+						response.addHeader("Content-Type", mimeIt->second);
+					else
+						response.addHeader("Content-Type", locationConfig.getDefaultType());
+					DEBUG(_logger, "executeHEADorGET: index opened, size=" + common::core::utils::toString(fileSize));
+				}
+				if (request.getMethod() == config::GET
+					&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
+				{
+					DEBUG(_logger, "executeHEADorGET: reading chunk for index file");
+					readChunk(responseHandler);
+				}
+				if (request.getMethod() == config::HEAD
+					&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
+				{
+					DEBUG(_logger, "executeHEADorGET: HEAD complete for index file");
+					setFlags(getFlags() | E_EXEC_COMPLETE);
+				}
+				return ;
+			}
+		}
 
-	// method is GET and E_RESP_HEADERS_SENT is set
+		// 2c. No index found -- try autoindex
+		if (locationConfig.getAutoindex())
+		{
+			if (!(response.getFlags() & client::E_RESP_HEADERS_SENT))
+			{
+				DEBUG(_logger, "executeHEADorGET: generating autoindex HTML");
+				std::string html = generateAutoindexHTML(absPath);
+				_autoindexBuffer.assign(html.begin(), html.end());
+				response.addHeader("Content-Length",
+					common::core::utils::toString(static_cast<int>(_autoindexBuffer.size())));
+				response.addHeader("Content-Type", "text/html");
+			}
+			else
+			{
+				if (request.getMethod() == config::HEAD)
+				{
+					DEBUG(_logger, "executeHEADorGET: HEAD autoindex complete (no body)");
+					_autoindexBuffer.clear();
+					setFlags(getFlags() | E_EXEC_COMPLETE);
+				}
+				else
+				{
+					DEBUG(_logger, "executeHEADorGET: appending autoindex buffer to response");
+					responseHandler.appendToBufferResponse(_autoindexBuffer);
+					_autoindexBuffer.clear();
+					setFlags(getFlags() | E_EXEC_COMPLETE);
+				}
+			}
+			return ;
+		}
 
-	// read chunk
+		// 2d. No index, no autoindex -> forbidden
+		INFO(_logger, "executeHEADorGET: no index, no autoindex -> 403");
+		throw client::HTTPError(403);
+	}
 
-	// else if isdir()
-
-	// if request target doesn't end with '/' -> redirect with 301 to request target + '/'
-
-	// if index file is present
-
-	//open file
-
-	// method is get
-	
-	// read chunk
-
-	// else if autoindex on and E_RESP_HEADEES_SENT is NOT set
-
-	// generate autoindex HTML
-
-	// else if autoindex on or E_RESP_HEADERS_SENT is set
-
-	// appendautoindexbuffertobufferresponse
-
-	// else 403
-
+	// ── Case 3: neither file nor directory ──
+	INFO(_logger, "executeHEADorGET: path not found -> 404");
+	throw client::HTTPError(404);
 }
 
 /**
@@ -260,7 +352,7 @@ void ExecutionHandler::executeHEADorGET(const RequestHandler &requestHandler, co
  * @param response [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executePOST(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
 	(void)responseHandler;
@@ -274,7 +366,7 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const R
  * @param response [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeDELETE(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
 	(void)responseHandler;
@@ -287,7 +379,7 @@ void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const
  * 
  */
 
-void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executePUT(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
 	(void)responseHandler;
