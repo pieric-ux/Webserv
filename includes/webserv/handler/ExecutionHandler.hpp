@@ -46,18 +46,21 @@ class ExecutionHandler
 		void							setFlags(const int flags);
 		void							setBodyReceived(const std::size_t bodyReceived);
 		int								getFlags() const;
+		t_raw 							getAutoindexBuffer(t_raw &buffer) const;
+		void							setAutoindexBuffer(const t_raw &buffer);
 
-		void							execute(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
-		void							executeCGI(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
-		void							executeRequest(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							execute(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executeCGI(RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							executeRequest(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 
 	private:
 		t_Logger						_logger;
 		common::core::raii::UniqueFd	_fd;
 		ssize_t							_bodyReceived;
 		e_ExecutionHandlerFlags			_flags;
+		t_raw							_autoindexBuffer;
 
-		void							executeHEADorGET(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executeHEADorGET(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 		void							executePUT(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 		void							executeDELETE(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);

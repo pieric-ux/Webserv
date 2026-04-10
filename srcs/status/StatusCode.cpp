@@ -19,7 +19,7 @@ StatusCode::StatusCode() : _code(0), _msg(), _description()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.status.statuscode");
 	_logger->setLevel(log42::logRecord::INFO);
-	INFO(_logger, "StatusCode instance created with default constructor");
+	DEBUG(_logger, "StatusCode instance created with default constructor");
 }
 
 /**
@@ -33,7 +33,7 @@ StatusCode::StatusCode(const unsigned short code, const std::string msg, const s
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.status.statuscode");
 	_logger->setLevel(log42::logRecord::INFO);
-	INFO(_logger, "StatusCode instance created with code: " + common::core::utils::toString(code) + ", message: " + msg);
+	DEBUG(_logger, "StatusCode instance created with code: " + common::core::utils::toString(code) + ", message: " + msg);
 }
 
 /**
