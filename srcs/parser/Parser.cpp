@@ -293,7 +293,6 @@ void Parser::parseConfig(const t_raw &buffer)
 	std::ostringstream httpOss;
 	httpOss << "Client max body size: " << _config.getClientMaxBodySize() << " bytes";
 	DEBUG(_logger, httpOss.str());
-	DEBUG(_logger, std::string("Create full PUT path: ") + (_config.getCreateFullPutPath() ? "on" : "off"));
 	DEBUG(_logger, "Default type: " + _config.getDefaultType());
 	httpOss.str(""); httpOss << "Keepalive timeout: " << _config.getKeepAliveTimeout() << "s";
 	DEBUG(_logger, httpOss.str());
@@ -469,7 +468,12 @@ void Parser::parseLocationUri(const std::string &locationBlockStr,
 			config.setModifier(config::EXACT);
 		else if (modifierStr == "^~")
 			config.setModifier(config::PREFIX_PRIORITY);
+		else
+			config.setModifier(config::PREFIX);
 	}
+	else
+		config.setModifier(config::PREFIX);
+
 	std::string modStr = (config.getModifier() == config::EXACT ? "= " :
 	                      (config.getModifier() == config::PREFIX_PRIORITY ? "^~ " : ""));
 	DEBUG(_logger, "[location-block] Location: " + modStr + config.getUri());

@@ -17,7 +17,6 @@ namespace config
  */
 ServerConfig::ServerConfig() 
 	:	_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
-		_createFullPutPath(DefaultConfig::createFullPutPath),
 		_davPutPath(DefaultConfig::davPutPath),
 		_davAccess(DefaultConfig::davAccess),
 		_davMethods(DefaultConfig::davMethods),
@@ -50,7 +49,6 @@ ServerConfig::~ServerConfig() {}
 ServerConfig::ServerConfig(const ServerConfig &rhs)
 	:	_logger(rhs._logger),
 		_clientMaxBodySize(rhs._clientMaxBodySize),
-		_createFullPutPath(rhs._createFullPutPath),
 		_davPutPath(rhs._davPutPath),
 		_davAccess(rhs._davAccess),
 		_davMethods(rhs._davMethods),
@@ -78,7 +76,6 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &rhs)
 	{
 		_logger = rhs._logger;
 		_clientMaxBodySize = rhs._clientMaxBodySize;
-		_createFullPutPath = rhs._createFullPutPath;
 		_davPutPath = rhs._davPutPath;
 		_davAccess = rhs._davAccess;
 		_davMethods = rhs._davMethods;
@@ -114,16 +111,6 @@ t_Logger	ServerConfig::getLogger()
 const t_clientMaxBodySize	&ServerConfig::getClientMaxBodySize() const
 {
 	return _clientMaxBodySize;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-bool ServerConfig::getCreateFullPutPath() const
-{
-	return _createFullPutPath;
 }
 
 /**
@@ -261,11 +248,6 @@ void ServerConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBody
 	_clientMaxBodySize = clientMaxBodySize;
 }
 
-void ServerConfig::setCreateFullPutPath(const bool createFullPutPath)
-{
-	_createFullPutPath = createFullPutPath;
-}
-
 void ServerConfig::setDavPutPath(const std::string &davPutPath)
 {
 	_davPutPath = davPutPath;
@@ -339,16 +321,36 @@ void ServerConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
  */
 const LocationConfig &ServerConfig::findLocationConfig(const std::string &path)
 {
+	t_LocationConfigs::iterator bestMatch = _locationConfigs.end();
+	std::size_t bestLen = 0;
+
 	t_LocationConfigs::iterator it = _locationConfigs.begin();
 	for (; it != _locationConfigs.end(); ++it)
 	{
-		if (path == it->getUri())
+		const std::string &uri = it->getUri();
+		if (it->getModifier() == EXACT)
 		{
-			INFO(_logger, "Exact match found for location: " + it->getUri());
-			return (*it);
+			if (path == uri)
+			{
+				INFO(_logger, "Exact match found for location: " + uri);
+				return (*it);
+			}
+		}
+		else if (path.compare(0, uri.size(), uri) == 0 && uri.size() > bestLen)
+		{
+			bestLen = uri.size();
+			bestMatch = it;
 		}
 	}
-	INFO(_logger, "No exact match found for request target path: " + path);
+
+	if (bestMatch != _locationConfigs.end())
+	{
+		std::string matchType = (bestMatch->getModifier() == PREFIX_PRIORITY) ? "Prefix-priority" : "Prefix";
+		INFO(_logger, matchType + " match found for location: " + bestMatch->getUri());
+		return (*bestMatch);
+	}
+
+	INFO(_logger, "No match found for request target path: " + path);
 	return _locationConfigs.front();
 }
 

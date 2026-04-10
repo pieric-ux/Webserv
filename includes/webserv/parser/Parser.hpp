@@ -194,14 +194,6 @@ void Parser::parseCommonDirectives(const std::string &parentRule,
 		DEBUG(_logger, oss.str());
 	}
 
-	dirs = extractDirectives(parentRule, input, "create-full-put-path-dir", depth);
-	ensureAtMostOne(dirs, "create-full-put-path-dir");
-	if (!dirs.empty())
-	{
-		config.setCreateFullPutPath(extractValue("create-full-put-path-dir", "on-off", dirs[0]) == "on");
-		DEBUG(_logger, ctx + "Create full PUT path: " + (config.getCreateFullPutPath() ? "on" : "off"));
-	}
-
 	dirs = extractDirectives(parentRule, input, "dav-put-path-dir", depth);
 	ensureAtMostOne(dirs, "dav-put-path-dir");
 	if (!dirs.empty())
@@ -318,7 +310,6 @@ template <typename ParentT, typename ChildT>
 void Parser::applyParentDefaults(const ParentT &parent, ChildT &child)
 {
 	child.setClientMaxBodySize(parent.getClientMaxBodySize());
-	child.setCreateFullPutPath(parent.getCreateFullPutPath());
 	child.setDavPutPath(parent.getDavPutPath());
 	child.setDavAccess(parent.getDavAccess());
 	child.setDavMethods(parent.getDavMethods());

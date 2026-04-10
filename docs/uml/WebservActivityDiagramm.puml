@@ -663,45 +663,51 @@ start
 								case (`PUT`)
 									:Call `executePUT(requestHandler, LocationConfig)`;
 									if (`davMethods` is set in `LocationConfig`) then (yes)
-										if (isDirectory(path)) then (no)
-											if (`E_EXEC_FILE_OPENED` is set) then (no)
-												if (isExisting(path)) then (yes)
-													:Call `setFlags(E_EXEC_NOCONTENT)`;
-												else (no)
-													:Call `setFlags(E_EXEC_CREATED)`;
-												endif
-												:Call `openFile(requestHandler, LocationConfig)` with `O_CREATE` and `O_TRUNC` flag;
-												if (EACCESS) then (yes)
-													:Throw HTTPError(500);
-													#red:(E)
-													detach
-												else (no)
-												endif
-												if (ENOENT) then (no)
-													:Throw HTTPError(500);
-													#red:(E)
-													detach
-												else (no)
-												endif
-												:Call `setFlags(E_EXEC_FILE_OPENED)`;
-											else (yes)
-												if (`bodyReceived` < `Content-Length`) then (yes)
-													:Call `writeChunk(fd, requestHandler)`;
-													if (wr > 0) then (yes)
-														:Update `bodyReceived`;
-													else (no)
-														:Throw HTTPError(500);
-														#red:(E)
-														detach
-													endif
-												else (no)
-													:Call `setFlags(E_EXEC_COMPLETE)`;
-												endif
-											endif
-										else (yes)
+										if (`path` ends with `/`) then (yes)
 											:Throw HTTPError(409);
 											#red:(E)
 											detach
+										else (no)
+										endif
+										if (isDirectory(path)) then (yes)
+											:Throw HTTPError(409);
+											#red:(E)
+											detach
+										else (no)
+										endif
+										if (`E_EXEC_FILE_OPENED` is set) then (no)
+											if (isExisting(path)) then (yes)
+												:Call `setFlags(E_EXEC_NOCONTENT)`;
+											else (no)
+												:Call `setFlags(E_EXEC_CREATED)`;
+											endif
+											:Call `openFile(requestHandler, LocationConfig)` with `O_CREATE` and `O_TRUNC` flag;
+											if (EACCESS) then (yes)
+												:Throw HTTPError(500);
+												#red:(E)
+												detach
+											else (no)
+											endif
+											if (ENOENT) then (no)
+												:Throw HTTPError(500);
+												#red:(E)
+												detach
+											else (no)
+											endif
+											:Call `setFlags(E_EXEC_FILE_OPENED)`;
+										else (yes)
+										endif
+										if (`bodyReceived` < `Content-Length`) then (yes)
+											:Call `writeChunk(fd, requestHandler)`;
+											if (wr > 0) then (yes)
+												:Update `bodyReceived`;
+											else (no)
+												:Throw HTTPError(500);
+												#red:(E)
+												detach
+											endif
+										else (no)
+											:Call `setFlags(E_EXEC_COMPLETE)`;
 										endif
 									else (no)
 										:Throw HTTPError(405);
@@ -711,45 +717,57 @@ start
 								case (`DELETE`)
 									:Call `executeDELETE(requestHandler, responseHandler, LocationConfig)`;
 									if (`davMethods` is set in `LocationConfig`) then (yes)
-										if (`Content-Length` header is present and not null) then (yes)
-											:Throw HTTPError(415);
-											#red:(E)
-											detach
-										else (no)
-										endif
-										if (isDirectory(path)) then (yes)
-											:Call `deleteDirectory(dirPath)`;
-											if (successfully deleted?) then (yes)
-												:Call `setFlags(E_EXEC_NOCONTENT)`;
-											else if (EACCESS) then (yes)
-												:Throw HTTPError(403);
-												#red:(E)
-												detach
-											else if (ENOENT) then (yes)
+										if (`path` ends with `/`) then (yes)
+											if (isExisting(path)) then (no)
 												:Throw HTTPError(404);
 												#red:(E)
 												detach
+											else (yes)
+											endif
+											if (isDirectory(path)) then (yes)
+												:Call `deleteDirectory(dirPath)`;
+												if (successfully deleted?) then (yes)
+													:Call `setFlags(E_EXEC_NOCONTENT)`;
+												else if (EACCESS) then (yes)
+													:Throw HTTPError(403);
+													#red:(E)
+													detach
+												else if (ENOENT) then (yes)
+													:Throw HTTPError(404);
+													#red:(E)
+													detach
+												else (no)
+													:Throw HTTPError(500);
+													#red:(E)
+													detach
+												endif
 											else (no)
-												:Throw HTTPError(500);
+												:Throw HTTPError(409);
 												#red:(E)
 												detach
 											endif
 										else (no)
-											:Call `deleteFile(filePath)`;
-											if (successfully deleted?) then (yes)
-												:Call `setFlags(E_EXEC_NOCONTENT)`;
-											else if (EACCESS) then (yes)
-												:Throw HTTPError(403);
-												#red:(E)
-												detach
-											else if (ENOENT) then (yes)
-												:Throw HTTPError(404);
+											if (isDirectory(path)) then (yes)
+												:Throw HTTPError(409);
 												#red:(E)
 												detach
 											else (no)
-												:Throw HTTPError(500);
-												#red:(E)
-												detach
+												:Call `deleteFile(filePath)`;
+												if (successfully deleted?) then (yes)
+													:Call `setFlags(E_EXEC_NOCONTENT)`;
+												else if (EACCESS) then (yes)
+													:Throw HTTPError(403);
+													#red:(E)
+													detach
+												else if (ENOENT) then (yes)
+													:Throw HTTPError(404);
+													#red:(E)
+													detach
+												else (no)
+													:Throw HTTPError(500);
+													#red:(E)
+													detach
+												endif
 											endif
 										endif
 									else (no)

@@ -41,7 +41,6 @@ class LocationConfig
 		bool						getAutoindex() const;
 
 		const t_clientMaxBodySize	&getClientMaxBodySize() const;
-		bool						getCreateFullPutPath() const;
 		const std::string			&getDavPutPath() const;
 		const t_Perms				&getDavAccess() const;
 		const t_DavMethods			&getDavMethods() const;
@@ -62,7 +61,6 @@ class LocationConfig
 
 		void				setAutoindex(const bool autoindex);
 		void				setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize);
-		void				setCreateFullPutPath(const bool createFullPutPath);
 		void				setDavPutPath(const std::string &davPutPath);
 		void				setDavAccess(const t_Perms &davAccess);
 		void				setDavMethods(const t_DavMethods &davMethods);
@@ -82,7 +80,6 @@ class LocationConfig
 		t_Logger					_logger;
 		bool						_autoindex;
 		t_clientMaxBodySize			_clientMaxBodySize;
-		bool						_createFullPutPath;
 		std::string					_davPutPath;
 		t_Perms						_davAccess;
 		t_DavMethods				_davMethods;

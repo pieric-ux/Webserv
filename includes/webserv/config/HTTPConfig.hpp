@@ -32,8 +32,6 @@ class HTTPConfig
 		const t_clientMaxBodySize	&getClientMaxBodySize() const;
 		void						setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize);
 
-		bool						getCreateFullPutPath() const;
-		void						setCreateFullPutPath(const bool createFullPutPath);
 		const std::string			&getDavPutPath() const;
 		void						setDavPutPath(const std::string &davPutPath);
 		const t_Perms				&getDavAccess() const;
@@ -62,7 +60,6 @@ class HTTPConfig
 		t_Logger					_logger;
 		std::string 				_ioMultiplexer;
 		t_clientMaxBodySize			_clientMaxBodySize;
-		bool						_createFullPutPath;
 		std::string					_davPutPath;
 		t_Perms						_davAccess;
 		t_DavMethods				_davMethods;

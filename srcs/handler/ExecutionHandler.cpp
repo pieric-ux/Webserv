@@ -209,13 +209,13 @@ void ExecutionHandler::executeRequest(RequestHandler &requestHandler, ResponseHa
 			DEBUG(_logger, "executeRequest: executePOST for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
 			executePOST(requestHandler, locationConfig);
 			break;
-		case config::DELETE:
-			DEBUG(_logger, "executeRequest: executeDELETE for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
-			executeDELETE(requestHandler, responseHandler, locationConfig);
-			break;
 		case config::PUT:
 			DEBUG(_logger, "executeRequest: executePUT for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
-			executePUT(requestHandler, responseHandler, locationConfig);
+			executePUT(requestHandler, locationConfig);
+			break;
+		case config::DELETE:
+			DEBUG(_logger, "executeRequest: executeDELETE for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
+			executeDELETE(requestHandler, locationConfig);
 			break;
 		default:
 			throw client::HTTPError(405);
@@ -398,17 +398,31 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
 		throw client::HTTPError(404);
 }
 
-
 /**
- * @brief 
- * 
+ * @brief [TODO:description]
+ *
+ * @param requestHandler [TODO:parameter]
+ * @param responseHandler [TODO:parameter]
+ * @param locationConfig [TODO:parameter]
  */
-
-void ExecutionHandler::executePUT(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
-	(void)requestHandler;
-	(void)responseHandler;
-	(void)locationConfig;
+	t_DavMethods davMethods = locationConfig.getDavMethods();
+
+	if (davMethods.find(config::PUT) == davMethods.end())
+		throw client::HTTPError(405);
+
+	const std::string &absPath = requestHandler.getRequest().getAbsolutePath();
+
+	if (absPath[absPath.size() - 1] == '/')
+		throw client::HTTPError(409);
+
+	if (isDirectory(absPath))
+		throw client::HTTPError(409);
+
+	if (!(getFlags() & E_EXEC_FILE_OPENED))
+		openFile(requestHandler, locationConfig);
+	writeChunk(requestHandler);
 }
 
 /**
@@ -418,11 +432,28 @@ void ExecutionHandler::executePUT(RequestHandler &requestHandler, ResponseHandle
  * @param response [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executeDELETE(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
-	(void)requestHandler;
-	(void)responseHandler;
-	(void)locationConfig;
+	std::string absPath = requestHandler.getRequest().getAbsolutePath();
+	t_DavMethods davMethods = locationConfig.getDavMethods();
+
+	if (davMethods.find(config::DELETE) == davMethods.end())
+		throw client::HTTPError(405);
+
+	if (absPath[absPath.size() - 1] == '/')
+	{
+		if (!isExisting(absPath))
+			throw client::HTTPError(404);
+		if (!isDirectory(absPath))
+			throw client::HTTPError(409);
+		deleteDirectory(absPath);
+	}
+	else if (isDirectory(absPath))
+		throw client::HTTPError(409);
+	else
+		deleteFile(absPath);
+
+	setFlags(getFlags() | E_EXEC_NOCONTENT);
 }
 
 /**
@@ -469,14 +500,13 @@ void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, c
 		if ((fd = ::open(absPath.c_str(), flags, mode)) < 0)
 		{
 			int e = errno;
-			INFO(_logger, "openFile: open failed on \"" + absPath + "\": " + std::string(std::strerror(e)));
+			ERROR(_logger, "openFile: open failed on \"" + absPath + "\": " + std::string(std::strerror(e)));
 			if (e == ENOENT)
 				throw client::HTTPError(404);
 			if (e == EACCES)
 				throw client::HTTPError(403);
 			throw client::HTTPError(500);
 		}
-		setFlags(getFlags() | E_EXEC_FILE_OPENED);
 	}
 	else if (method == config::PUT)
 	{
@@ -489,7 +519,7 @@ void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, c
 		if ((fd = ::open(absPath.c_str(), flags, mode)) < 0)
 		{
 			int e = errno;
-			INFO(_logger, "openFile: open failed on \"" + absPath + "\": " + std::string(std::strerror(e)));
+			ERROR(_logger, "openFile: open failed on \"" + absPath + "\": " + std::string(std::strerror(e)));
 			if (e != ENOENT)
 				throw client::HTTPError(500);
 		}
@@ -503,6 +533,8 @@ void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, c
 		ERROR(_logger, "openFile: unsupported method " + config::methodToStr(method));
 		throw client::HTTPError(500);
 	}
+
+	setFlags(getFlags() | E_EXEC_FILE_OPENED);
 
 	_fd.reset(fd);
 	DEBUG(_logger, "openFile: opened \"" + absPath + "\" fd=" + common::core::utils::toString(fd));
@@ -563,7 +595,7 @@ void ExecutionHandler::writeChunk(const handler::RequestHandler &requestHandler)
 	std::size_t		offset = _bodyReceived;
 
 	const t_Headers	&headers = requestHandler.getRequest().getHeaders();
-	t_Headers::const_iterator it = headers.find("Content-Length");
+	t_Headers::const_iterator it = headers.find("content-length");
 	if (it == headers.end() || it->second.empty())
 	{
 		ERROR(_logger, "writeChunk: missing Content-Length header");
@@ -658,7 +690,15 @@ bool ExecutionHandler::isExisting(const std::string& path)
 void ExecutionHandler::deleteFile(const std::string& filePath)
 {
 	if (std::remove(filePath.c_str()) != 0)
-		INFO(_logger, "deleteFile: failed to remove " + filePath);
+	{
+		int e = errno;
+		ERROR(_logger, "deleteFile: failed to unlink " + filePath + "\": " + std::string(std::strerror(e)));
+		if (e == ENOENT)
+			throw client::HTTPError(404);
+		if (e == EACCES)
+			throw client::HTTPError(403);
+		throw client::HTTPError(500);
+	}
 }
 
 /**
@@ -691,13 +731,27 @@ void ExecutionHandler::deleteDirectory(const std::string& dirPath)
 				deleteDirectory(path);
 		}
 	}
+	catch (const client::HTTPError &e)
+	{
+		ERROR(_logger, "deleteDirectory: " + std::string(e.what()));
+		throw;
+	}
 	catch (const std::exception &e)
 	{
 		ERROR(_logger, "deleteDirectory: " + std::string(e.what()));
-		return;
+		throw client::HTTPError(500);
 	}
+
 	if (std::remove(dirPath.c_str()) != 0)
-		ERROR(_logger, "deleteDirectory: failed to rmdir " + dirPath);
+	{
+		int e = errno;
+		ERROR(_logger, "deleteDirectory: failed to rmdir " + dirPath + "\": " + std::string(std::strerror(e)));
+		if (e == ENOENT)
+			throw client::HTTPError(404);
+		if (e == EACCES)
+			throw client::HTTPError(403);
+		throw client::HTTPError(500);
+	}
 }
 
 /**

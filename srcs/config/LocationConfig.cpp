@@ -18,7 +18,6 @@ namespace config
 LocationConfig::LocationConfig()
 	:	_autoindex(DefaultConfig::autoindex),
 		_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
-		_createFullPutPath(DefaultConfig::createFullPutPath),
 		_davPutPath(DefaultConfig::davPutPath),
 		_davAccess(DefaultConfig::davAccess),
 		_davMethods(DefaultConfig::davMethods),
@@ -51,7 +50,6 @@ LocationConfig::~LocationConfig() {}
 LocationConfig::LocationConfig(const LocationConfig &rhs)
 	: _autoindex(rhs._autoindex),
 	  _clientMaxBodySize(rhs._clientMaxBodySize),
-	  _createFullPutPath(rhs._createFullPutPath),
 	  _davPutPath(rhs._davPutPath),
 	  _davAccess(rhs._davAccess),
 	  _davMethods(rhs._davMethods),
@@ -81,7 +79,6 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &rhs)
 	{
 		_autoindex = rhs._autoindex;
 		_clientMaxBodySize = rhs._clientMaxBodySize;
-		_createFullPutPath = rhs._createFullPutPath;
 		_davPutPath = rhs._davPutPath;
 		_davAccess = rhs._davAccess;
 		_davMethods = rhs._davMethods;
@@ -128,16 +125,6 @@ bool LocationConfig::getAutoindex() const
 const t_clientMaxBodySize	&LocationConfig::getClientMaxBodySize() const
 {
 	return _clientMaxBodySize;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-bool LocationConfig::getCreateFullPutPath() const
-{
-	return _createFullPutPath;
 }
 
 /**
@@ -308,11 +295,6 @@ void LocationConfig::setAutoindex(const bool autoindex)
 void LocationConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
 {
 	_clientMaxBodySize = clientMaxBodySize;
-}
-
-void LocationConfig::setCreateFullPutPath(const bool createFullPutPath)
-{
-	_createFullPutPath = createFullPutPath;
 }
 
 void LocationConfig::setDavPutPath(const std::string &davPutPath)

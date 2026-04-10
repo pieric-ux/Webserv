@@ -59,7 +59,6 @@ const int					DefaultConfig::so_keepalive = false;
 const std::string			DefaultConfig::ioMultiplexer = DEFAULT_IOMULTIPLEXER;
 const bool					DefaultConfig::autoindex = false;
 const t_clientMaxBodySize	DefaultConfig::clientMaxBodySize = 1048576;
-const bool					DefaultConfig::createFullPutPath = false;
 const std::string			DefaultConfig::davPutPath = "";
 const t_Perms				DefaultConfig::davAccess = 0600;
 const t_DavMethods			DefaultConfig::davMethods = t_DavMethods();

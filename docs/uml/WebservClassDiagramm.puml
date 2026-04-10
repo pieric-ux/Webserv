@@ -262,7 +262,7 @@ namespace webserv.handler {
 		+ executeRequest(requestHandler : requestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
 		- executeHEADorGET(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
 		- executePOST(requestHandler : RequestHandler, locationConfig : LocationConfig) : void
-		- executePUT(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
+		- executePUT(requestHandler : RequestHandler, locationConfig : LocationConfig) : void
 		- executeDELETE(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
 		- openFile(request : Request, locationConfig : LocationConfig) : void
 		- readChunk(requestHandler : RequestHandler) : void
@@ -348,7 +348,6 @@ namespace webserv.config {
 	class "HTTPConfig" as HTTPConfig <<singleton>> {
 		- _ioMultiplexer : string
 		- _clientMaxBodySize : int
-		- _createFullPutPath : bool
 		- _davPutPath : string
 		- _davAccess : string
 		- _davMethods : vector<e_Method>
@@ -365,8 +364,6 @@ namespace webserv.config {
 		+ {static} getInstance() : HTTPConfig
 		+ getClientMaxBodySize() : int
 		+ setClientMaxBodySize(clientMaxBodySize : int) : void
-		+ getCreateFullPutPath() : bool
-		+ setCreateFullPutPath(createFullPutPath : bool) : void
 		+ getDavPutPath() : string
 		+ setDavPutPath(davPutPath : string) : void
 		+ getDavAccess() : string
@@ -393,7 +390,6 @@ namespace webserv.config {
 
 	class "ServerConfig" as ServerConfig {
 		- _clientMaxBodySize : int
-		- _createFullPutPath : bool
 		- _davPutPath : string
 		- _davAccess : string
 		- _davMethods : vector<e_Method>
@@ -410,7 +406,6 @@ namespace webserv.config {
 		--
 		+ ServerConfig()
 		+ getClientMaxBodySize() : int
-		+ getCreateFullPutPath() : bool
 		+ getDavPutPath() : string
 		+ getDavAccess() : string
 		+ getDavMethods() : vector<e_Method>
@@ -430,7 +425,6 @@ namespace webserv.config {
 	class "LocationConfig" as LocationConfig {
 		- _autoindex : bool
 		- _clientMaxBodySize : int
-		- _createFullPutPath : bool
 		- _davPutPath : string
 		- _davAccess : string
 		- _davMethods : vector<e_Method>
@@ -450,7 +444,6 @@ namespace webserv.config {
 		+ LocationConfig()
 		+ getAutoindex() : bool
 		+ getClientMaxBodySize() : int
-		+ getCreateFullPutPath() : bool
 		+ getDavPutPath() : string
 		+ getDavAccess() : string
 		+ getDavMethods() : vector<e_Method>
