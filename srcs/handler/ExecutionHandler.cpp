@@ -134,9 +134,9 @@ void ExecutionHandler::setFlags(const int flags)
 /**
  * @brief [TODO:description]
  *
- * @param request [TODO:parameter]
- * @param response [TODO:parameter]
- * @param serverConfig [TODO:parameter]
+ * @param requestHandler [TODO:parameter]
+ * @param responseHandler [TODO:parameter]
+ * @param locationConfig [TODO:parameter]
  */
 void ExecutionHandler::execute(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
@@ -169,9 +169,9 @@ void ExecutionHandler::executeCGI(const RequestHandler &requestHandler, const co
 /**
  * @brief [TODO:description]
  *
- * @param request [TODO:parameter]
- * @param response [TODO:parameter]
- * @param serverConfig [TODO:parameter]
+ * @param requestHandler [TODO:parameter]
+ * @param responseHandler [TODO:parameter]
+ * @param locationConfig [TODO:parameter]
  */
 void ExecutionHandler::executeRequest(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
@@ -184,7 +184,7 @@ void ExecutionHandler::executeRequest(const RequestHandler &requestHandler, cons
 			break;
 		case config::POST:
 			DEBUG(_logger, "executeRequest: executePOST for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
-			executePOST(requestHandler, responseHandler, locationConfig);
+			executePOST(requestHandler, locationConfig);
 			break;
 		case config::DELETE:
 			DEBUG(_logger, "executeRequest: executeDELETE for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
@@ -216,15 +216,51 @@ void ExecutionHandler::executeHEADorGET(const RequestHandler &requestHandler, co
 /**
  * @brief [TODO:description]
  *
- * @param request [TODO:parameter]
- * @param response [TODO:parameter]
+ * @param requestHandler [TODO:parameter]
+ * @param responseHandler [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
-	(void)requestHandler;
-	(void)responseHandler;
-	(void)locationConfig;
+	std::string absPath = requestHandler.getRequest().getAbsolutePath();
+	std::string root = locationConfig.getRoot();
+	while(root.size() > 1 && root[root.size() - 1] == '/')
+		root = root.substr(0, root.size() - 1);
+
+	if (isFile(absPath))
+	{
+		if (isFileExisting(absPath))
+			throw client::HTTPError(405);
+		throw client::HTTPError(404);
+	}
+	else if (isDirectory(absPath))
+	{
+		if (absPath == root + '/')
+			throw client::HTTPError(403);
+		else if (absPath[absPath.size() - 1] != '/')
+			throw client::HTTPError(301);
+		else
+		{
+			bool indexFound = false;
+			const t_Index &indexes = locationConfig.getIndex();
+
+			t_Index::const_iterator it = indexes.begin();
+			for (; it != indexes.end(); ++it)
+			{
+				if (isFileExisting(absPath + *it))
+				{
+					indexFound = true;
+					break;
+				}
+			}
+			if (indexFound)
+				throw client::HTTPError(403);
+			else
+				throw client::HTTPError(405);
+		}
+	}
+	else
+		throw client::HTTPError(404);
 }
 
 /**
@@ -253,13 +289,7 @@ void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const Re
 	(void)responseHandler;
 	(void)locationConfig;
 }
-/**
- * @brief [TODO:description]
- *
- * @param request [TODO:parameter]
- * @param locationConfig [TODO:parameter]
- * @return [TODO:return]
- */
+
 /**
  * @brief Opens the file targeted by @p request and stores the resulting fd
  *        in the owned _fd (UniqueFd). Sets E_EXEC_FILE_OPENED on success.
