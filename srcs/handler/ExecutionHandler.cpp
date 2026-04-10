@@ -219,22 +219,22 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 		+ " flags=0x" + common::core::utils::toString(getFlags())
 		+ " respFlags=0x" + common::core::utils::toString(response.getFlags()));
 
-	// ── Case 1: target is a regular file ──
+	// file
 	if (isFile(absPath))
 	{
 		DEBUG(_logger, "executeHEADorGET: target is a file");
-		if (!(getFlags() & E_EXEC_FILE_OPENED))
+		if (!(getFlags() & E_EXEC_FILE_OPENED)) //E_EXEC_FILE_OPENED is NOT set
 		{
 			openFile(requestHandler, locationConfig);
 			int fileSize = getFileSize(absPath);
-			response.addHeader("Content-Length", common::core::utils::toString(fileSize));
+			response.addHeader("Content-Length", common::core::utils::toString(fileSize)); // k m g ?
 			std::string ext = getFileExtension(absPath);
 			const t_MimeTypes &types = locationConfig.getTypes();
 			t_MimeTypes::const_iterator mimeIt = types.find(ext);
 			if (mimeIt != types.end())
 				response.addHeader("Content-Type", mimeIt->second);
 			else
-				response.addHeader("Content-Type", locationConfig.getDefaultType());
+				response.addHeader("Content-Type", locationConfig.getDefaultType()); // octet-stream
 			DEBUG(_logger, "executeHEADorGET: file opened, size=" + common::core::utils::toString(fileSize)
 				+ " ext=\"" + ext + "\"");
 		}
@@ -253,24 +253,24 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 		return ;
 	}
 
-	// ── Case 2: target is a directory ──
+	// dir
 	if (isDirectory(absPath))
 	{
 		DEBUG(_logger, "executeHEADorGET: target is a directory");
 
-		// 2a. Redirect if missing trailing slash
-		if (absPath.empty() || absPath[absPath.size() - 1] != '/')
+		// 301
+		if (absPath[absPath.size() - 1] != '/')
 		{
 			INFO(_logger, "executeHEADorGET: directory without trailing slash, 301 redirect");
 			throw client::HTTPError(301);
 		}
 
-		// 2b. Try index files
+		// index
 		const t_Index &indexes = locationConfig.getIndex();
-		for (t_Index::const_iterator it = indexes.begin(); it != indexes.end(); ++it)
+		for (t_Index::const_iterator it = indexes.begin(); it != indexes.end(); ++it) // index file is present in dir?
 		{
 			std::string indexPath = absPath + *it;
-			if (isFile(indexPath))
+			if (isFile(indexPath)) // index file found
 			{
 				DEBUG(_logger, "executeHEADorGET: index file found: \"" + indexPath + "\"");
 				request.setAbsolutePath(indexPath);
@@ -278,7 +278,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 				{
 					openFile(requestHandler, locationConfig);
 					int fileSize = getFileSize(indexPath);
-					response.addHeader("Content-Length", common::core::utils::toString(fileSize));
+					response.addHeader("Content-Length", common::core::utils::toString(fileSize)); // set content-length for index file  // k m g ?
 					std::string ext = getFileExtension(indexPath);
 					const t_MimeTypes &types = locationConfig.getTypes();
 					t_MimeTypes::const_iterator mimeIt = types.find(ext);
@@ -304,10 +304,10 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 			}
 		}
 
-		// 2c. No index found -- try autoindex
+		// autoindex and no index  file found
 		if (locationConfig.getAutoindex())
 		{
-			if (!(response.getFlags() & client::E_RESP_HEADERS_SENT))
+			if (!(response.getFlags() & client::E_RESP_HEADERS_SENT)) // E_RESP_HEADERS_SENT is NOT set
 			{
 				DEBUG(_logger, "executeHEADorGET: generating autoindex HTML");
 				std::string html = generateAutoindexHTML(absPath);
@@ -316,7 +316,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 					common::core::utils::toString(static_cast<int>(_autoindexBuffer.size())));
 				response.addHeader("Content-Type", "text/html");
 			}
-			else
+			else // E_RESP_HEADERS_SENT is set
 			{
 				if (request.getMethod() == config::HEAD)
 				{
@@ -335,12 +335,12 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 			return ;
 		}
 
-		// 2d. No index, no autoindex -> forbidden
+		//403
 		INFO(_logger, "executeHEADorGET: no index, no autoindex -> 403");
 		throw client::HTTPError(403);
 	}
 
-	// ── Case 3: neither file nor directory ──
+	// default 404
 	INFO(_logger, "executeHEADorGET: path not found -> 404");
 	throw client::HTTPError(404);
 }
@@ -385,40 +385,13 @@ void ExecutionHandler::executePUT(RequestHandler &requestHandler, ResponseHandle
 	(void)responseHandler;
 	(void)locationConfig;
 }
+
 /**
  * @brief [TODO:description]
  *
  * @param request [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  * @return [TODO:return]
- */
-/**
- * @brief Opens the file targeted by @p request and stores the resulting fd
- *        in the owned _fd (UniqueFd). Sets E_EXEC_FILE_OPENED on success.
- *
- *        The flow is "check before open" so we never touch open() unless we
- *        already know the operation is allowed both by the webserv config
- *        and by the underlying filesystem:
- *
- *        1. Check the location's `dav_access` bits (config-level rule).
- *           Only the 'all' triplet (least significant 3 bits) is consulted
- *           because HTTP has no authenticated user concept here.
- *           - GET / HEAD require the read bit  (0004) -> else 403
- *           - PUT        requires the write bit (0002) -> else 403
- *
- *        2. Probe the filesystem with access():
- *           - GET / HEAD : access(R_OK) -> ENOENT=404, EACCES=403, else=500
- *           - PUT        : access(F_OK) to distinguish create vs overwrite,
- *                          then access(W_OK) on overwrite.
- *
- *        3. Only then call open() with the appropriate flags. mode for
- *           PUT is derived from `dav_access` directly (mode_t-compatible).
- *
- * @param request        Request providing method and absolute path.
- * @param locationConfig Location whose `dav_access` drives both the
- *                       allow check and the create mode.
- * @return The opened file descriptor (also stored in _fd).
- * @throws client::HTTPError on failure.
  */
 void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
