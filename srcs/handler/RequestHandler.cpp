@@ -322,7 +322,12 @@ void RequestHandler::parseBody()
 void RequestHandler::buildAbsolutPath()
 {
 	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getPath());
-	std::string root = locationConfig.getRoot();
+	std::string root;
+
+	if (_request.getMethod() == config::PUT || _request.getMethod() == config::DELETE)
+		root = locationConfig.getDavPutPath();
+	else
+		root = locationConfig.getRoot();
 
 	while (root.size() > 1 && root[root.size() - 1] == '/')
 		root = root.substr(0, root.size() - 1);

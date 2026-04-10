@@ -37,7 +37,6 @@ struct DefaultConfig
 	static const std::string			ioMultiplexer;
 	static const bool					autoindex;
 	static const t_clientMaxBodySize	clientMaxBodySize;
-	static const bool					createFullPutPath;
 	static const std::string			davPutPath;
 	static const t_Perms				davAccess;
 	static const t_DavMethods			davMethods;

@@ -34,7 +34,6 @@ class ServerConfig
 
 		const t_clientMaxBodySize	&getClientMaxBodySize() const;
 
-		bool						getCreateFullPutPath() const;
 		const std::string			&getDavPutPath() const;
 		const t_Perms				&getDavAccess() const;
 		const t_DavMethods			&getDavMethods() const;
@@ -52,7 +51,6 @@ class ServerConfig
 		const LocationConfig		&findLocationConfig(const std::string &requestTarget);
 
 		void				setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize);
-		void				setCreateFullPutPath(const bool createFullPutPath);
 		void				setDavPutPath(const std::string &davPutPath);
 		void				setDavAccess(const t_Perms &davAccess);
 		void				setDavMethods(const t_DavMethods &davMethods);
@@ -70,7 +68,6 @@ class ServerConfig
 	private:
 		t_Logger					_logger;
 		t_clientMaxBodySize			_clientMaxBodySize;
-		bool						_createFullPutPath;
 		std::string					_davPutPath;
 		t_Perms						_davAccess;
 		t_DavMethods				_davMethods;

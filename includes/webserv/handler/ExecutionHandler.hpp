@@ -59,8 +59,8 @@ class ExecutionHandler
 
 		void							executeHEADorGET(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
-		void							executePUT(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
-		void							executeDELETE(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executePUT(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							executeDELETE(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 
 		void							openFile(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 		void							readChunk(ResponseHandler &responseHandler);

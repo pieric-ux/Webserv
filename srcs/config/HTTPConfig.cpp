@@ -19,7 +19,6 @@ namespace config
 HTTPConfig::HTTPConfig()
 	:	_ioMultiplexer(DefaultConfig::ioMultiplexer),
 		_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
-		_createFullPutPath(DefaultConfig::createFullPutPath),
 		_davPutPath(DefaultConfig::davPutPath),
 		_davAccess(DefaultConfig::davAccess),
 		_davMethods(DefaultConfig::davMethods),
@@ -101,26 +100,6 @@ const t_clientMaxBodySize	&HTTPConfig::getClientMaxBodySize() const
 void	HTTPConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
 {
 	_clientMaxBodySize = clientMaxBodySize;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-bool HTTPConfig::getCreateFullPutPath() const
-{
-	return _createFullPutPath;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param createFullPutPath [TODO:parameter]
- */
-void	HTTPConfig::setCreateFullPutPath(const bool createFullPutPath)
-{
-	_createFullPutPath = createFullPutPath;
 }
 
 /**
