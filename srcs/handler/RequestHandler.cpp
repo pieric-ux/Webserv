@@ -374,7 +374,7 @@ std::string RequestHandler::normalizePath(const std::string &path)
 
 	if (result.empty())
 		result = "/";
-	else if (!path.empty() && path[path.size() - 1] == '/')
+	else if (path[path.size() - 1] == '/' && result[result.size() - 1] != '/')
 		result += "/";
 
 	return result;
