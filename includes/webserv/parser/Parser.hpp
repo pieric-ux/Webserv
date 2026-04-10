@@ -230,8 +230,8 @@ void Parser::parseCommonDirectives(const std::string &parentRule,
 		std::ostringstream oss;
 		oss << ctx << "DAV methods: ";
 		t_DavMethods dm = config.getDavMethods();
-		for (size_t i = 0; i < dm.size(); ++i)
-			oss << ((dm[i] == config::PUT) ? "PUT" : "DELETE") << " ";
+		for (t_DavMethods::iterator it = dm.begin(); it != dm.end(); ++it)
+			oss << ((*it == config::PUT) ? "PUT" : "DELETE") << " ";
 		DEBUG(_logger, oss.str());
 	}
 

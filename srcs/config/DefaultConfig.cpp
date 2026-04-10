@@ -11,9 +11,9 @@ namespace {
 webserv::t_AllowedMethods initAllowedMethods()
 {
 	webserv::t_AllowedMethods allowedMethods;
-	allowedMethods.push_back(webserv::config::GET);
-	allowedMethods.push_back(webserv::config::POST);
-	allowedMethods.push_back(webserv::config::DELETE);
+	allowedMethods.insert(webserv::config::GET);
+	allowedMethods.insert(webserv::config::POST);
+	allowedMethods.insert(webserv::config::DELETE);
 	return allowedMethods;
 }
 

@@ -69,7 +69,7 @@ class ExecutionHandler
 		int								getFileSize(const std::string &path);
 		std::string						getFileExtension(const std::string &path);
 		bool							isFile(const std::string& path);
-		bool							isFileExisting(const std::string& path);
+		bool							isExisting(const std::string& path);
 		void							deleteFile(const std::string& filePath);
 		void							deleteDirectory(const std::string& dirPath);
 		bool							isDirectory(const std::string &path);
