@@ -5,6 +5,7 @@
 
 #include <list>
 #include <map>
+#include <set>
 #include <sys/socket.h>
 #include <vector>
 #include <log42/Log42.hpp>
@@ -44,9 +45,9 @@ typedef std::map<std::string, std::string>													t_MimeTypes;
 
 typedef std::map<std::string, std::string>													t_CgiExtensions;
 
-typedef std::vector<config::e_Method>														t_DavMethods;
+typedef std::set<config::e_Method>															t_DavMethods;
 
-typedef std::vector<config::e_Method>														t_AllowedMethods;
+typedef std::set<config::e_Method>															t_AllowedMethods;
 
 typedef std::vector<config::ErrorPage>														t_ErrorPages;
 

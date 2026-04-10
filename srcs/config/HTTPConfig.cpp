@@ -168,7 +168,7 @@ void	HTTPConfig::setDavAccess(const t_Perms &davAccess)
  *
  * @return [TODO:return]
  */
-const std::vector<config::e_Method> &HTTPConfig::getDavMethods() const
+const t_DavMethods &HTTPConfig::getDavMethods() const
 {
 	return _davMethods;
 }
@@ -178,7 +178,7 @@ const std::vector<config::e_Method> &HTTPConfig::getDavMethods() const
  *
  * @param davMethods [TODO:parameter]
  */
-void	HTTPConfig::setDavMethods(const	 std::vector<config::e_Method> &davMethods)
+void	HTTPConfig::setDavMethods(const	t_DavMethods &davMethods)
 {
 	_davMethods = davMethods;
 }

@@ -2,6 +2,7 @@
 // Build: make && c++ -std=c++98 -I includes -I libs/parser/includes -I libs/logger/includes -I libs/common/includes test/parser_tests/dump_config.cpp -L. -L libs/parser -L libs/logger -L libs/common -labnf -llog42 -lcommon objs/*.o -o test_dump -Wl,-force_load,objs/main.o 2>/dev/null || true
 // Alternatively, just link against webserv objects minus main
 
+#include <webserv/config/method.hpp>
 #include <webserv/config/HTTPConfig.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
@@ -16,18 +17,6 @@
 #include <cstdlib>
 
 using namespace webserv;
-
-static std::string methodStr(config::e_Method m)
-{
-	switch (m) {
-		case config::GET: return "GET";
-		case config::HEAD: return "HEAD";
-		case config::POST: return "POST";
-		case config::PUT: return "PUT";
-		case config::DELETE: return "DELETE";
-	}
-	return "?";
-}
 
 static void dumpLocation(const config::LocationConfig &loc, const std::string &indent)
 {
@@ -47,8 +36,8 @@ static void dumpLocation(const config::LocationConfig &loc, const std::string &i
 	t_AllowedMethods am = loc.getAllowedMethods();
 	if (!am.empty()) {
 		std::cout << indent << "allowed_methods:";
-		for (size_t i = 0; i < am.size(); ++i)
-			std::cout << " " << methodStr(am[i]);
+		for (t_AllowedMethods::const_iterator it = am.begin(); it != am.end(); ++it)
+			std::cout << " " << config::methodToStr(*it);
 		std::cout << "\n";
 	}
 
@@ -79,8 +68,8 @@ static void dumpLocation(const config::LocationConfig &loc, const std::string &i
 	t_DavMethods dm = loc.getDavMethods();
 	if (!dm.empty()) {
 		std::cout << indent << "dav_methods:";
-		for (size_t i = 0; i < dm.size(); ++i)
-			std::cout << " " << methodStr(dm[i]);
+		for (t_DavMethods::const_iterator it = dm.begin(); it != dm.end(); ++it)
+			std::cout << " " << config::methodStr(*it);
 		std::cout << "\n";
 	}
 
