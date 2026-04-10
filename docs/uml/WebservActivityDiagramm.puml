@@ -531,7 +531,64 @@ start
 							switch (`method`)
 								case (`HEAD` or `GET`)
 									:Call `executeHEADorGET(requestHandler, responseHandler, LocationConfig)`;
-									if (isFile(path)) then (yes)
+									if (isDirectory(path)) then (yes)
+										if (`path` is a directory whithout end `/`) then (yes)
+											:Throw HTTPError(301);
+											#red:(E)
+											detach
+										else (no)
+										endif
+										if (`index` file is present in directory) then (yes)
+											if (`E_EXEC_FILE_OPENED` is set) then (no)
+												:Call `openFile(requestHandler, LocationConfig)`;
+												if (fd > 0) then (yes)
+													:Call `setFlags(E_EXEC_FILE_OPENED)`;
+													:Call `getFileSize(fd)` to set `Content-Length` header in `response`;
+													:Call `getFileExtension(path)` to set `Content-Type` header in `response`;
+												else if (EACCESS) then (yes)
+													:Throw HTTPError(403);
+													#red:(E)
+													detach
+												else if (ENOENT) then (yes)
+													:Throw HTTPError(404);
+													#red:(E)
+													detach
+												else (no)
+													:Throw HTTPError(500);
+													#red:(E)
+													detach
+												endif
+											else (yes)
+											endif
+											if (`method` is `GET` AND `E_RESP_HEADERS_SENT` is set) then (yes)
+												:Call `readChunk(fd, response)`;
+												if (rd > 0) then (yes)
+													:Append `buffer` to `bufferResponse`;
+												else if (EOF reached?) then (yes)
+													:Call `setFlags(E_EXEC_COMPLETE)`;
+												else (no)
+													:Throw HTTPError(500);
+													#red:(E)
+													detach
+												endif
+											else (no)
+											endif
+										else (no)
+											if (`autoindex` is set in `LocationConfig` AND `E_RESP_HEADERS_SENT` is NOT set) then (yes)
+												:Call `generateAutoindexHTML(path)`;
+												floating note: Uses Directory and DirectoryIterator\nfrom common lib to iterate entries.
+												:Append `htmlString` to `bufferAutoindex`;
+												:Set `Content-Length` with `htmlString` length;
+												:Set `Content-Type: text/html; charset=utf-8`;
+											else if (`autoindex` is set in `LocationConfig` AND `E_RESP_HEADERS_SENT` is set) then (yes)
+												:Call `appendAutoindexbufferToBufferResponse()`;
+											else (no)
+												:Throw HTTPError(403);
+												#red:(E)
+												detach
+											endif
+										endif
+									else (no)
 										if (`E_EXEC_FILE_OPENED` is set) then (no)
 											:Call `openFile(requestHandler, LocationConfig)`;
 											if (fd > 0) then (yes)
@@ -566,68 +623,33 @@ start
 											endif
 										else (no)
 										endif
-									else (no)
-										if (`path` is a directory without end `/`) then (yes)
+									endif
+								case (`POST`)
+									:Call `executePOST(requestHandler, LocationConfig)`;
+									if (isDirectory(path)) then (yes)
+										if (`path` is root) then (yes)
+											:Throw HTTPError(403);
+											#red:(E)
+											detach
+										else (no)
+										endif
+										if (`path` is a directory whithout end `/`) then (yes)
 											:Throw HTTPError(301);
 											#red:(E)
 											detach
 										else (no)
-											if ('index' file is present in directory) then (yes)
-												if (`E_EXEC_FILE_OPENED` is set) then (no)
-													:Call `openFile(requestHandler, LocationConfig)`;
-													if (fd > 0) then (yes)
-														:Call `setFlags(E_EXEC_FILE_OPENED)`;
-														:Call `getFileSize(fd)` to set `Content-Length` header in `response`;
-														:Call `getFileExtension(path)` to set `Content-Type` header in `response`;
-													else if (EACCESS) then (yes)
-														:Throw HTTPError(403);
-														#red:(E)
-														detach
-													else if (ENOENT) then (yes)
-														:Throw HTTPError(404);
-														#red:(E)
-														detach
-													else (no)
-														:Throw HTTPError(500);
-														#red:(E)
-														detach
-													endif
-												else (yes)
-												endif
-												if (`method` is `GET` AND `E_RESP_HEADERS_SENT` is set) then (yes)
-													:Call `readChunk(fd, response)`;
-													if (rd > 0) then (yes)
-														:Append `buffer` to `bufferResponse`;
-													else if (EOF reached?) then (yes)
-														:Call `setFlags(E_EXEC_COMPLETE)`;
-													else (no)
-														:Throw HTTPError(500);
-														#red:(E)
-														detach
-													endif
-												else (no)
-												endif
-											else (no)
-												if (`autoindex` is set in `LocationConfig` AND `E_RESP_HEADERS_SENT` is NOT set) then (yes)
-													:Call `generateAutoindexHTML(path)`;
-													floating note: Uses Directory and DirectoryIterator\nfrom common lib to iterate entries.
-													:Append `htmlString` to `bufferAutoindex`;
-													:Set `Content-Length` with `htmlString` length;
-													:Set `Content-Type: text/html; charset=utf-8`;
-												else if (`autoindex` is set in `LocationConfig` AND `E_RESP_HEADERS_SENT` is set) then (yes)
-													:Call `appendAutoindexbufferToBufferResponse()`;
-												else (no)
-													:Throw HTTPError(403);
-													#red:(E)
-													detach
-												endif
-											endif
 										endif
-									endif
-								case (`POST`)
-									:Call `executePOST(requestHandler, LocationConfig)`;
-									if (isFile(path)) then (yes)
-										:Call `isFileExisting(path)`;
+										if (`index` file is present in directory) then (yes)
+											:Throw HTTPError(403);
+											#red:(E)
+											detach
+										else (no)
+											:Throw HTTPError(405);
+											#red:(E)
+											detach
+										endif
+									else (no)
+										:Call `isExisting(path)`;
 										if (file exists?) then (yes)
 											:Throw HTTPError(405);
 											#red:(E)
@@ -637,90 +659,46 @@ start
 											#red:(E)
 											detach
 										endif
-									else (no)
-										if (`path` is root) then (yes)
-											:Throw HTTPError(403);
-											#red:(E)
-											detach
-										else (no)
-											if (`path` is a directory whithout end `/`) then (yes)
-												:Throw HTTPError(301);
-												#red:(E)
-												detach
-											else (no)
-												if (`index` file is present in directory) then (yes)
-													:Throw HTTPError(403);
-													#red:(E)
-													detach
-												else (no)
-													:Throw HTTPError(405);
-													#red:(E)
-													detach
-												endif
-											endif
-										endif
 									endif
 								case (`PUT`)
 									:Call `executePUT(requestHandler, LocationConfig)`;
 									if (`davMethods` is set in `LocationConfig`) then (yes)
-										if (isFile(path)) then (yes)
+										if (isDirectory(path)) then (no)
 											if (`E_EXEC_FILE_OPENED` is set) then (no)
-												:Call `openFile(requestHandler, LocationConfig)` with `O_TRUNC` flag;
-												if (fd > 0) then (yes)
-													:Call `setFlags(E_EXEC_FILE_OPENED)`;
+												if (isExisting(path)) then (yes)
 													:Call `setFlags(E_EXEC_NOCONTENT)`;
-													if (`bodyReceived` < `Content-Length`) then (yes)
-														:Call `writeChunk(fd, requestHandler)`;
-														if (wr > 0) then (yes)
-															:Update `bodyReceived`;
-														else (no)
-															:Throw HTTPError(500);
-															#red:(E)
-															detach
-														endif
-													else (no)
-														:Call `setFlags(E_EXEC_COMPLETE)`;
-													endif
-												else if (EACCESS) then (yes)
+												else (no)
+													:Call `setFlags(E_EXEC_CREATED)`;
+												endif
+												:Call `openFile(requestHandler, LocationConfig)` with `O_CREATE` and `O_TRUNC` flag;
+												if (EACCESS) then (yes)
 													:Throw HTTPError(500);
 													#red:(E)
 													detach
-												else if (ENOENT) then (no)
+												else (no)
+												endif
+												if (ENOENT) then (no)
 													:Throw HTTPError(500);
 													#red:(E)
 													detach
-												else (yes)
-													if (`createFullPutPath` is set in `LocationConfig`) then (yes)
-														:Call `openFile(request, LocationConfig)` with `O_CREAT` flag;
-														if (fd > 0) then (yes)
-															:Call `setFlags(E_EXEC_FILE_OPENED)`;
-															:Call `setFlags(E_EXEC_CREATED)`;
-															if (`bodyReceived` < `Content-Length`) then (yes)
-																:Call `writeChunk(fd, requestHandler)`;
-																if (wr > 0) then (yes)
-																	:Update `bodyReceived`;
-																else (no)
-																	:Throw HTTPError(500);
-																	#red:(E)
-																	detach
-																endif
-															else (no)
-																:Call `setFlags(E_EXEC_COMPLETE)`;
-															endif
-														else (no)
-															:Throw HTTPError(500);
-															#red:(E)
-															detach
-														endif
+												else (no)
+												endif
+												:Call `setFlags(E_EXEC_FILE_OPENED)`;
+											else (yes)
+												if (`bodyReceived` < `Content-Length`) then (yes)
+													:Call `writeChunk(fd, requestHandler)`;
+													if (wr > 0) then (yes)
+														:Update `bodyReceived`;
 													else (no)
 														:Throw HTTPError(500);
 														#red:(E)
 														detach
 													endif
+												else (no)
+													:Call `setFlags(E_EXEC_COMPLETE)`;
 												endif
-											else (yes)
 											endif
-										else (no)
+										else (yes)
 											:Throw HTTPError(409);
 											#red:(E)
 											detach
@@ -739,8 +717,8 @@ start
 											detach
 										else (no)
 										endif
-										if (isFile(path)) then (yes)
-											:Call `deleteFile(filePath)`;
+										if (isDirectory(path)) then (yes)
+											:Call `deleteDirectory(dirPath)`;
 											if (successfully deleted?) then (yes)
 												:Call `setFlags(E_EXEC_NOCONTENT)`;
 											else if (EACCESS) then (yes)
@@ -757,7 +735,7 @@ start
 												detach
 											endif
 										else (no)
-											:Call `deleteDirectory(dirPath)`;
+											:Call `deleteFile(filePath)`;
 											if (successfully deleted?) then (yes)
 												:Call `setFlags(E_EXEC_NOCONTENT)`;
 											else if (EACCESS) then (yes)
