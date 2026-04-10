@@ -162,7 +162,7 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
  * @param request [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-void ExecutionHandler::executeCGI(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeCGI(RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
 	(void)locationConfig;
@@ -227,7 +227,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 		{
 			openFile(requestHandler, locationConfig);
 			int fileSize = getFileSize(absPath);
-			response.addHeader("Content-Length", common::core::utils::toString(fileSize)); // k m g ?
+			response.addHeader("Content-Length", common::core::utils::toString(fileSize));
 			std::string ext = getFileExtension(absPath);
 			const t_MimeTypes &types = locationConfig.getTypes();
 			t_MimeTypes::const_iterator mimeIt = types.find(ext);
@@ -278,8 +278,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 				{
 					openFile(requestHandler, locationConfig);
 					int fileSize = getFileSize(indexPath);
-					response.addHeader("Content-Length", common::core::utils::toString(fileSize)); // set content-length for index file  // k m g ?
-					std::string ext = getFileExtension(indexPath);
+					response.addHeader("Content-Length", common::core::utils::toString(fileSize)); // set content-length for index file  
 					const t_MimeTypes &types = locationConfig.getTypes();
 					t_MimeTypes::const_iterator mimeIt = types.find(ext);
 					if (mimeIt != types.end())
@@ -348,20 +347,6 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 /**
  * @brief [TODO:description]
  *
- * @param request [TODO:parameter]
- * @param response [TODO:parameter]
- * @param locationConfig [TODO:parameter]
- */
-void ExecutionHandler::executePOST(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
-{
-	(void)requestHandler;
-	(void)responseHandler;
-	(void)locationConfig;
-}
-
-/**
- * @brief [TODO:description]
- *
  * @param requestHandler [TODO:parameter]
  * @param responseHandler [TODO:parameter]
  * @param locationConfig [TODO:parameter]
@@ -402,7 +387,7 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
  * 
  */
 
-void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executePUT(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
 	(void)responseHandler;
@@ -416,7 +401,7 @@ void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const Re
  * @param response [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeDELETE(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
 	(void)responseHandler;

@@ -48,7 +48,7 @@ class ExecutionHandler
 		int								getFlags() const;
 
 		void							execute(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
-		void							executeCGI(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							executeCGI(RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 		void							executeRequest(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 
 	private:
@@ -59,7 +59,7 @@ class ExecutionHandler
 		t_raw							_autoindexBuffer;
 
 		void							executeHEADorGET(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
-		void							executePOST(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 		void							executeDELETE(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executePUT(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 
