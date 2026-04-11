@@ -57,8 +57,8 @@ class Request
 		void							setHeaders(const t_Headers &headers);
 		const HTTPheaders::HTTPHeader	&findHeader(const std::string &headerName, const std::string &headerValue) const;
 		void							addHeader(const std::string &headerName, const std::string &headerValue);
-		e_RequestFlags					getFlags() const;
-		void							setFlags(const e_RequestFlags flags);
+		int								getFlags() const;
+		void							setFlags(const int flags);
 
 	private:
 		t_Logger						_logger;

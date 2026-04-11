@@ -148,14 +148,6 @@ void ResponseHandler::buildHeadersResponse(const client::Request &request)
 }
 
 /**
- * @brief Appends the response body bytes to the outgoing buffer.
- */
-void ResponseHandler::buildBodyResponse()
-{
-
-}
-
-/**
  * @brief [TODO:description]
  *
  * @param httpVersion [TODO:parameter]

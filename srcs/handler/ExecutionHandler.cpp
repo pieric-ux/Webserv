@@ -6,18 +6,6 @@
  */
 
 #include <webserv/handler/ExecutionHandler.hpp>
-#include <webserv/client/HTTPError.hpp>
-#include <webserv/status/StatusCodeRegistry.hpp>
-#include <common/core/utils/Directory.hpp>
-#include <common/core/utils/fileUtils.hpp>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <cstdio>
-#include <cstring>
 
 namespace webserv
 {
@@ -454,6 +442,7 @@ void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const
 		deleteFile(absPath);
 
 	setFlags(getFlags() | E_EXEC_NOCONTENT);
+	setFlags(getFlags() | E_EXEC_COMPLETE);
 }
 
 /**
@@ -568,6 +557,7 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 	if (rd == 0)
 	{
 		setFlags(getFlags() | E_EXEC_COMPLETE);
+		_fd.reset();
 		DEBUG(_logger, "readChunk: EOF on fd=" + common::core::utils::toString(_fd.get()));
 		return ;
 	}
@@ -603,7 +593,11 @@ void ExecutionHandler::writeChunk(const handler::RequestHandler &requestHandler)
 	}
 
 	std::size_t		remaining = std::stoul(it->second.front().getValue()) - offset;
+	std::size_t		available = buf.size() > offset ? buf.size() - offset : 0;
+	if (available == 0)
+		return ;
 	std::size_t		toWrite = remaining < config::DefaultConfig::BUFFER_SIZE ? remaining : config::DefaultConfig::BUFFER_SIZE;
+	toWrite = toWrite < available ? toWrite : available;
 	ssize_t			wr;
 
 	wr = ::write(_fd.get(), &buf[offset], toWrite);
@@ -613,7 +607,10 @@ void ExecutionHandler::writeChunk(const handler::RequestHandler &requestHandler)
 		_bodyReceived += wr;
 		DEBUG(_logger, "writeChunk: wrote " + common::core::utils::toString(wr) + " bytes to fd=" + common::core::utils::toString(_fd.get()));
 		if (_bodyReceived >= static_cast<ssize_t>(std::stoul(it->second.front().getValue())))
+		{
 			setFlags(getFlags() | E_EXEC_COMPLETE);
+			_fd.reset();
+		}
 		return ;
 	}
 	ERROR(_logger, "writeChunk: write() failed on fd=" + common::core::utils::toString(_fd.get()));

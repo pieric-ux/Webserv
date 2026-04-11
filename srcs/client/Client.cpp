@@ -6,6 +6,7 @@
  */
 
 #include "webserv/client/Response.hpp"
+#include "webserv/handler/ExecutionHandler.hpp"
 #include <webserv/client/Client.hpp>
 
 namespace webserv
@@ -328,7 +329,47 @@ void	Client::receiveData()
  */
 void Client::sendData()
 {
+	const t_raw &buf = _responseHandler.getBufferResponse();
+	if (buf.empty())
+		return;
 
+	ssize_t sd;
+	try
+	{
+		sd = _socket.send(&buf[0], buf.size());
+	}
+	catch (const std::exception &e)
+	{
+		try {
+			t_AddrPortPair addr = common::core::net::getNameInfo(this->getSockaddrStorage());
+			DEBUG(_logger, "send error to " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(this->getSocket().getFd())
+				+ ": " + std::string(e.what()));
+		} catch (const std::exception &e) {
+			WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+		}
+		_status = E_CLI_DISCONNECTED;
+		return;
+	}
+
+	DEBUG(_logger, "Sent " + common::core::utils::toString(sd) + " bytes to fd="
+		+ common::core::utils::toString(this->getSocket().getFd()));
+
+	_responseHandler.eraseBufferResponseFront(static_cast<std::size_t>(sd));
+
+	int flags = _responseHandler.getResponse().getFlags();
+	if (!(flags & E_RESP_HEADERS_SENT))
+		_responseHandler.getResponse().setFlags(flags | E_RESP_HEADERS_SENT);
+
+	if (_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
+	{
+		const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath());
+		_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
+
+		_requestHandler.getParser().setFlags(0);
+		_requestHandler.getRequest().setFlags(0);
+		_responseHandler.getResponse().setFlags(0);
+		_executionHandler.setFlags(0);
+	}
 }
 
 
@@ -370,15 +411,6 @@ void Client::processHTTPCycle()
 			_responseHandler.buildHeadersResponse(_requestHandler.getRequest());
 		} catch (const HTTPError &e) {
 			INFO(_logger, "While preparing response headers: " + std::string(e.what()));
-			setHTTPError(e);
-			setStatus(E_CLI_ERR_PARSING);
-			return ;
-		}
-	if (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT && _responseHandler.getBufferResponse().size() > 0)
-		try{
-			_responseHandler.buildBodyResponse();
-		} catch (const HTTPError &e) {
-			INFO(_logger, "While preparing response body: " + std::string(e.what()));
 			setHTTPError(e);
 			setStatus(E_CLI_ERR_PARSING);
 			return ;

@@ -11,6 +11,7 @@
 #include <ctime>
 #include <common/common.hpp>
 #include <webserv/client/Client.hpp>
+#include <webserv/client/Request.hpp>
 #include <webserv/types.hpp>
 
 namespace webserv

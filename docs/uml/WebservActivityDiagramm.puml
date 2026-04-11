@@ -121,7 +121,7 @@ start
 					detach
 				else (E_REQUEST)
 				endif
-				if (`bufferResquest` is not empty) then (yes)
+				if ((`bufferResquest` is not empty OR `E_REQ_HEADERS_VALIDATED` is set) AND `E_EXEC_COMPLETE` is not set) then (yes)
 					| __Client__ |
 					:Call `processHTTPCycle()`;
 					if (`E_REQ_HEADERS_VALIDATED` is set) then (no)
@@ -808,13 +808,6 @@ start
 								:Add final CRLF after headers;
 					else (yes)
 					endif
-					| __Client__ |
-					if (E_RESP_HEADERS_SENT is set AND `bufferResponse` is not empty) then (yes)
-						| __ResponseHandler__ |
-						:Call `buildBodyResponse()`;
-						:Append `body` to `bufferResponse`;
-					else (no)
-					endif
 				else (no)
 				endif
 			else (yes)
@@ -823,14 +816,14 @@ start
 			if (`E_OUT` is set for `TcpClient`) then (yes)
 				| __Client__ |
 				:Call `sendData()` with `bufferResponse`;
+				:Call `eraseBufferResponseFront()`;
 				if (`E_RESP_HEADERS_SENT is NOT set) then (yes)
 					:Call `setFlags(E_RESP_HEADERS_SENT)`;
 				else (no)
 				endif
 				if (`E_EXEC_COMPLETE` is set) then (yes)
 					:Update `effectiveKeepaliveTimeout` = `locationConfig.keepAliveTimeout`;
-					:Call `resetAllFlags()`;
-					:Call `clearBufferResponse()`;
+					:Reset all flags for Parser, Request, Response and ExecutionHanlder;
 				else (no)
 				endif
 			else (no)

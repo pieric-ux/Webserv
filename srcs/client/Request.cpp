@@ -289,7 +289,7 @@ void Request::addHeader(const std::string &headerName, const std::string &header
  *
  * @return [TODO:return]
  */
-e_RequestFlags Request::getFlags() const
+int	Request::getFlags() const
 {
 	return _flags;
 }
@@ -299,9 +299,9 @@ e_RequestFlags Request::getFlags() const
  *
  * @param flags [TODO:parameter]
  */
-void Request::setFlags(const e_RequestFlags flags)
+void	Request::setFlags(const int flags)
 {
-	_flags = flags;
+	_flags = static_cast<e_RequestFlags>(flags);
 }
 
 } // !client

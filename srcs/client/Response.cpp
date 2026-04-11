@@ -175,7 +175,7 @@ void	Response::addHeader(const std::string &headerName, const std::string &heade
  *
  * @return [TODO:return]
  */
-e_ResponseFlags Response::getFlags() const
+int	Response::getFlags() const
 {
 	return _flags;
 }
@@ -185,9 +185,9 @@ e_ResponseFlags Response::getFlags() const
  *
  * @param flags [TODO:parameter]
  */
-void Response::setFlags(const e_ResponseFlags flags)
+void	Response::setFlags(const int flags)
 {
-	_flags = flags;
+	_flags = static_cast<e_ResponseFlags>(flags);
 }
 
 } // !client
