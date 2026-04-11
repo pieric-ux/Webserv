@@ -179,6 +179,7 @@ void ResponseHandler::buildHeadersResponse(const client::Request &request, int e
 
 	unsigned char crlf[] = {'\r', '\n'};
 	appendToBufferResponse(t_raw(crlf, crlf + 2));
+	_response.setFlags(client::E_RESP_HEADERS_SENT);
 	DEBUG(_logger, "buildHeadersResponse: headers serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
 }
 

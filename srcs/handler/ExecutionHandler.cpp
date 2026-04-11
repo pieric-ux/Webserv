@@ -784,7 +784,7 @@ bool	ExecutionHandler::isDirectory(const std::string &path)
  */
 std::string ExecutionHandler::generateAutoindexHTML(const std::string &dirPath)
 {
-	std::string html = "#!DOCTYPE html><html><head><title>Index of "
+	std::string html = "<html><head><title>Index of "
 						+ dirPath
 						+ "</title></head><body><h1>Index of "
 						+ dirPath
