@@ -5,8 +5,6 @@
  * @brief [TODO:description]
  */
 
-#include "webserv/client/Response.hpp"
-#include "webserv/handler/ExecutionHandler.hpp"
 #include <webserv/client/Client.hpp>
 
 namespace webserv
@@ -333,7 +331,6 @@ void Client::buildErrorResponse()
 		return ;
 	INFO(_logger, "Building error response: " + std::string(_HTTPError.what()));
 	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
-	_responseHandler.getResponse().setFlags(E_RESP_HEADERS_SENT);
 }
 
 /**
@@ -374,6 +371,24 @@ void Client::sendData()
 
 	if (_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
 	{
+		t_Headers::const_iterator it = _requestHandler.getRequest().getHeaders().find("Connection");
+		const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+		if (it != _requestHandler.getRequest().getHeaders().end())
+		{
+			std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
+			for (; lit != headerList.end(); ++lit)
+			{
+				if (lit->getName() == "Connection")
+				{
+					if (lit->getValue() == "close")
+					{
+						DEBUG(_logger, "client Connection=close, closing connection");
+						setStatus(E_CLI_DISCONNECTED);
+					}
+				}
+			}
+		}
+		
 		const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath());
 		_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
 
