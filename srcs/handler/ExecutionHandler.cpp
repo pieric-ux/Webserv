@@ -163,6 +163,14 @@ void ExecutionHandler::setAutoindexBuffer(const t_raw &buffer)
  */
 void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
+	const config::Return &redirect = locationConfig.getRedirect();
+	if (redirect.statusCode.getCode() != 0)
+	{
+		INFO(_logger, "execute: return directive " + common::core::utils::toString(redirect.statusCode.getCode())
+			+ (redirect.url.empty() ? "" : " -> " + redirect.url));
+		throw client::HTTPError(redirect.statusCode.getCode(), redirect.url);
+	}
+
 	if (locationConfig.getEnableCGI())
 	{
 		std::string ext = getFileExtension(requestHandler.getRequest().getAbsolutePath());
@@ -249,7 +257,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 		if (absPath[absPath.size() - 1] != '/')
 		{
 			INFO(_logger, "executeHEADorGET: directory without trailing slash, 301 redirect");
-			throw client::HTTPError(301);
+			throw client::HTTPError(301, request.getRequestTarget() + "/");
 		}
 
 		// index
@@ -380,7 +388,7 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
 		if (absPath == root + '/')
 			throw client::HTTPError(403);
 		if (absPath[absPath.size() - 1] != '/')
-			throw client::HTTPError(301);
+			throw client::HTTPError(301, requestHandler.getRequest().getRequestTarget() + "/");
 		
 		const t_Index &indexes = locationConfig.getIndex();
 

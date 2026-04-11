@@ -261,6 +261,9 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 
 	_response.addHeader("Connection", "close");
 
+	if (!error.getLocation().empty())
+		_response.addHeader("Location", error.getLocation());
+
 	std::string errorBody =	"<html><head><title>"
 						+ common::core::utils::toString(error.getStatusCode().getCode())
 						+ " "

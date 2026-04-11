@@ -36,6 +36,16 @@ HTTPError::HTTPError(unsigned short code)
 	INFO(_logger, "HTTPError instance created: " + _what);
 }
 
+HTTPError::HTTPError(unsigned short code, const std::string &location)
+	:	_statusCode(status::StatusCodeRegistry::getInstance().getStatusCode(code)),
+		_what(common::core::utils::toString(code) + " " + _statusCode.getMessage() + ": " + _statusCode.getDescription()),
+		_location(location)
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
+	_logger->setLevel(log42::logRecord::DEBUG);
+	INFO(_logger, "HTTPError instance created: " + _what + " -> " + _location);
+}
+
 /**
  * @brief [TODO:description]
  */
@@ -49,7 +59,8 @@ HTTPError::~HTTPError() throw() {}
 HTTPError::HTTPError(const HTTPError &rhs)
 	:	std::exception(rhs),
 		_statusCode(rhs._statusCode),
-		_what(rhs._what)
+		_what(rhs._what),
+		_location(rhs._location)
 {}
 
 /**
@@ -65,6 +76,7 @@ HTTPError &HTTPError::operator=(const HTTPError &rhs)
 		std::exception::operator=(rhs);
 		_statusCode = rhs._statusCode;
 		_what = rhs._what;
+		_location = rhs._location;
 	}
 	return (*this);
 }
@@ -97,6 +109,11 @@ status::StatusCode HTTPError::getStatusCode() const
 void HTTPError::setStatusCode(const status::StatusCode &statusCode)
 {
 	_statusCode = statusCode;
+}
+
+const std::string &HTTPError::getLocation() const
+{
+	return _location;
 }
 
 /**
