@@ -6,7 +6,12 @@
  */
 
 #include <webserv/handler/ResponseHandler.hpp>
+#include <webserv/handler/ExecutionHandler.hpp>
+#include <webserv/client/HTTPError.hpp>
+#include <webserv/parser/Parser.hpp>
+#include <webserv/status/StatusCodeRegistry.hpp>
 #include <sstream>
+#include <ctime>
 
 namespace webserv
 {
@@ -142,13 +147,43 @@ void ResponseHandler::eraseBufferResponseFront(std::size_t n)
  *
  * @param request [TODO:parameter]
  */
-void ResponseHandler::buildHeadersResponse(const client::Request &request)
+void ResponseHandler::buildHeadersResponse(const client::Request &request, int execFlags, int parsFlags)
 {
-	(void)request;
+	DEBUG(_logger, "buildHeadersResponse: execFlags=0x" + common::core::utils::toString(execFlags)
+		+ " parsFlags=0x" + common::core::utils::toString(parsFlags));
+	
+	// set status codes
+	if (execFlags & E_EXEC_CREATED)
+		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(201));
+	else if (execFlags & E_EXEC_NOCONTENT)
+		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(204));
+	else if (_response.getStatusCode().getCode() == 0)
+		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(200));
+	DEBUG(_logger, "buildHeadersResponse: status code set to " + common::core::utils::toString(_response.getStatusCode().getCode()));
+	
+	buildStatusLine(request.getHttpVersion(), _response.getStatusCode(), _response.getStatusCode().getMessage());
+	buildHeaders(request, parsFlags);
+
+	//append headers to bufferReponse
+	const t_Headers &headers = _response.getHeaders();
+	for (t_Headers::const_iterator it = headers.begin(); it != headers.end(); ++it)
+	{
+		const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+		for (std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin(); lit != headerList.end(); ++lit)
+		{
+			std::string headerLine = lit->getName() + ": " + lit->getValue() + "\r\n";
+			appendToBufferResponse(t_raw(headerLine.begin(), headerLine.end()));
+			DEBUG(_logger, "buildHeadersResponse: header added to buffer: " + headerLine);
+		}
+	}
+
+	unsigned char crlf[] = {'\r', '\n'};
+	appendToBufferResponse(t_raw(crlf, crlf + 2));
+	DEBUG(_logger, "buildHeadersResponse: headers serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
 }
 
 /**
- * @brief Appends the response body bytes to the outgoing buffer.
+ * @todo TODO: to remove?
  */
 void ResponseHandler::buildBodyResponse()
 {
@@ -164,9 +199,15 @@ void ResponseHandler::buildBodyResponse()
  */
 void ResponseHandler::buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase)
 {
-	(void)httpVersion;
-	(void)statusCode;
-	(void)reasonPhrase;
+	//status-line = HTTP-version SP status-code SP [ reason-phrase ]
+	std::string statusLine = httpVersion
+							+ " "
+							+ common::core::utils::toString(statusCode.getCode())
+							+ " "
+							+ reasonPhrase
+							+ "\r\n";
+	DEBUG(_logger, "buildStatusLine: " + httpVersion + " " + common::core::utils::toString(statusCode.getCode()) + " " + reasonPhrase);
+	appendToBufferResponse(t_raw(statusLine.begin(), statusLine.end()));
 }
 
 /**
@@ -174,9 +215,89 @@ void ResponseHandler::buildStatusLine(const std::string &httpVersion, const stat
  *
  * @param request [TODO:parameter]
  */
-void ResponseHandler::buildHeaders(const client::Request &request)
+void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags)
 {
-	(void)request;
+	DEBUG(_logger, "buildHeaders: building response headers");
+	_response.addHeader("Server", "webserv/1.0");
+
+	std::time_t t = std::time(NULL);
+	std::tm tm = *std::gmtime(&t);
+	char dateStr[100];
+	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S GMT", &tm);
+	_response.addHeader("Date", dateStr);
+
+	// E_PARS_CONNECTION is set
+	// assign connection header with same value
+	if (parsFlags & parser::E_PARS_CONNECTION)
+	{
+		const HTTPheaders::HTTPHeader &connHeader = request.findHeader("Connection", "");
+		DEBUG(_logger, "buildHeaders: E_PARS_CONNECTION set, client Connection=" + connHeader.getValue());
+		if (connHeader.getValue() == "close")
+			_response.addHeader("Connection", "close");
+		else if (connHeader.getValue() == "keep-alive")
+			_response.addHeader("Connection", "keep-alive");
+	}
+	else 
+	{
+		DEBUG(_logger, "buildHeaders: no Connection header from client, defaulting based on " + request.getHttpVersion());
+		if (request.getHttpVersion() == "HTTP/1.1")
+			_response.addHeader("Connection", "keep-alive");
+		else
+			_response.addHeader("Connection", "close");
+	}
+}
+
+void ResponseHandler::buildErrorResponse(const client::Request &request, const client::HTTPError &error)
+{
+	DEBUG(_logger, "buildErrorResponse: building error response for " + common::core::utils::toString(error.getStatusCode().getCode()) + " " + error.getStatusCode().getMessage());
+
+	_response.setStatusCode(error.getStatusCode());
+	DEBUG(_logger, "buildErrorResponse: status code set to " + common::core::utils::toString(_response.getStatusCode().getCode()));
+
+	buildStatusLine(request.getHttpVersion(), _response.getStatusCode(), _response.getStatusCode().getMessage());
+
+	_response.addHeader("Connection", "close");
+
+	std::string errorBody =	"<html><head><title>"
+						+ common::core::utils::toString(error.getStatusCode().getCode())
+						+ " "
+						+ error.getStatusCode().getMessage()
+						+ "</title></head>"
+						"<body><h1>"
+						+ common::core::utils::toString(error.getStatusCode().getCode())
+						+ " "
+						+ error.getStatusCode().getMessage()
+						+ "</h1><p>"
+						+ std::string(error.what())
+						+ "</p></body></html>";
+	DEBUG(_logger, "buildErrorResponse: error errorBody generated, size=" + common::core::utils::toString(errorBody.size()));
+
+	_response.addHeader("Content-Length", common::core::utils::toString(errorBody.size()));
+	_response.addHeader("Content-Type", "text/html");
+	_response.addHeader("Server", "webserv/1.0");
+
+	std::time_t t = std::time(NULL);
+	std::tm tm = *std::gmtime(&t);
+	char dateStr[100];
+	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S GMT", &tm);
+	_response.addHeader("Date", dateStr);
+
+	const t_Headers &headers = _response.getHeaders();
+	for (t_Headers::const_iterator it = headers.begin(); it != headers.end(); ++it)
+	{
+		const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+		for (std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin(); lit != headerList.end(); ++lit)
+		{
+			std::string headerLine = lit->getName() + ": " + lit->getValue() + "\r\n";
+			appendToBufferResponse(t_raw(headerLine.begin(), headerLine.end()));
+			DEBUG(_logger, "buildErrorResponse: header added to buffer: " + headerLine);
+		}
+	}
+	unsigned char crlf[] = {'\r', '\n'};
+	appendToBufferResponse(t_raw(crlf, crlf + 2));
+	appendToBufferResponse(t_raw(errorBody.begin(), errorBody.end()));
+	DEBUG(_logger, "buildErrorResponse: headers and body serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
+
 }
 
 } // !handler

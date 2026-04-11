@@ -180,7 +180,8 @@ void	ClientHandler::processClients()
 		}
 		else
 		{
-			WARNING(_logger, "Skipping receive/prepare for " + clientAddr + " (parsing error)");
+			client.buildErrorResponse();
+			INFO(_logger, "Built error response for client " + clientAddr);
 		}
 		if (events & common::core::io::IEventIO::E_OUT)
 			client.sendData();
