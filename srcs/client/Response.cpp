@@ -121,6 +121,10 @@ const t_Headers &Response::getHeaders() const
 	return _headers;
 }
 
+t_Headers &Response::getHeaders()
+{
+	return _headers;
+}
 /**
  * @brief [TODO:description]
  *

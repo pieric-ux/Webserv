@@ -80,6 +80,8 @@ class Client
 		HTTPError							_HTTPError;
 		std::time_t							_lastActivityTime;
 		std::time_t							_effectiveKeepaliveTimeout;
+
+		void								resetAll();
 };
 
 } // !client
