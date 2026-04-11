@@ -6,6 +6,7 @@
  */
 
 #include <webserv/handler/ResponseHandler.hpp>
+#include <webserv/handler/ExecutionHandler.hpp>
 
 namespace webserv
 {
