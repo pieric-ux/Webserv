@@ -555,10 +555,6 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 	unsigned char	buf[config::DefaultConfig::BUFFER_SIZE];
 	ssize_t			rd;
 
-	DEBUG(_logger, "sizeof(buf)=" + common::core::utils::toString(sizeof(buf)));
-	std::ostringstream oss;
-	oss << buf;
-	DEBUG(_logger, "buf (as osstream)=\"" + common::core::utils::toString(oss.str().size()) + "\"");
 	rd = ::read(_fd.get(), buf, sizeof(buf));
 	if (rd > 0)
 	{
