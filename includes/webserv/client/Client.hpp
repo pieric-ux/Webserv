@@ -65,6 +65,7 @@ class Client
 		void								receiveData();
 		void								sendData();
 		void								processHTTPCycle();
+		void								buildErrorResponse();
 
 	private:
 		t_Logger							_logger;

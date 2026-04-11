@@ -23,6 +23,7 @@ class HTTPError : public std::exception
 	public:
 		HTTPError();
 		explicit HTTPError(unsigned short code);
+		HTTPError(unsigned short code, const std::string &location);
 		virtual ~HTTPError() throw();
 
 		HTTPError(const HTTPError &rhs);
@@ -32,12 +33,14 @@ class HTTPError : public std::exception
 
 		status::StatusCode		getStatusCode() const;
 		void					setStatusCode(const status::StatusCode &statusCode);
+		const std::string		&getLocation() const;
 		const char				*what() const throw();
 
 	private:
 		t_Logger				_logger;
 		status::StatusCode		_statusCode;
 		std::string				_what;
+		std::string				_location;
 };
 
 } // !client

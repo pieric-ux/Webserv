@@ -135,7 +135,7 @@ t_Clients::iterator	ClientHandler::removeClient(client::Client &client)
  */
 void	ClientHandler::processClients()
 {
-	DEBUG(_logger, "Processing clients (" + common::core::utils::toString(_clients.size()) + " active)");
+	//DEBUG(_logger, "Processing clients (" + common::core::utils::toString(_clients.size()) + " active)");
 
 	std::time_t now = std::time(NULL);
 
@@ -180,7 +180,7 @@ void	ClientHandler::processClients()
 		}
 		else
 		{
-			WARNING(_logger, "Skipping receive/prepare for " + clientAddr + " (parsing error)");
+			client.buildErrorResponse();
 		}
 		if (events & common::core::io::IEventIO::E_OUT)
 			client.sendData();

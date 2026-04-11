@@ -324,12 +324,25 @@ void	Client::receiveData()
 }
 
 /**
+ * @brief Builds the HTTP error response from the stored HTTPError.
+ */
+void Client::buildErrorResponse()
+{
+	if (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT)
+		return ;
+	INFO(_logger, "Building error response: " + std::string(_HTTPError.what()));
+	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
+	_responseHandler.getResponse().setFlags(E_RESP_HEADERS_SENT);
+}
+
+/**
  * @brief [TODO:description]
  */
 void Client::sendData()
 {
 
 }
+
 
 
 /**
@@ -367,7 +380,7 @@ void Client::processHTTPCycle()
 		}
 	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED && !(_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT))
 		try{
-			_responseHandler.buildHeadersResponse(_requestHandler.getRequest());
+			_responseHandler.buildHeadersResponse(_requestHandler.getRequest(), _executionHandler.getFlags(), _requestHandler.getParser().getFlags());
 		} catch (const HTTPError &e) {
 			INFO(_logger, "While preparing response headers: " + std::string(e.what()));
 			setHTTPError(e);
