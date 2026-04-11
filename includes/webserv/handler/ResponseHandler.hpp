@@ -12,6 +12,7 @@
 #include <string>
 #include <webserv/client/Response.hpp>
 #include <webserv/client/Request.hpp>
+#include <webserv/client/HTTPError.hpp>
 #include <webserv/status/StatusCode.hpp>
 
 namespace webserv
@@ -37,7 +38,9 @@ class ResponseHandler
 		void					clearBufferResponse();
 		const t_raw				&getBufferResponse() const;
 		void					eraseBufferResponseFront(std::size_t n);
-		void					buildHeadersResponse(const client::Request &request);
+		void					buildHeadersResponse(const client::Request &request, int execFlags, int parsFlags);
+		void					buildBodyResponse();
+		void					buildErrorResponse(const client::Request &request, const client::HTTPError &error);
 
 	private:
 		t_Logger				_logger;
@@ -45,7 +48,7 @@ class ResponseHandler
 		t_raw					_bufferResponse;
 
 		void					buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase);
-		void					buildHeaders(const client::Request &request);
+		void					buildHeaders(const client::Request &request, int parsFlags);
 };
 
 } // !handler
