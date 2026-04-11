@@ -224,27 +224,35 @@ void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags
 	std::time_t t = std::time(NULL);
 	std::tm tm = *std::gmtime(&t);
 	char dateStr[100];
-	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S GMT", &tm);
+	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S %Z", &tm);
 	_response.addHeader("Date", dateStr);
 
 	// E_PARS_CONNECTION is set
 	// assign connection header with same value
 	if (parsFlags & parser::E_PARS_CONNECTION)
 	{
-		const HTTPheaders::HTTPHeader &connHeader = request.findHeader("Connection", "");
-		DEBUG(_logger, "buildHeaders: E_PARS_CONNECTION set, client Connection=" + connHeader.getValue());
-		if (connHeader.getValue() == "close")
-			_response.addHeader("Connection", "close");
-		else if (connHeader.getValue() == "keep-alive")
-			_response.addHeader("Connection", "keep-alive");
-	}
-	else 
-	{
-		DEBUG(_logger, "buildHeaders: no Connection header from client, defaulting based on " + request.getHttpVersion());
-		if (request.getHttpVersion() == "HTTP/1.1")
+		t_Headers::const_iterator it = request.getHeaders().find("Connection");
+		if (it == request.getHeaders().end())
 			_response.addHeader("Connection", "keep-alive");
 		else
-			_response.addHeader("Connection", "close");
+		{
+			const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+			std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
+			bool closeFlag = 0;
+			for (; lit != headerList.end(); ++lit)
+			{
+				if (lit->getName() == "Connection")
+				{
+					DEBUG(_logger, "buildHeaders: E_PARS_CONNECTION set, client Connection=" + lit->getValue());
+					if (lit->getValue() == "close")
+						closeFlag = 1;
+				}
+			}
+			if (closeFlag)
+				_response.addHeader("Connection", "close");
+			else
+				_response.addHeader("Connection", "keep-alive");
+		}
 	}
 }
 
@@ -275,7 +283,7 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 						+ " "
 						+ error.getStatusCode().getMessage()
 						+ "</h1><p>"
-						+ std::string(error.what())
+						+ error.getStatusCode().getDescription()
 						+ "</p></body></html>";
 	DEBUG(_logger, "buildErrorResponse: error errorBody generated, size=" + common::core::utils::toString(errorBody.size()));
 
@@ -286,7 +294,7 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 	std::time_t t = std::time(NULL);
 	std::tm tm = *std::gmtime(&t);
 	char dateStr[100];
-	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S GMT", &tm);
+	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S %Z", &tm);
 	_response.addHeader("Date", dateStr);
 
 	const t_Headers &headers = _response.getHeaders();
