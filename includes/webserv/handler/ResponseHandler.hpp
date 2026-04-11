@@ -39,7 +39,6 @@ class ResponseHandler
 		const t_raw				&getBufferResponse() const;
 		void					eraseBufferResponseFront(std::size_t n);
 		void					buildHeadersResponse(const client::Request &request, int execFlags, int parsFlags);
-		void					buildBodyResponse();
 		void					buildErrorResponse(const client::Request &request, const client::HTTPError &error);
 
 	private:
