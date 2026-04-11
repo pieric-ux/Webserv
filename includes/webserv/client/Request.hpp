@@ -54,6 +54,7 @@ class Request
 		std::string						getQuery() const;
 		void							setQuery(const std::string &query);
 		const t_Headers					&getHeaders() const;
+		t_Headers						&getHeaders();
 		void							setHeaders(const t_Headers &headers);
 		const HTTPheaders::HTTPHeader	&findHeader(const std::string &headerName, const std::string &headerValue) const;
 		void							addHeader(const std::string &headerName, const std::string &headerValue);

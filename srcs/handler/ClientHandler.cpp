@@ -178,13 +178,11 @@ void	ClientHandler::processClients()
 		}
 		else
 		{
+			DEBUG(_logger, "Client " + clientAddr + " in error state, building error response");
 			client.buildErrorResponse();
 		}
 		if (events & common::core::io::IEventIO::E_OUT)
-		{
-			DEBUG(_logger, "Ready to send data to " + clientAddr);
 			client.sendData();
-		}
 		++it;
 	}
 }

@@ -254,8 +254,6 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 		httpVersion = "HTTP/1.1";
 	buildStatusLine(httpVersion, _response.getStatusCode(), _response.getStatusCode().getMessage());
 
-	_response.addHeader("Connection", "close");
-
 	if (!error.getLocation().empty())
 		_response.addHeader("Location", error.getLocation());
 

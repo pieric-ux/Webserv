@@ -333,6 +333,19 @@ void Client::buildErrorResponse()
 	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
 }
 
+void Client::resetAll()
+{
+	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath());
+	_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
+
+	_requestHandler.getRequest().getHeaders().clear();
+	_responseHandler.getResponse().getHeaders().clear();
+	_requestHandler.getParser().setFlags(0);
+	_requestHandler.getRequest().setFlags(0);
+	_responseHandler.getResponse().setFlags(0);
+	_executionHandler.setFlags(0);
+}
+
 /**
  * @brief [TODO:description]
  */
@@ -340,7 +353,10 @@ void Client::sendData()
 {
 	const t_raw &buf = _responseHandler.getBufferResponse();
 	if (buf.empty())
+	{
+		resetAll();
 		return;
+	}
 
 	ssize_t sd;
 	try
@@ -388,14 +404,7 @@ void Client::sendData()
 				}
 			}
 		}
-		
-		const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath());
-		_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
-
-		_requestHandler.getParser().setFlags(0);
-		_requestHandler.getRequest().setFlags(0);
-		_responseHandler.getResponse().setFlags(0);
-		_executionHandler.setFlags(0);
+		resetAll(); 
 	}
 }
 
