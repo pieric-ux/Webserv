@@ -5,7 +5,6 @@
  * @brief [TODO:description]
  */
 
-#include "webserv/client/Response.hpp"
 #include <webserv/client/Client.hpp>
 
 namespace webserv
@@ -332,7 +331,6 @@ void Client::buildErrorResponse()
 		return ;
 	INFO(_logger, "Building error response: " + std::string(_HTTPError.what()));
 	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
-	_responseHandler.getResponse().setFlags(E_RESP_HEADERS_SENT);
 }
 
 /**
@@ -340,7 +338,65 @@ void Client::buildErrorResponse()
  */
 void Client::sendData()
 {
+	const t_raw &buf = _responseHandler.getBufferResponse();
+	if (buf.empty())
+		return;
 
+	ssize_t sd;
+	try
+	{
+		sd = _socket.send(&buf[0], buf.size());
+	}
+	catch (const std::exception &e)
+	{
+		try {
+			t_AddrPortPair addr = common::core::net::getNameInfo(this->getSockaddrStorage());
+			DEBUG(_logger, "send error to " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(this->getSocket().getFd())
+				+ ": " + std::string(e.what()));
+		} catch (const std::exception &e) {
+			WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+		}
+		_status = E_CLI_DISCONNECTED;
+		return;
+	}
+
+	DEBUG(_logger, "Sent " + common::core::utils::toString(sd) + " bytes to fd="
+		+ common::core::utils::toString(this->getSocket().getFd()));
+
+	_responseHandler.eraseBufferResponseFront(static_cast<std::size_t>(sd));
+
+	int flags = _responseHandler.getResponse().getFlags();
+	if (!(flags & E_RESP_HEADERS_SENT))
+		_responseHandler.getResponse().setFlags(flags | E_RESP_HEADERS_SENT);
+
+	if (_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
+	{
+		t_Headers::const_iterator it = _requestHandler.getRequest().getHeaders().find("Connection");
+		const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+		if (it != _requestHandler.getRequest().getHeaders().end())
+		{
+			std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
+			for (; lit != headerList.end(); ++lit)
+			{
+				if (lit->getName() == "Connection")
+				{
+					if (lit->getValue() == "close")
+					{
+						DEBUG(_logger, "client Connection=close, closing connection");
+						setStatus(E_CLI_DISCONNECTED);
+					}
+				}
+			}
+		}
+		
+		const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath());
+		_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
+
+		_requestHandler.getParser().setFlags(0);
+		_requestHandler.getRequest().setFlags(0);
+		_responseHandler.getResponse().setFlags(0);
+		_executionHandler.setFlags(0);
+	}
 }
 
 
@@ -383,15 +439,6 @@ void Client::processHTTPCycle()
 			_responseHandler.buildHeadersResponse(_requestHandler.getRequest(), _executionHandler.getFlags(), _requestHandler.getParser().getFlags());
 		} catch (const HTTPError &e) {
 			INFO(_logger, "While preparing response headers: " + std::string(e.what()));
-			setHTTPError(e);
-			setStatus(E_CLI_ERR_PARSING);
-			return ;
-		}
-	if (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT && _responseHandler.getBufferResponse().size() > 0)
-		try{
-			_responseHandler.buildBodyResponse();
-		} catch (const HTTPError &e) {
-			INFO(_logger, "While preparing response body: " + std::string(e.what()));
 			setHTTPError(e);
 			setStatus(E_CLI_ERR_PARSING);
 			return ;

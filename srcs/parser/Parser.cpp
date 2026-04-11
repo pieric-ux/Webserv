@@ -60,7 +60,10 @@ t_Logger	Parser::getLogger()
 /**
  * @brief [TODO:description]
  */
-void Parser::setFlags(const int flags) { _flags = static_cast<e_ParserFlags>(flags); }
+void Parser::setFlags(const int flags) 
+{ 
+	_flags = static_cast<e_ParserFlags>(flags); 
+}
 
 /**
  * @brief [TODO:description]

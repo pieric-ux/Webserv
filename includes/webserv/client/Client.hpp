@@ -43,7 +43,7 @@ class Client
 		Client(const Client &rhs);
 		Client &operator=(const Client &rhs);
 
-		static t_Logger					getLogger() ;
+		static t_Logger						getLogger() ;
 
 		const common::core::net::TcpClient	&getSocket() const;
 		void								setSocket(const common::core::net::TcpClient &socket);

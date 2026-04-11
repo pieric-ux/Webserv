@@ -8,13 +8,18 @@
  * @brief [TODO:description]
  */
 
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <string>
+#include <common/common.hpp>
+#include <webserv/client/HTTPError.hpp>
 #include <webserv/client/Request.hpp>
 #include <webserv/client/Response.hpp>
-#include <webserv/handler/RequestHandler.hpp>
-#include <webserv/handler/ResponseHandler.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
+#include <webserv/handler/RequestHandler.hpp>
+#include <webserv/handler/ResponseHandler.hpp>
+#include <webserv/status/StatusCodeRegistry.hpp>
 #include <webserv/types.hpp>
 
 namespace webserv

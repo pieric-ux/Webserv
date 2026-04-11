@@ -5,11 +5,7 @@
  * @brief [TODO:description]
  */
 
-#include "common/core/io/IEventIO.hpp"
-#include "webserv/client/Client.hpp"
-#include "webserv/types.hpp"
 #include <webserv/handler/ClientHandler.hpp>
-#include <ctime>
 
 namespace webserv
 {
@@ -82,7 +78,7 @@ void	ClientHandler::setIoMultiplexer(const t_ioMultiplexer &ioMultiplexer)
 void	ClientHandler::addClient(const t_SocketPairClient &client, const config::ServerConfig &serverConfig)
 {
 	try{
-		_ioMultiplexer->add(client.first.getFd(), common::core::io::IEventIO::E_IN);
+		_ioMultiplexer->add(client.first.getFd(), static_cast<common::core::io::IEventIO::e_Event>(common::core::io::IEventIO::E_IN | common::core::io::IEventIO::E_OUT));
 	} catch (const std::exception &e) {
 		ERROR(_logger, "Failed to add client fd to io multiplexer: " + std::string(e.what()));
 		throw;
@@ -172,7 +168,9 @@ void	ClientHandler::processClients()
 				it = removeClient(client);
 				continue;
 			}
-			if (client.getRequestHandler().getBufferRequest().size() > 0)
+			if ((client.getRequestHandler().getBufferRequest().size() > 0
+					|| (client.getRequestHandler().getRequest().getFlags() & client::E_REQ_HEADERS_VALIDATED))
+				&& !(client.getExecutionHandler().getFlags() & E_EXEC_COMPLETE))
 			{
 				DEBUG(_logger, "Processing HTTPCycle for " + clientAddr);
 				client.processHTTPCycle();
@@ -183,7 +181,10 @@ void	ClientHandler::processClients()
 			client.buildErrorResponse();
 		}
 		if (events & common::core::io::IEventIO::E_OUT)
+		{
+			DEBUG(_logger, "Ready to send data to " + clientAddr);
 			client.sendData();
+		}
 		++it;
 	}
 }

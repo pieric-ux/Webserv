@@ -174,7 +174,7 @@ void RequestHandler::parseHeaders()
 	{
 		DEBUG(_logger, "parsing request line: \"" + line + "\"");
 		_parser.parseRequestLine(line, _request);
-		_request.setFlags(client::E_REQ_REQUEST_LINE);
+		_request.setFlags(_request.getFlags() | client::E_REQ_REQUEST_LINE);
 		DEBUG(_logger, "request line parsed: method=" + config::methodToStr(_request.getMethod()) + " target=" + _request.getRequestTarget());
 	}
 	if (_request.getFlags() & client::E_REQ_REQUEST_LINE)
@@ -193,7 +193,7 @@ void RequestHandler::parseHeaders()
 
 		buildAbsolutPath();
 
-		_request.setFlags(static_cast<client::e_RequestFlags>(_request.getFlags() | client::E_REQ_HEADERS_VALIDATED));
+		_request.setFlags(_request.getFlags() | client::E_REQ_HEADERS_VALIDATED);
 
 		INFO(_logger, "headers validated, remaining buffer=" + common::core::utils::toString(_bufferRequest.size()) + " bytes");
 	}
@@ -312,7 +312,7 @@ void RequestHandler::parseBody()
 	if (contentLength > maxBodySize)
 		throw client::HTTPError(413);
 
-	_request.setFlags(static_cast<client::e_RequestFlags>(_request.getFlags() | client::E_REQ_BODY_STARTED));
+	_request.setFlags(_request.getFlags() | client::E_REQ_BODY_STARTED);
 	DEBUG(_logger, "Body started, Content-Length=" + common::core::utils::toString(contentLength));
 }
 

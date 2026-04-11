@@ -6,12 +6,6 @@
  */
 
 #include <webserv/handler/ResponseHandler.hpp>
-#include <webserv/handler/ExecutionHandler.hpp>
-#include <webserv/client/HTTPError.hpp>
-#include <webserv/parser/Parser.hpp>
-#include <webserv/status/StatusCodeRegistry.hpp>
-#include <sstream>
-#include <ctime>
 
 namespace webserv
 {
@@ -179,16 +173,7 @@ void ResponseHandler::buildHeadersResponse(const client::Request &request, int e
 
 	unsigned char crlf[] = {'\r', '\n'};
 	appendToBufferResponse(t_raw(crlf, crlf + 2));
-	_response.setFlags(client::E_RESP_HEADERS_SENT);
 	DEBUG(_logger, "buildHeadersResponse: headers serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
-}
-
-/**
- * @todo TODO: to remove?
- */
-void ResponseHandler::buildBodyResponse()
-{
-
 }
 
 /**
