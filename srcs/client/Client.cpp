@@ -330,6 +330,7 @@ void Client::buildErrorResponse()
 {
 	if (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT)
 		return ;
+	INFO(_logger, "Building error response: " + std::string(_HTTPError.what()));
 	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
 	_responseHandler.getResponse().setFlags(E_RESP_HEADERS_SENT);
 }

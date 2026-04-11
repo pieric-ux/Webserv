@@ -254,7 +254,10 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 	_response.setStatusCode(error.getStatusCode());
 	DEBUG(_logger, "buildErrorResponse: status code set to " + common::core::utils::toString(_response.getStatusCode().getCode()));
 
-	buildStatusLine(request.getHttpVersion(), _response.getStatusCode(), _response.getStatusCode().getMessage());
+	std::string httpVersion = request.getHttpVersion();
+	if (httpVersion.empty())
+		httpVersion = "HTTP/1.1";
+	buildStatusLine(httpVersion, _response.getStatusCode(), _response.getStatusCode().getMessage());
 
 	_response.addHeader("Connection", "close");
 
