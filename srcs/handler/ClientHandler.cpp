@@ -168,9 +168,6 @@ void	ClientHandler::processClients()
 				it = removeClient(client);
 				continue;
 			}
-			//DEBUG(_logger, "buffer size: " + common::core::utils::toString(client.getRequestHandler().getBufferRequest().size()));
-			//DEBUG(_logger, "request flags: 0x" + common::core::utils::toString(client.getRequestHandler().getRequest().getFlags()));
-			//DEBUG(_logger, "exec flags: 0x" + common::core::utils::toString(client.getExecutionHandler().getFlags()));
 			if ((client.getRequestHandler().getBufferRequest().size() > 0
 					|| (client.getRequestHandler().getRequest().getFlags() & client::E_REQ_HEADERS_VALIDATED))
 				&& !(client.getExecutionHandler().getFlags() & E_EXEC_COMPLETE))
