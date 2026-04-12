@@ -333,19 +333,6 @@ void Client::buildErrorResponse()
 	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
 }
 
-void Client::resetAll()
-{
-	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath());
-	_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
-
-	_requestHandler.getRequest().getHeaders().clear();
-	_responseHandler.getResponse().getHeaders().clear();
-	_requestHandler.getParser().setFlags(0);
-	_requestHandler.getRequest().setFlags(0);
-	_responseHandler.getResponse().setFlags(0);
-	_executionHandler.setFlags(0);
-}
-
 /**
  * @brief [TODO:description]
  */
@@ -353,10 +340,7 @@ void Client::sendData()
 {
 	const t_raw &buf = _responseHandler.getBufferResponse();
 	if (buf.empty())
-	{
-		resetAll();
 		return;
-	}
 
 	ssize_t sd;
 	try
@@ -384,28 +368,6 @@ void Client::sendData()
 	int flags = _responseHandler.getResponse().getFlags();
 	if (!(flags & E_RESP_HEADERS_SENT))
 		_responseHandler.getResponse().setFlags(flags | E_RESP_HEADERS_SENT);
-
-	if (_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
-	{
-		t_Headers::const_iterator it = _requestHandler.getRequest().getHeaders().find("Connection");
-		const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
-		if (it != _requestHandler.getRequest().getHeaders().end())
-		{
-			std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
-			for (; lit != headerList.end(); ++lit)
-			{
-				if (lit->getName() == "Connection")
-				{
-					if (lit->getValue() == "close")
-					{
-						DEBUG(_logger, "client Connection=close, closing connection");
-						setStatus(E_CLI_DISCONNECTED);
-					}
-				}
-			}
-		}
-		resetAll(); 
-	}
 }
 
 
@@ -415,7 +377,6 @@ void Client::sendData()
  */
 void Client::processHTTPCycle()
 {
-	int method = _requestHandler.getRequest().getMethod();
 	if (!(_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED))
 		try{
 			_requestHandler.parseHeaders();
@@ -425,6 +386,7 @@ void Client::processHTTPCycle()
 			setStatus(E_CLI_ERR_PARSING);
 			return ;
 		}
+	int method = _requestHandler.getRequest().getMethod();
 	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED && (method == config::POST || method == config::PUT || method == config::DELETE))
 		try{
 			_requestHandler.parseBody();
@@ -443,7 +405,12 @@ void Client::processHTTPCycle()
 			setStatus(E_CLI_ERR_PARSING);
 			return ;
 		}
-	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED && !(_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT))
+	method = _requestHandler.getRequest().getMethod();
+	if ((_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED)
+		&& !(_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT)
+		&& ((_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
+			|| method == config::GET
+			|| method == config::HEAD))
 		try{
 			_responseHandler.buildHeadersResponse(_requestHandler.getRequest(), _executionHandler.getFlags(), _requestHandler.getParser().getFlags());
 		} catch (const HTTPError &e) {
@@ -453,6 +420,27 @@ void Client::processHTTPCycle()
 			return ;
 		}
 }
+
+/**
+ * @brief [TODO:description]
+ */
+void Client::resetAll()
+{
+	if (_responseHandler.getResponse().shouldCloseConnection())
+		setStatus(client::E_CLI_DISCONNECTED);
+
+	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath());
+	_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
+
+	_requestHandler.getRequest().getHeaders().clear();
+	_responseHandler.getResponse().getHeaders().clear();
+	_requestHandler.getParser().setFlags(0);
+	_requestHandler.getRequest().setFlags(0);
+	_responseHandler.getResponse().setFlags(0);
+	_executionHandler.setFlags(0);
+}
+
+
 
 } // !client
 } // !webserv
