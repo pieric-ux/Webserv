@@ -194,5 +194,25 @@ void	Response::setFlags(const int flags)
 	_flags = static_cast<e_ResponseFlags>(flags);
 }
 
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+bool Response::shouldCloseConnection() const
+{
+	return _shouldCloseConnection;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param shouldClose [TODO:parameter]
+ */
+void Response::setShouldCloseConnection(bool shouldClose)
+{
+	_shouldCloseConnection = shouldClose;
+}
+
 } // !client
 } // !webserv

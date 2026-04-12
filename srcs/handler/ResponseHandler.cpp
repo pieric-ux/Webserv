@@ -213,8 +213,6 @@ void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags
 	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S %Z", &tm);
 	_response.addHeader("Date", dateStr);
 
-	// E_PARS_CONNECTION is set
-	// assign connection header with same value
 	if (parsFlags & parser::E_PARS_CONNECTION)
 	{
 		t_Headers::const_iterator it = request.getHeaders().find("Connection");
@@ -235,7 +233,10 @@ void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags
 				}
 			}
 			if (closeFlag)
+			{
 				_response.addHeader("Connection", "close");
+				_response.setShouldCloseConnection(true);
+			}
 			else
 				_response.addHeader("Connection", "keep-alive");
 		}

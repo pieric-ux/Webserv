@@ -66,6 +66,7 @@ class Client
 		void								sendData();
 		void								processHTTPCycle();
 		void								buildErrorResponse();
+		void								resetAll();
 
 	private:
 		t_Logger							_logger;
@@ -80,8 +81,6 @@ class Client
 		HTTPError							_HTTPError;
 		std::time_t							_lastActivityTime;
 		std::time_t							_effectiveKeepaliveTimeout;
-
-		void								resetAll();
 };
 
 } // !client

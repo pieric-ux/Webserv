@@ -46,6 +46,8 @@ class Response
 		void							addHeader(const std::string &headerName, const std::string &headerValue);
 		int								getFlags() const;
 		void							setFlags(const int flags);
+		bool							shouldCloseConnection() const;
+		void							setShouldCloseConnection(bool shouldClose);
 
 	private:
 		t_Logger						_logger;
@@ -53,6 +55,7 @@ class Response
 		status::StatusCode				_statusCode;
 		t_Headers						_headers;
 		e_ResponseFlags					_flags;
+		bool							_shouldCloseConnection;
 };
 
 } // !client
