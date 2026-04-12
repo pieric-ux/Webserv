@@ -17,6 +17,7 @@ namespace client
  */
 Request::Request()
 	:	_method(config::GET),
+		_locationConfig(),
 		_requestTarget(),
 		_httpVersion(),
 		_absolutePath(),
@@ -43,6 +44,7 @@ Request::~Request() {}
  */
 Request::Request(const Request &rhs)
 	:	_method(rhs._method),
+		_locationConfig(rhs._locationConfig),
 		_requestTarget(rhs._requestTarget),
 		_httpVersion(rhs._httpVersion),
 		_absolutePath(rhs._absolutePath),
@@ -71,6 +73,7 @@ Request &Request::operator=(const Request &rhs)
 		_path = rhs._path;
 		_query = rhs._query;
 		_headers = rhs._headers;
+		_locationConfig = rhs._locationConfig;
 		_flags = rhs._flags;
 	}
 	return (*this);
@@ -306,6 +309,16 @@ int	Request::getFlags() const
 void	Request::setFlags(const int flags)
 {
 	_flags = static_cast<e_RequestFlags>(flags);
+}
+
+const config::LocationConfig &Request::getLocationConfig() const
+{
+	return _locationConfig;
+}
+
+void Request::setLocationConfig(const config::LocationConfig &locationConfig)
+{
+	_locationConfig = locationConfig;
 }
 
 } // !client

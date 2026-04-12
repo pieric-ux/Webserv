@@ -123,7 +123,7 @@ StatusCode StatusCodeRegistry::getStatusCode(const unsigned short code) const
 {
 	std::map<unsigned short, StatusCode>::const_iterator it = _statusCodes.find(code);
 	if (it == _statusCodes.end())
-		return (StatusCode());
+		return (StatusCode(code, "", ""));
 	return (it->second);
 }
 
