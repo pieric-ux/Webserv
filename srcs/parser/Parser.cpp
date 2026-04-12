@@ -789,6 +789,11 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 				INFO(_logger, "400: Invalid Expect header format");
 				throw client::HTTPError(400);
 			}
+			if (value != "100-continue")
+			{
+				INFO(_logger, "417: Unsupported Expect header value: " + value);
+				throw client::HTTPError(417);
+			}
 			else
 				DEBUG(_logger, "Parsed Expect header: " + value);
 			setFlags(getFlags() | E_PARS_EXPECT);
