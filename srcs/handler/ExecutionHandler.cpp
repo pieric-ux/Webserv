@@ -786,6 +786,7 @@ std::string ExecutionHandler::generateAutoindexHTML(const std::string &dirPath)
 						+ "</title></head><body><h1>Index of "
 						+ dirPath
 						+ "</h1><ul>";
+
 	DEBUG(_logger, "generateAutoindexHTML: generating autoindex HTML for \"" + dirPath + "\"");
 	DEBUG(_logger, "generateAutoindexHTML: " + html);
 
@@ -804,7 +805,7 @@ std::string ExecutionHandler::generateAutoindexHTML(const std::string &dirPath)
 			if (!path.empty() && path[path.size() - 1] != '/')
 				path += "/";
 			path += name;
-			std::string tmp = "<li><a href=\"" + name + (S_ISDIR((*it)->d_type) ? "/" : "") + "\">" + name + "</a></li>";
+			std::string tmp = "<li><a href=\"" + name + (isDirectory(path) ? "/" : "") + "\">" + name + "</a></li>";
 			DEBUG(_logger, "generateAutoindexHTML: " + tmp);
 			html += tmp;
 		}

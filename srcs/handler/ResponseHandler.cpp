@@ -148,6 +148,7 @@ void ResponseHandler::buildHeadersResponse(const client::Request &request, int e
 		+ " parsFlags=0x" + common::core::utils::toString(parsFlags));
 	
 	// set status codes
+
 	if (execFlags & E_EXEC_CREATED)
 		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(201));
 	else if (execFlags & E_EXEC_NOCONTENT)
