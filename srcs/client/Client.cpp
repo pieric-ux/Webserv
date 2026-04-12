@@ -399,7 +399,7 @@ void Client::processHTTPCycle()
 		}
 	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED)
 		try{
-			_executionHandler.execute(_requestHandler, _responseHandler, _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath()));
+			_executionHandler.execute(_requestHandler, _responseHandler, _requestHandler.getRequest().getLocationConfig());
 		} catch (const HTTPError &e) {
 			INFO(_logger, "While executing request: " + std::string(e.what()));
 			setHTTPError(e);
@@ -432,7 +432,7 @@ void Client::resetAll()
 	else
 		this->setStatus(E_CLI_REQUEST);
 
-	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath());
+	const config::LocationConfig &locationConfig = _requestHandler.getRequest().getLocationConfig();
 	_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
 
 	_requestHandler.getRequest().getHeaders().clear();

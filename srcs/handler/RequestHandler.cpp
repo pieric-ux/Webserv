@@ -208,8 +208,10 @@ void RequestHandler::validateHeaders()
 {
 	DEBUG(_logger, "method=" + config::methodToStr(_request.getMethod()) + " target=" + _request.getRequestTarget());
 
+	
 	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getPath());
-
+	_request.setLocationConfig(locationConfig);
+	
 	if (locationConfig.getAllowedMethods().find(_request.getMethod()) == locationConfig.getAllowedMethods().end())
 	{
 		INFO(_logger, "405: " + config::methodToStr(_request.getMethod()) + " not allowed on " + _request.getPath());
@@ -297,7 +299,7 @@ void RequestHandler::validateHeaders()
  */
 void RequestHandler::parseBody()
 {
-	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getPath());
+	const config::LocationConfig &locationConfig = _request.getLocationConfig();
 
 	t_clientMaxBodySize contentLength = 0;
 	const t_Headers &headers = _request.getHeaders();
@@ -321,7 +323,7 @@ void RequestHandler::parseBody()
  */
 void RequestHandler::buildAbsolutPath()
 {
-	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_request.getPath());
+	const config::LocationConfig &locationConfig = _request.getLocationConfig();
 	std::string root;
 
 	if (_request.getMethod() == config::PUT || _request.getMethod() == config::DELETE)

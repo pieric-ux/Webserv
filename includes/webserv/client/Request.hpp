@@ -13,6 +13,7 @@
 #include <webserv/types.hpp>
 #include <webserv/config/method.hpp>
 #include <webserv/config/HTTPConfig.hpp>
+#include <webserv/config/LocationConfig.hpp>
 #include <webserv/headers/HTTPHeader.hpp>
 #include <webserv/headers/HTTPHeadersRegistry.hpp>
 
@@ -20,7 +21,6 @@ namespace webserv
 {
 namespace client
 {
-
 enum e_RequestFlags
 {
 	E_REQ_REQUEST_LINE = 1 << 0,
@@ -60,10 +60,13 @@ class Request
 		void							addHeader(const std::string &headerName, const std::string &headerValue);
 		int								getFlags() const;
 		void							setFlags(const int flags);
+		const config::LocationConfig	&getLocationConfig() const;
+		void							setLocationConfig(const config::LocationConfig &locationConfig);
 
 	private:
 		t_Logger						_logger;
 		config::e_Method				_method;
+		config::LocationConfig			_locationConfig;
 		std::string						_requestTarget;
 		std::string						_httpVersion;
 		std::string						_absolutePath;

@@ -162,9 +162,9 @@ void ResponseHandler::buildHeadersResponse(const client::Request &request, int e
 
 	//append headers to bufferReponse
 	const t_Headers &headers = _response.getHeaders();
-	for (t_Headers::const_iterator it = headers.begin(); it != headers.end(); ++it)
+	for (t_Headers::const_reverse_iterator rit = headers.rbegin(); rit != headers.rend(); ++rit)
 	{
-		const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+		const std::list<HTTPheaders::HTTPHeader> &headerList = rit->second;
 		for (std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin(); lit != headerList.end(); ++lit)
 		{
 			std::string headerLine = lit->getName() + ": " + lit->getValue() + "\r\n";
@@ -255,26 +255,7 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 	if (httpVersion.empty())
 		httpVersion = "HTTP/1.1";
 	buildStatusLine(httpVersion, _response.getStatusCode(), _response.getStatusCode().getMessage());
-
-	if (!error.getLocation().empty())
-		_response.addHeader("Location", error.getLocation());
-
-	std::string errorBody =	"<html><head><title>"
-						+ common::core::utils::toString(error.getStatusCode().getCode())
-						+ " "
-						+ error.getStatusCode().getMessage()
-						+ "</title></head>"
-						"<body><h1>"
-						+ common::core::utils::toString(error.getStatusCode().getCode())
-						+ " "
-						+ error.getStatusCode().getMessage()
-						+ "</h1><p>"
-						+ error.getStatusCode().getDescription()
-						+ "</p></body></html>";
-	DEBUG(_logger, "buildErrorResponse: error errorBody generated, size=" + common::core::utils::toString(errorBody.size()));
-
-	_response.addHeader("Content-Length", common::core::utils::toString(errorBody.size()));
-	_response.addHeader("Content-Type", "text/html");
+	
 	_response.addHeader("Server", "webserv/1.0");
 
 	std::time_t t = std::time(NULL);
@@ -282,11 +263,100 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 	char dateStr[100];
 	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S %Z", &tm);
 	_response.addHeader("Date", dateStr);
+	if (!error.getLocation().empty())
+		_response.addHeader("Location", error.getLocation());
+
+	if (error.getStatusCode().getCode() == 401)
+		_response.addHeader("WWW-Authenticate", "Basic realm=\"Restricted Area\"");
+
+	if (error.getStatusCode().getCode() == 405)
+	{
+		t_AllowedMethods allowMethods = request.getLocationConfig().getAllowedMethods();
+		t_AllowedMethods::const_iterator it = allowMethods.begin();
+		std::string allowHeaderValue;
+		for (; it != allowMethods.end(); ++it)
+		{
+			switch (*it)
+			{
+				case config::GET:
+					allowHeaderValue += "GET, ";
+					break;
+				case config::HEAD:
+					allowHeaderValue += "HEAD, ";
+					break;
+				case config::POST:
+					allowHeaderValue += "POST, ";
+					break;
+				case config::PUT:
+					allowHeaderValue += "PUT, ";
+					break;
+				case config::DELETE:
+					allowHeaderValue += "DELETE, ";
+					break;
+				default:
+					break;
+			}
+		}
+		if (!allowHeaderValue.empty())
+		{
+			allowHeaderValue = allowHeaderValue.substr(0, allowHeaderValue.size() - 2);
+			_response.addHeader("Allow", allowHeaderValue);
+		}
+	}
+
+	if (error.getStatusCode().getCode() == 413 || error.getStatusCode().getCode() == 503)
+		_response.addHeader("Retry-After", "42");
+
+	if (error.getStatusCode().getCode() == 415)
+	{
+		std::string acceptedTypes;
+
+		t_MimeTypes::const_iterator it = request.getLocationConfig().getTypes().begin();
+		for (; it != request.getLocationConfig().getTypes().end(); ++it)
+		{
+			acceptedTypes += it->second + ", ";
+		}
+		if (!acceptedTypes.empty())
+		{
+			acceptedTypes = acceptedTypes.substr(0, acceptedTypes.size() - 2);
+			_response.addHeader("Accept", acceptedTypes);
+		}
+	}
+
+	if (error.getStatusCode().getCode() == 426)
+		_response.addHeader("Upgrade", "HTTP/1.1");
+	
+	std::string errorBody = "";
+	if (error.getStatusCode().getCode() == 304)
+	{
+		_response.addHeader("Content-Length", "1");
+		errorBody = "";
+		_response.addHeader("Content-Type", "application/octet-stream");
+	}
+	else
+	{
+		errorBody =	"<html><head><title>"
+							+ common::core::utils::toString(error.getStatusCode().getCode())
+							+ " "
+							+ error.getStatusCode().getMessage()
+							+ "</title></head>"
+							"<body><h1>"
+							+ common::core::utils::toString(error.getStatusCode().getCode())
+							+ " "
+							+ error.getStatusCode().getMessage()
+							+ "</h1><p>"
+							+ error.getStatusCode().getDescription()
+							+ "</p></body></html>";
+		DEBUG(_logger, "buildErrorResponse: error errorBody generated, size=" + common::core::utils::toString(errorBody.size()));
+
+		_response.addHeader("Content-Length", common::core::utils::toString(errorBody.size()));
+		_response.addHeader("Content-Type", "text/html");
+	}
 
 	const t_Headers &headers = _response.getHeaders();
-	for (t_Headers::const_iterator it = headers.begin(); it != headers.end(); ++it)
+	for (t_Headers::const_reverse_iterator rit = headers.rbegin(); rit != headers.rend(); ++rit)
 	{
-		const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+		const std::list<HTTPheaders::HTTPHeader> &headerList = rit->second;
 		for (std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin(); lit != headerList.end(); ++lit)
 		{
 			std::string headerLine = lit->getName() + ": " + lit->getValue() + "\r\n";
