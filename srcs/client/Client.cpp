@@ -429,6 +429,8 @@ void Client::resetAll()
 {
 	if (_responseHandler.getResponse().shouldCloseConnection())
 		setStatus(client::E_CLI_DISCONNECTED);
+	else
+		this->setStatus(E_CLI_REQUEST);
 
 	const config::LocationConfig &locationConfig = _serverConfig.findLocationConfig(_requestHandler.getRequest().getPath());
 	_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
@@ -439,7 +441,6 @@ void Client::resetAll()
 	_requestHandler.getRequest().setFlags(0);
 	_responseHandler.getResponse().setFlags(0);
 	_executionHandler.setFlags(0);
-	this->setStatus(E_CLI_REQUEST);
 	this->setHTTPError(HTTPError());
 }
 
