@@ -269,6 +269,35 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 	}
 	else
 	{
+		const t_ErrorPages &errorPages = request.getLocationConfig().getErrorPage();
+		bool customPageFound = false;
+
+		for (t_ErrorPages::const_iterator ep = errorPages.begin(); ep != errorPages.end(); ++ep)
+		{
+		    const t_StatusCodes &codes = ep->getCodes();
+		    for (t_StatusCodes::const_iterator c = codes.begin(); c != codes.end(); ++c)
+		    {
+		        if (c->getCode() == error.getStatusCode().getCode())
+		        {
+		            std::string filePath = request.getLocationConfig().getRoot() + ep->getPath();
+		            common::core::raii::UniqueFd fd;
+					fd.set(::open(filePath.c_str(), O_RDONLY));
+		            if (fd.valid())
+		            {
+		                char buf[4096];
+		                ssize_t n;
+		                while ((n = ::read(fd.get(), buf, sizeof(buf))) > 0)
+		                    errorBody.append(buf, n);
+		                fd.reset();
+		                customPageFound = true;
+		            }
+		            break;
+		        }
+		    }
+		    if (customPageFound) break;
+		}
+
+		if (!customPageFound)
 		errorBody =	"<html><head><title>"
 							+ common::core::utils::toString(error.getStatusCode().getCode())
 							+ " "

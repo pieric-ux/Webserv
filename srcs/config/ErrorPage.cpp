@@ -21,6 +21,26 @@ static std::string	formatStatusCodesInfo(const t_StatusCodes &codes);
 
 /**
  * @brief [TODO:description]
+ *
+ * @param codes [TODO:parameter]
+ */
+const t_StatusCodes	&ErrorPage::getCodes() const
+{
+	return _codes;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param codes [TODO:parameter]
+ */
+const std::string	&ErrorPage::getPath() const
+{
+	return _path;
+}
+
+/**
+ * @brief [TODO:description]
  */
 ErrorPage::ErrorPage() : _codes(), _path()
 {
