@@ -91,9 +91,9 @@ void RequestHandler::parseHeaders()
 		if (!(_request.getFlags() & client::E_REQ_REQUEST_LINE))
 		{
 			std::string::size_type firstCrlf = bufferStr.find("\r\n");
-			if (firstCrlf == std::string::npos && bufferStr.size() >= 8192)
+			if (firstCrlf == std::string::npos && bufferStr.size() >= config::DefaultConfig::URI_MAX_LENGTH)
 			{
-				INFO(_logger, "414: URI too long (no CRLF in first 8192+ bytes)");
+				INFO(_logger, "414: URI too long (no CRLF in first " + common::core::utils::toString(config::DefaultConfig::URI_MAX_LENGTH) + "+ bytes)");
 				throw client::HTTPError(414);
 			}
 		}

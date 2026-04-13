@@ -31,6 +31,8 @@ struct DefaultConfig
 {
 	// HTTPSERVER
 	static const std::size_t			BUFFER_SIZE = 8 * 1024;
+	static const std::size_t			CLIENT_HEADER_BUFFER_SIZE = 1 * 1024;
+	static const std::size_t			URI_MAX_LENGTH = 2 * 1024;
 	static const std::string			defaultConfigPath;
 
 	// HTTPCONFIG, SERVERCONFIG, LOCATIONCONFIG
