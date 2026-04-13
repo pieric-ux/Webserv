@@ -370,33 +370,32 @@ void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags
 	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S %Z", &tm);
 	_response.addHeader("Date", dateStr);
 
+	bool closeConnection = false;
 	if (parsFlags & parser::E_PARS_CONNECTION)
 	{
-		t_Headers::const_iterator it = request.getHeaders().find("Connection");
-		if (it == request.getHeaders().end())
-			_response.addHeader("Connection", "keep-alive");
-		else
+		t_Headers::const_iterator it = request.getHeaders().find("connection");
+		if (it != request.getHeaders().end())
 		{
 			const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
-			std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
-			bool closeFlag = 0;
-			for (; lit != headerList.end(); ++lit)
+			for (std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
+				lit != headerList.end(); ++lit)
 			{
-				if (lit->getName() == "Connection")
+				if (lit->getValue() == "close")
 				{
-					DEBUG(_logger, "buildHeaders: E_PARS_CONNECTION set, client Connection=" + lit->getValue());
-					if (lit->getValue() == "close")
-						closeFlag = 1;
+					closeConnection = true;
+					break;
 				}
 			}
-			if (closeFlag)
-			{
-				_response.addHeader("Connection", "close");
-				_response.setShouldCloseConnection(true);
-			}
-			else
-				_response.addHeader("Connection", "keep-alive");
 		}
+	}
+	if (closeConnection)
+	{
+		_response.addHeader("Connection", "close");
+		_response.setShouldCloseConnection(true);
+	}
+	else
+	{
+		_response.addHeader("Connection", "keep-alive");
 	}
 }
 
