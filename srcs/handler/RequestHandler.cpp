@@ -6,6 +6,7 @@
  */
 
 #include <webserv/handler/RequestHandler.hpp>
+#include <webserv/config/DefaultConfig.hpp>
 
 namespace webserv
 {

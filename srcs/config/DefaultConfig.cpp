@@ -43,6 +43,9 @@ namespace config
 
 // HTTPSERVER
 const std::string			DefaultConfig::defaultConfigPath = DEFAULT_CONFIG_PATH;
+const std::size_t			DefaultConfig::URI_MAX_LENGTH;
+const std::size_t			DefaultConfig::BUFFER_SIZE;
+const std::size_t			DefaultConfig::CLIENT_HEADER_BUFFER_SIZE;
 
 // LISTEN
 const std::string			DefaultConfig::address = "*";
