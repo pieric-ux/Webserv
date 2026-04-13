@@ -155,7 +155,7 @@ void Parser::parseRequestLine(const std::string &line, client::Request &request)
 		throw client::HTTPError(400);
 	}
 
-	if (target.size() > 8192)
+	if (target.size() > config::DefaultConfig::URI_MAX_LENGTH)
 	{
 		std::ostringstream oss;
 		oss << "414: URI too long (" << target.size() << " bytes)";

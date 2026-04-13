@@ -29,6 +29,9 @@ class ErrorPage
 
 		static t_Logger		getLogger();
 
+		const t_StatusCodes	&getCodes() const;
+		const std::string	&getPath() const;
+
 	private:
 		t_Logger 			_logger;
 		t_StatusCodes		_codes;

@@ -372,10 +372,14 @@ namespace webserv.config {
 	}
 
 	class "ErrorPage" as ErrorPage {
+		- _logger : log42::logger::Logger
 		- _codes : vector<StatusCode>
 		- _path : string
 		--
 		+ ErrorPage(codes : vector<StatusCode>, path : string)
+		+ {static} getLogger() : log42::logger::Logger
+		+ getCodes() : vector<StatusCode>
+		+ getPath() : string
 	}
 
 	class "HTTPConfig" as HTTPConfig <<singleton>> {

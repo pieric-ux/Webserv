@@ -9,6 +9,8 @@ static void	initAbnf();
 
 int main(int ac, char **av)
 {
+	signal(SIGPIPE, SIG_IGN);
+	
 	try {
 		initLogging();
 	} catch (const std::exception &e) {

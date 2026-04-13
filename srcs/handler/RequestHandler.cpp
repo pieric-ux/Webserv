@@ -88,6 +88,15 @@ void RequestHandler::parseHeaders()
 	std::string::iterator it = std::search(bufferStr.begin(), bufferStr.end(), CRLF, CRLF + 4);
 	if (it == bufferStr.end())
 	{
+		if (!(_request.getFlags() & client::E_REQ_REQUEST_LINE))
+		{
+			std::string::size_type firstCrlf = bufferStr.find("\r\n");
+			if (firstCrlf == std::string::npos && bufferStr.size() >= config::DefaultConfig::URI_MAX_LENGTH)
+			{
+				INFO(_logger, "414: URI too long (no CRLF in first " + common::core::utils::toString(config::DefaultConfig::URI_MAX_LENGTH) + "+ bytes)");
+				throw client::HTTPError(414);
+			}
+		}
 		INFO(_logger, "400: CRLFCRLF not found in buffer");
 		throw client::HTTPError(400);
 	}

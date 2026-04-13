@@ -19,6 +19,7 @@ namespace config
  */
 static std::string	formatStatusCodesInfo(const t_StatusCodes &codes);
 
+
 /**
  * @brief [TODO:description]
  */
@@ -36,8 +37,8 @@ ErrorPage::ErrorPage() : _codes(), _path()
  * @param path [TODO:parameter]
  */
 ErrorPage::ErrorPage(const t_StatusCodes &codes, const std::string &path)
-	:	_codes(codes),
-		_path(path)
+:	_codes(codes),
+_path(path)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.ErrorPage");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -47,7 +48,19 @@ ErrorPage::ErrorPage(const t_StatusCodes &codes, const std::string &path)
 /**
  * @brief [TODO:description]
  */
-ErrorPage::~ErrorPage() {}
+ ErrorPage::~ErrorPage() {}
+ 
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param rhs [TODO:parameter]
+ */
+ErrorPage::ErrorPage(const ErrorPage &rhs)
+:	_logger(rhs._logger),
+_codes(rhs._codes),
+_path(rhs._path)
+{}
 
 /**
  * @brief [TODO:description]
@@ -62,13 +75,22 @@ t_Logger	ErrorPage::getLogger()
 /**
  * @brief [TODO:description]
  *
- * @param rhs [TODO:parameter]
+ * @param codes [TODO:parameter]
  */
-ErrorPage::ErrorPage(const ErrorPage &rhs)
-	:	_logger(rhs._logger),
-		_codes(rhs._codes),
-		_path(rhs._path)
-{}
+const t_StatusCodes	&ErrorPage::getCodes() const
+{
+	return _codes;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param codes [TODO:parameter]
+ */
+const std::string	&ErrorPage::getPath() const
+{
+	return _path;
+}
 
 /**
  * @brief [TODO:description]

@@ -269,6 +269,35 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 	}
 	else
 	{
+		const t_ErrorPages &errorPages = request.getLocationConfig().getErrorPage();
+		bool customPageFound = false;
+
+		for (t_ErrorPages::const_iterator ep = errorPages.begin(); ep != errorPages.end(); ++ep)
+		{
+		    const t_StatusCodes &codes = ep->getCodes();
+		    for (t_StatusCodes::const_iterator c = codes.begin(); c != codes.end(); ++c)
+		    {
+		        if (c->getCode() == error.getStatusCode().getCode())
+		        {
+		            std::string filePath = request.getLocationConfig().getRoot() + ep->getPath();
+		            common::core::raii::UniqueFd fd;
+					fd.set(::open(filePath.c_str(), O_RDONLY));
+		            if (fd.valid())
+		            {
+		                char buf[4096];
+		                ssize_t n;
+		                while ((n = ::read(fd.get(), buf, sizeof(buf))) > 0)
+		                    errorBody.append(buf, n);
+		                fd.reset();
+		                customPageFound = true;
+		            }
+		            break;
+		        }
+		    }
+		    if (customPageFound) break;
+		}
+
+		if (!customPageFound)
 		errorBody =	"<html><head><title>"
 							+ common::core::utils::toString(error.getStatusCode().getCode())
 							+ " "
@@ -341,33 +370,32 @@ void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags
 	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S %Z", &tm);
 	_response.addHeader("Date", dateStr);
 
+	bool closeConnection = false;
 	if (parsFlags & parser::E_PARS_CONNECTION)
 	{
-		t_Headers::const_iterator it = request.getHeaders().find("Connection");
-		if (it == request.getHeaders().end())
-			_response.addHeader("Connection", "keep-alive");
-		else
+		t_Headers::const_iterator it = request.getHeaders().find("connection");
+		if (it != request.getHeaders().end())
 		{
 			const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
-			std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
-			bool closeFlag = 0;
-			for (; lit != headerList.end(); ++lit)
+			for (std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
+				lit != headerList.end(); ++lit)
 			{
-				if (lit->getName() == "Connection")
+				if (lit->getValue() == "close")
 				{
-					DEBUG(_logger, "buildHeaders: E_PARS_CONNECTION set, client Connection=" + lit->getValue());
-					if (lit->getValue() == "close")
-						closeFlag = 1;
+					closeConnection = true;
+					break;
 				}
 			}
-			if (closeFlag)
-			{
-				_response.addHeader("Connection", "close");
-				_response.setShouldCloseConnection(true);
-			}
-			else
-				_response.addHeader("Connection", "keep-alive");
 		}
+	}
+	if (closeConnection)
+	{
+		_response.addHeader("Connection", "close");
+		_response.setShouldCloseConnection(true);
+	}
+	else
+	{
+		_response.addHeader("Connection", "keep-alive");
 	}
 }
 

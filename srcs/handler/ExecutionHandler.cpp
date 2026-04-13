@@ -489,7 +489,7 @@ void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, c
 	int					flags = 0;
 	mode_t				mode = 0;
 	int					fd;
-	bool				isCreated = false;
+	bool				isCreated = true;
 
 	if (method == config::GET || method == config::HEAD)
 	{
@@ -603,7 +603,11 @@ void ExecutionHandler::writeChunk(const handler::RequestHandler &requestHandler)
 	std::size_t		remaining = std::stoul(it->second.front().getValue()) - offset;
 	std::size_t		available = buf.size() > offset ? buf.size() - offset : 0;
 	if (available == 0)
+	{
+		setFlags(getFlags() | E_EXEC_COMPLETE);
+		_fd.reset();
 		return ;
+	}
 	std::size_t		toWrite = remaining < config::DefaultConfig::BUFFER_SIZE ? remaining : config::DefaultConfig::BUFFER_SIZE;
 	toWrite = toWrite < available ? toWrite : available;
 	ssize_t			wr;
