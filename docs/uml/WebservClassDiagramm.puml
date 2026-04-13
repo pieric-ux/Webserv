@@ -16,19 +16,23 @@ skinparam IconProtected {
   BackgroundColor #ff7f00
 }
 
+/'!include ../../libs/common/doc/puml/class.puml'/
+/'!include ../../libs/logger/doc/puml/class.puml'/
+/'!include ../../libs/parser/doc/puml/class.puml'/
+
 title Class Diagram for Webserv 
 
-namespace webserv.headers {
+namespace webserv.HTTPheaders {
 
 	class "HTTPHeader" as HTTPHeader {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _name : string
 		- _value : string
 		- _description : string
 		--
 		+ HTTPHeader(name : string, description : string)
 		+ HTTPHeader(name : string, value : string, description : string)
-		+ {static} getLogger() : log42::logger::Logger
+		+ {static} getLogger() : t_Logger
 		+ getName() : string
 		+ getValue() : string
 		+ setValue(value : string) : void
@@ -36,12 +40,12 @@ namespace webserv.headers {
 	}
 
 	class "HTTPHeadersRegistry" as HTTPHeadersRegistry <<singleton>> {
-		- _logger : log42::logger::Logger
-		- _headers : map<string, HTTPHeader>
+		- _logger : t_Logger
+		- _headers : t_HeadersRegistry
 		--
-		+ HeaderRegistry()
-		+ getLogger() : log42::logger::Logger
-  		+ {static} getInstance() : HeaderRegistry
+		- HTTPHeadersRegistry()
+		+ getLogger() : t_Logger
+  		+ {static} getInstance() : HTTPHeadersRegistry
 		+ getHeader(name : string) : HTTPHeader
 	}
 }
@@ -49,27 +53,27 @@ namespace webserv.headers {
 namespace webserv.status {
 
 	class "StatusCode" as StatusCode {
-		- _logger : log42::logger::Logger
-		- _code : int
-		- _message : string
+		- _logger : t_Logger
+		- _code : unsigned short
+		- _msg : string
 		- _description : string
 		--
 		+ StatusCode()
-		+ StatusCode(code : int, message : string, description : string)
-		+ {static} getLogger() : log42::logger::Logger
+		+ StatusCode(code : unsigned short, msg : string, description : string)
+		+ {static} getLogger() : t_Logger
 		+ getCode() : int
 		+ getMessage() : string
 		+ getDescription() : string
 	}
 
 	class "StatusCodeRegistry" as StatusCodeRegistry <<singleton>> {
-		- _logger : log42::logger::Logger
-		- _statusCodes : map<int, StatusCode>
+		- _logger : t_Logger
+		- _statusCodes : t_StatusCodesRegistry
 		--
 		- StatusCodeRegistry()
-		+ getLogger() : log42::logger::Logger
+		+ getLogger() : t_Logger
   		+ {static} getInstance() : StatusCodeRegistry
-		+ getStatusCode(code : int) : StatusCode
+		+ getStatusCode(code : unsigned short) : StatusCode
 	}
 }
 
@@ -78,11 +82,11 @@ namespace webserv.client {
 	enum "e_RequestFlags" as e_RequestFlags {
 		E_REQ_REQUEST_LINE = 1 << 0
 		E_REQ_HEADERS_VALIDATED = 1 << 1
-		E_REQ_BODY_STARTED 1 << = 2
+		E_REQ_BODY_STARTED = 1 << 2
 	}
 
 	class "Request" as Request  {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _method : e_Method
 		- _locationConfig : LocationConfig
 		- _requestTarget : string
@@ -91,11 +95,11 @@ namespace webserv.client {
 		- _authority : string
 		- _path : string
 		- _query : string
-		- _headers : vector<list<HTTPHeader>>
+		- _headers : t_Headers
 		- _flags : e_RequestFlags
 		--
 		+ Request()
-		+ {static} getLogger() : log42::logger::Logger
+		+ {static} getLogger() : t_Logger
 		+ getMethod() : e_Method
 		+ setMethod(method : e_Method) : void
 		+ getRequestTarget() : string
@@ -110,8 +114,8 @@ namespace webserv.client {
 		+ setPath(path : string) : void
 		+ getQuery() : string
 		+ setQuery(query : string) : void
-		+ getHeaders() : vector<list<HTTPHeader>>
-		+ setHeaders(headers : vector<list<HTTPHeader>>) : void
+		+ getHeaders() : t_Headers
+		+ setHeaders(headers : t_Headers) : void
 		+ findHeader(headerName : string, headerValue : string) : HTTPHeader
 		+ addHeader(headerName : string, headerValue : string) : void
 		+ getFlags() : e_RequestFlags
@@ -125,39 +129,39 @@ namespace webserv.client {
 	}
 
 	class "Response" as Response {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _httpVersion : string
 		- _statusCode : StatusCode
-		- _headers : vector<HTTPHeader>
+		- _headers : t_Headers
 		- _flags : e_ResponseFlags
 		- _shouldCloseConnection : bool
 		--
 		+ Response()
-		+ {static} getLogger() : log42::logger::Logger
+		+ {static} getLogger() : t_Logger
 		+ getHttpVersion() : string
 		+ setHttpVersion(httpVersion : string) : void
 		+ getStatusCode() : StatusCode
 		+ setStatusCode(statusCode : StatusCode) : void
-		+ getHeaders() : vector<list<HTTPHeader>>
-		+ setHeaders(headers : vector<list<HTTPHeader>>) : void
+		+ getHeaders() : t_Headers
+		+ setHeaders(headers : t_Headers) : void
 		+ findHeader(headerName : string, headerValue : string) : HTTPHeader
 		+ addHeader(headerName : string, headerValue : string) : void
-		+ getFlags() : e_RequestFlags
-		+ setFlags(flags : e_RequestFlags) : void
-		+ getShouldCloseConnection() : bool
+		+ getFlags() : e_ResponseFlags
+		+ setFlags(flags : e_ResponseFlags) : void
+		+ shouldCloseConnection() : bool
 		+ setShouldCloseConnection(shouldCloseConnection : bool) : void
 
 	}
 
 	class "HTTPError" as HTTPError <<exception>> {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _statusCode : StatusCode
 		- _what : string
 		- _location : string
 		--
 		+ HTTPError(code : int)
 		+ HTTPError(code : int, location : string)
-		+ {static} getLogger() : log42::logger::Logger
+		+ {static} getLogger() : t_Logger
 		+ getStatusCode() : StatusCode
 		+ setStatusCode(statusCode : StatusCode) : void
 		+ getLocation() : string
@@ -171,7 +175,7 @@ namespace webserv.client {
 	}
 
 	class "Client" as Client {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _id : int
 		- _socket : common::core::net::TcpClient
 		- _sockaddr_storage : sockaddr_storage
@@ -181,11 +185,11 @@ namespace webserv.client {
 		- _requestHandler : RequestHandler
 		- _responseHandler : ResponseHandler
 		- _HTTPError : HTTPError
-		- _lastActivityTime : int
-		- _effectiveKeepaliveTimeout : int
+		- _lastActivityTime : time_t
+		- _effectiveKeepaliveTimeout : time_t
 		--
-		+ Client(socket : common::core::net::TcpClient, serverConfig : ServerConfig)
-		+ {static} getLogger() : log42::logger::Logger
+		+ Client(client : t_SocketPairClient, serverConfig : ServerConfig)
+		+ {static} getLogger() : t_Logger
 		+ getSocket() : common::core::net::TcpClient
 		+ setSocket(socket : common::core::net::TcpClient) : void
 		+ getSockaddrStorage() : sockaddr_storage
@@ -198,8 +202,10 @@ namespace webserv.client {
 		+ getServerConfig() : ServerConfig
 		+ getHTTPError() : HTTPError
 		+ setHTTPError(error : HTTPError) : void
-		+ getLastActivityTime() : int
-		+ setLastActivityTime(time : int) : void
+		+ getLastActivityTime() : time_t
+		+ setLastActivityTime(time : time_t) : void
+		+ getEffectiveKeepaliveTimeout() : time_t
+		+ setEffectiveKeepaliveTimeout(timeout : time_t) : void
 		+ receiveData() : void
 		+ sendData() : void
 		+ processHTTPCycle() : void
@@ -211,57 +217,58 @@ namespace webserv.client {
 namespace webserv.handler {
 
 	class "ClientHandler" as ClientHandler {
-		- _logger : log42::logger::Logger
-		- _clients : map<int, Client>
-		- _ioMultiplexer : common::core::io::IEventIO
+		- _logger : t_Logger
+		- _clients : t_Clients
+		- _ioMultiplexer : t_ioMultiplexer
 		--
 		+ ClientHandler()
-		+ {static} getLogger() : log42::logger::Logger
-		+ setIoMultiplexer(ioMultiplexer : common::core::io::IEventIO) : void
-		+ addClient(client : Client, serverConfig : ServerConfig) : void
-		+ removeClient(client : Client)
+		+ {static} getLogger() : t_Logger
+		+ setIoMultiplexer(ioMultiplexer : t_ioMultiplexer) : void
+		+ addClient(client : t_SocketPairClient, serverConfig : ServerConfig) : void
+		+ removeClient(client : Client) : t_Clients::iterator
 		+ processClients() : void
 	}
 
 	class "RequestHandler" as RequestHandler {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _request : Request
-		- _bufferRequest : vector<unsigned char>
+		- _bufferRequest : t_raw
 		- _parser : Parser
 		- _serverConfig : ServerConfig
 		--
 		- validateHeaders() : void
 		- buildAbsolutPath() : void
 		- normalizePath(path : string) : string
-		+ RequestHandler()
-		+ {static} getLogger() : log42::logger::Logger
+		+ RequestHandler(serverConfig : ServerConfig)
+		+ {static} getLogger() : t_Logger
 		+ parseHeaders() : void
 		+ parseBody() : void
 		+ getRequest() : Request
 		+ setRequest(request : Request) : void
-		+ getBufferRequest() : vector<unsigned char>
-		+ appendToBufferRequest(buffer : string) : void
+		+ getBufferRequest() : t_raw
+		+ appendToBufferRequest(buffer : t_raw) : void
+		+ eraseBufferRequestFront(n : size_t) : void
 		+ clearBufferRequest() : void
 		+ getParser() : Parser
 	}
 
 	class "ResponseHandler" as ResponseHandler {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _response : Response
-		- _bufferResponse : vector<unsigned char>
+		- _bufferResponse : t_raw
 		--
 		- buildStatusLine(httpVersion : string, statusCode : StatusCode, reasonPhrase : string) : void
 		- buildHeaders(request : Request, parseFlags : int) : void
 		+ ResponseHandler()
-		+ {static} getLogger() : log42::logger::Logger
+		+ {static} getLogger() : t_Logger
 		+ getResponse() : Response
 		+ setResponse(response : Response) : void
-		+ appendToBufferResponse(buffer : string) : void
+		+ appendToBufferResponse(buffer : t_raw) : void
 		+ clearBufferResponse() : void
-		+ getBufferResponse() : vector<unsigned char>
-		+ eraseBufferResponseFront(n : int) : void
-		+ buildHeadersResponse(request : Request, parseFlags : int) : void
-		+ buildErrorBodyResponse(requeset : Request, error : HTTPError) : void
+		+ getBufferResponse() : t_raw
+		+ eraseBufferResponseFront(n : size_t) : void
+		+ buildHeadersResponse(request : Request, execFlags : int, parseFlags : int) : void
+		+ buildErrorResponse(request : Request, error : HTTPError) : void
 	}
 
 	enum "e_ExecutionHandlerFlags" as e_ExecutionHandlerFlags {
@@ -272,11 +279,11 @@ namespace webserv.handler {
 	}
 
 	class "ExecutionHandler" as ExecutionHandler {
-		- _logger : log42::logger::Logger
-		- _fd : common::core::raii::UniqueFD
-		- _bodyReceived : int
-		- _flags : e_ExecutionFlags
-		- _bufferAutoindex : vector<unsigned char>
+		- _logger : t_Logger
+		- _fd : common::core::raii::UniqueFd
+		- _bodyReceived : ssize_t
+		- _flags : e_ExecutionHandlerFlags
+		- _autoindexBuffer : t_raw
 		--
 		- executeHEADorGET(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
 		- executePOST(requestHandler : RequestHandler, locationConfig : LocationConfig) : void
@@ -295,24 +302,24 @@ namespace webserv.handler {
 		- generateAutoindexHTML(dirPath : string) : string
 
 		+ ExecutionHandler()
-		+ {static} getLogger() : log42::logger::Logger
+		+ {static} getLogger() : t_Logger
 		+ getFd() : int
-		+ getBodyReceived() : int
-		+ setBodyReceived(bodyReceived : int) : void
-		+ getFlags() : e_ExecutionFlags
-		+ setFlags(flags : e_ExecutionFlags) : void
-		+ getAutoindexBuffer() : vector<unsigned char>
-		+ setAutoindexBuffer(buffer : vector<unsigned char>) : void
-		+ execute(requestHandler : requestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
+		+ getBodyReceived() : size_t
+		+ setBodyReceived(bodyReceived : size_t) : void
+		+ getFlags() : int
+		+ setFlags(flags : int) : void
+		+ getAutoindexBuffer(buffer : t_raw) : t_raw
+		+ setAutoindexBuffer(buffer : t_raw) : void
+		+ execute(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
 		+ executeCGI(requestHandler : RequestHandler, locationConfig : LocationConfig) : void
-		+ executeRequest(requestHandler : requestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
+		+ executeRequest(requestHandler : RequestHandler, responseHandler : ResponseHandler, locationConfig : LocationConfig) : void
 	}
 }
 
 namespace webserv.parser {
 
 	enum "e_ParserFlags" as e_ParserFlags {
-		E_PARS_HOST 1 << = 0
+		E_PARS_HOST = 1 << 0
 		E_PARS_CONNECTION = 1 << 1
 		E_PARS_CONTENT_LENGTH = 1 << 2
 		E_PARS_CONTENT_TYPE = 1 << 3
@@ -322,17 +329,17 @@ namespace webserv.parser {
 	}
 
 	class "Parser" as Parser {
-		- _logger : log42::logger::Logger
-		- {static} _abnfParser : abnf::Abnf
-		- {static} _httpConfig : HTTPConfig
+		- _logger : t_Logger
+		- {static} _abnf : abnf::Abnf
+		- {static} _config : HTTPConfig
 		- _flags : e_ParserFlags
-		- _buffer : vector<unsigned char>
+		- _buffer : t_raw
 		--
 		+ Parser()
-		+ {static} getLogger() : log42::logger::Logger
-		+ getFlags() : e_ParserFlags
-		+ setFlags(flags : e_ParserFlags) : void
-		+ parseConfig(buffer : vector<unsigned char>) : void
+		+ {static} getLogger() : t_Logger
+		+ getFlags() : int
+		+ setFlags(flags : int) : void
+		+ parseConfig(buffer : t_raw) : void
 		+ parseRequestLine(line : string, request : Request) : void
 		+ parseHeaders(headersBlock : string, request : Request) : void
 	}
@@ -372,159 +379,159 @@ namespace webserv.config {
 	}
 
 	class "ErrorPage" as ErrorPage {
-		- _logger : log42::logger::Logger
-		- _codes : vector<StatusCode>
+		- _logger : t_Logger
+		- _codes : t_StatusCodes
 		- _path : string
 		--
-		+ ErrorPage(codes : vector<StatusCode>, path : string)
-		+ {static} getLogger() : log42::logger::Logger
-		+ getCodes() : vector<StatusCode>
+		+ ErrorPage(codes : t_StatusCodes, path : string)
+		+ {static} getLogger() : t_Logger
+		+ getCodes() : t_StatusCodes
 		+ getPath() : string
 	}
 
 	class "HTTPConfig" as HTTPConfig <<singleton>> {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _ioMultiplexer : string
-		- _clientMaxBodySize : int
+		- _clientMaxBodySize : t_clientMaxBodySize
 		- _davPutPath : string
-		- _davAccess : int
-		- _davMethods : set<e_Method>
+		- _davAccess : t_Perms
+		- _davMethods : t_DavMethods
 		- _defaultType : string
-		- _errorPage : vector<ErrorPage>
-		- _keepAliveTimeout : int
+		- _errorPage : t_ErrorPages
+		- _keepAliveTimeout : t_keepAliveTimeout
 		- _root : string
-		- _serverConfigs : vector<ServerConfig>
-		- _types : map<string, string>
+		- _serverConfigs : t_ServerConfigs
+		- _types : t_MimeTypes
 		- _enableCGI : bool
-		- _cgiExtensions : map<string, string>
+		- _cgiExtensions : t_CgiExtensions
 		--
 		- HTTPConfig()
-		+ getLogger() : log42::logger::Logger
+		+ {static} getLogger() : t_Logger
 		+ {static} getInstance() : HTTPConfig
 		+ getIOMultiplexer() : string
 		+ setIOMultiplexer(ioMultiplexer : string) : void
-		+ getClientMaxBodySize() : int
-		+ setClientMaxBodySize(clientMaxBodySize : int) : void
+		+ getClientMaxBodySize() : t_clientMaxBodySize
+		+ setClientMaxBodySize(clientMaxBodySize : t_clientMaxBodySize) : void
 		+ getDavPutPath() : string
 		+ setDavPutPath(davPutPath : string) : void
-		+ getDavAccess() : int
-		+ setDavAccess(davAcces : int) : void
-		+ getDavMethods() : set<e_Method>
-		+ setDavMethods(davMethods : set<e_Method>) : void
+		+ getDavAccess() : t_Perms
+		+ setDavAccess(davAccess : t_Perms) : void
+		+ getDavMethods() : t_DavMethods
+		+ setDavMethods(davMethods : t_DavMethods) : void
 		+ getDefaultType() : string
 		+ setDefaultType(defaultType : string) : void
-		+ getErrorPage() : vector<ErrorPage>
-		+ setErrorPage(errorPage : vector<ErrorPage>) : void
-		+ getKeepAliveTimeout() : int
-		+ setKeepAliveTimeout(keepAliveTimeout : int) : void
+		+ getErrorPage() : t_ErrorPages
+		+ setErrorPage(errorPage : t_ErrorPages) : void
+		+ getKeepAliveTimeout() : t_keepAliveTimeout
+		+ setKeepAliveTimeout(keepAliveTimeout : t_keepAliveTimeout) : void
 		+ getRoot() : string
 		+ setRoot(root : string) : void
-		+ getServerConfigs() : vector<ServerConfig>
-		+ setServerConfigs(serverConfigs : vector<ServerConfig>) : void
-		+ getTypes() : map<string, string>
-		+ setTypes(types : map<string, string>) : void
+		+ getServerConfigs() : t_ServerConfigs
+		+ setServerConfigs(serverConfigs : t_ServerConfigs) : void
+		+ getTypes() : t_MimeTypes
+		+ setTypes(types : t_MimeTypes) : void
 		+ getEnableCGI() : bool
 		+ setEnableCGI(enableCGI : bool) : void
-		+ getCgiExtensions() : map<string, string>
-		+ setCgiExtensions(cgiExstension : map<string, string>) : void
+		+ getCgiExtensions() : t_CgiExtensions
+		+ setCgiExtensions(cgiExtensions : t_CgiExtensions) : void
 	}
 
 	class "ServerConfig" as ServerConfig {
-		- _logger : log42::logger::Logger
-		- _clientMaxBodySize : int
+		- _logger : t_Logger
+		- _clientMaxBodySize : t_clientMaxBodySize
 		- _davPutPath : string
-		- _davAccess : int
-		- _davMethods : set<e_Method>
+		- _davAccess : t_Perms
+		- _davMethods : t_DavMethods
 		- _defaultType : string
-		- _errorPage : vector<ErrorPage>
-		- _keepAliveTimeout : int
-		- _listen : vector<Listen>
-		- _locationConfigs : vector<LocationConfig>
+		- _errorPage : t_ErrorPages
+		- _keepAliveTimeout : t_keepAliveTimeout
+		- _listen : t_Listen
+		- _locationConfigs : t_LocationConfigs
 		- _root : string
-		- _serverName : vector<string>
-		- _types : map<string, string>
+		- _serverName : t_Servernames
+		- _types : t_MimeTypes
 		- _enableCGI : bool
-		- _cgiExtensions : map<string, string>
+		- _cgiExtensions : t_CgiExtensions
 		--
 		+ ServerConfig()
-		+ {static} getLogger() : log42::logger::Logger
-		+ getClientMaxBodySize() : int
-		+ setClientMaxBodySize(clientMaxBodySize : int) : void
+		+ {static} getLogger() : t_Logger
+		+ getClientMaxBodySize() : t_clientMaxBodySize
+		+ setClientMaxBodySize(clientMaxBodySize : t_clientMaxBodySize) : void
 		+ getDavPutPath() : string
 		+ setDavPutPath(davPutPath : string) : void
-		+ getDavAccess() : int
-		+ setDavAccess(davAcces : int) : void
-		+ getDavMethods() : set<e_Method>
-		+ setDavMethods(davMethods : set<e_Method>) : void
+		+ getDavAccess() : t_Perms
+		+ setDavAccess(davAccess : t_Perms) : void
+		+ getDavMethods() : t_DavMethods
+		+ setDavMethods(davMethods : t_DavMethods) : void
 		+ getDefaultType() : string
 		+ setDefaultType(defaultType : string) : void
-		+ getErrorPage() : vector<ErrorPage>
-		+ setErrorPage(errorPage : vector<ErrorPage>) : void
-		+ getKeepAliveTimeout() : int
-		+ setKeepAliveTimeout(keepAliveTimeout : int) : void
-		+ getListen() : vector<Listen>
-		+ setListen(listen : vector<Listen>) : void
-		+ getLocationConfigs() : vector<LocationConfig>
-		+ setLocationConfigs(locationConfigs : vector<LocationConfig>) : void
+		+ getErrorPage() : t_ErrorPages
+		+ setErrorPage(errorPage : t_ErrorPages) : void
+		+ getKeepAliveTimeout() : t_keepAliveTimeout
+		+ setKeepAliveTimeout(keepAliveTimeout : t_keepAliveTimeout) : void
+		+ getListen() : t_Listen
+		+ setListen(listen : t_Listen) : void
+		+ getLocationConfigs() : t_LocationConfigs
+		+ setLocationConfigs(locationConfigs : t_LocationConfigs) : void
 		+ getRoot() : string
 		+ setRoot(root : string) : void
-		+ getServerNames() : vector<string>
-		+ setServerNames(serverNames : vector<string>) : void
-		+ getTypes() : map<string, string>
-		+ setTypes(types : map<string, string>) : void
+		+ getServerNames() : t_Servernames
+		+ setServerNames(serverNames : t_Servernames) : void
+		+ getTypes() : t_MimeTypes
+		+ setTypes(types : t_MimeTypes) : void
 		+ getEnableCGI() : bool
 		+ setEnableCGI(enableCGI : bool) : void
-		+ getCgiExtensions() : map<string, string>
-		+ setCgiExtensions(cgiExstension : map<string, string>) : void
+		+ getCgiExtensions() : t_CgiExtensions
+		+ setCgiExtensions(cgiExtensions : t_CgiExtensions) : void
 		+ findLocationConfig(path : string) : LocationConfig
 	}
 
 	class "LocationConfig" as LocationConfig {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _autoindex : bool
-		- _clientMaxBodySize : int
+		- _clientMaxBodySize : t_clientMaxBodySize
 		- _davPutPath : string
-		- _davAccess : int
-		- _davMethods : set<e_Method>
+		- _davAccess : t_Perms
+		- _davMethods : t_DavMethods
 		- _defaultType : string
-		- _errorPage : vector<ErrorPage>
-		- _index : vector<string>
-		- _keepAliveTimeout : int
-		- _allowedMethods : vector<e_Method>
+		- _errorPage : t_ErrorPages
+		- _index : t_Index
+		- _keepAliveTimeout : t_keepAliveTimeout
+		- _allowedMethods : t_AllowedMethods
 		- _root : string
-		- _types : map<string, string>
+		- _types : t_MimeTypes
 		- _uri : string
 		- _modifier : e_Modifier
 		- _redirect : Return
 		- _enableCGI : bool
-		- _cgiExtensions : map<string, string>
+		- _cgiExtensions : t_CgiExtensions
 		--
 		+ LocationConfig()
-		+ {static} getLogger() : log42::logger::Logger
+		+ {static} getLogger() : t_Logger
 		+ getAutoindex() : bool
 		+ setAutoindex(autoindex : bool) : void
-		+ getClientMaxBodySize() : int
-		+ setClientMaxBodySize(clientMaxBodySize : int) : void
+		+ getClientMaxBodySize() : t_clientMaxBodySize
+		+ setClientMaxBodySize(clientMaxBodySize : t_clientMaxBodySize) : void
 		+ getDavPutPath() : string
 		+ setDavPutPath(davPutPath : string) : void
-		+ getDavAccess() : int
-		+ setDavAccess(davAcces : int) : void
-		+ getDavMethods() : setvector<e_Method>
-		+ setDavMethods(davMethods : set<e_Method>) : void
+		+ getDavAccess() : t_Perms
+		+ setDavAccess(davAccess : t_Perms) : void
+		+ getDavMethods() : t_DavMethods
+		+ setDavMethods(davMethods : t_DavMethods) : void
 		+ getDefaultType() : string
 		+ setDefaultType(defaultType : string) : void
-		+ getErrorPage() : vector<ErrorPage>
-		+ setErrorPage(errorPage : vector<ErrorPage>) : void
-		+ getIndex() : vector<string>
-		+ setIndex(index : vector<string>) : void
-		+ getKeepAliveTimeout() : int
-		+ setKeepAliveTimeout(keepAliveTimeout : int) : void
-		+ getAllowedMethods() : vector<e_Method>
-		+ setAllowedMethods(allowedMethods : vector<e_Method>) : void
+		+ getErrorPage() : t_ErrorPages
+		+ setErrorPage(errorPage : t_ErrorPages) : void
+		+ getIndex() : t_Index
+		+ setIndex(index : t_Index) : void
+		+ getKeepAliveTimeout() : t_keepAliveTimeout
+		+ setKeepAliveTimeout(keepAliveTimeout : t_keepAliveTimeout) : void
+		+ getAllowedMethods() : t_AllowedMethods
+		+ setAllowedMethods(allowedMethods : t_AllowedMethods) : void
 		+ getRoot() : string
 		+ setRoot(root : string) : void
-		+ getTypes() : map<string, string>
-		+ setTypes(types : map<string, string>) : void
+		+ getTypes() : t_MimeTypes
+		+ setTypes(types : t_MimeTypes) : void
 		+ getUri() : string
 		+ setUri(uri : string) : void
 		+ getModifier() : e_Modifier
@@ -533,8 +540,8 @@ namespace webserv.config {
 		+ setRedirect(redirect : Return) : void
 		+ getEnableCGI() : bool
 		+ setEnableCGI(enableCGI : bool) : void
-		+ getCgiExtensions() : map<string, string>
-		+ setCgiExtensions(cgiExstension : map<string, string>) : void
+		+ getCgiExtensions() : t_CgiExtensions
+		+ setCgiExtensions(cgiExtensions : t_CgiExtensions) : void
 	}
 }
 
@@ -546,50 +553,49 @@ namespace webserv.cgi {
 namespace webserv {
 
 	class "HTTPServer" as HTTPServer <<singleton>> {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _defaultConfigPath : string
 		- _parser : Parser
 		- _httpConfig : HTTPConfig
 		- _serverFactory : ServerFactory
-		- _servers : vector<Server>
-		- _ioMultiplexer : common::core::io::IEventIO
+		- _servers : t_Servers
+		- _ioMultiplexer : t_ioMultiplexer
 		- _clientHandler : ClientHandler
-		- _headerRegistry : HeaderRegistry
+		- _headerRegistry : HTTPHeadersRegistry
 		- _statusCodeRegistry : StatusCodeRegistry
-		- _typesRegistry : TypesRegistry
 		--
 		- HTTPServer()
-		- loadConfig() : HTTPConfig
-		- connectClient(server : common::core::net::TcpServer) : void
+		- loadConfig() : void
+		- connectClient(socket : t_SocketPairServer, serverConfig : ServerConfig) : void
   		+ {static} getInstance() : HTTPServer
-  		+ getLogger() : log42::logger::Logger
+  		+ {static} getLogger() : t_Logger
   		+ setup() : void
-		+ run() : bool
+		+ run() : void
 		+ setConfigPath(configPath : string) : void
 		+ getHTTPConfig() : HTTPConfig
 	}
 
 	class "ServerFactory" as ServerFactory {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _httpConfig : HTTPConfig
 		--
 		+ ServerFactory()
-		+ ServerFactory(httpConfig : HTTPConfig) : void	
-		+ {static} getLogger() : log42::logger::Logger
-		+ createServers() : vector<Server>
+		+ ServerFactory(httpConfig : HTTPConfig)
+		+ {static} getLogger() : t_Logger
+		+ createServers() : t_Servers
 	}
 
 	class "Server" as Server {
-		- _logger : log42::logger::Logger
+		- _logger : t_Logger
 		- _config : ServerConfig
-		- _sockets : vector<pair<common::core::net::TcpServer, sockaddr_storage>>
+		- _sockets : t_ServerSockets
 		--
 		- createSockets() : void
-		- setSocketOptions(socket : common::core::net::TcpServer, listen : config::Listen, ai_family : int, addr : pair<string, string>) : void
+		- setSocketOption(socket : common::core::net::TcpServer, listen : Listen, ai_family : int, addr : t_AddrPortPair) : void
 		+ Server()
 		+ Server(config : ServerConfig)
-		+ {static} getLogger() : log42::logger::Logger
-		+ getSockets() : vector<pair<common::core::net::TcpServer, common::core::net::GetAddrinfo>>
+		+ {static} getLogger() : t_Logger
+		+ getSockets() : t_ServerSockets
 		+ getConfig() : ServerConfig
 	}
 
@@ -597,7 +603,7 @@ namespace webserv {
 	Client "1" *-- "1" RequestHandler
 	Client "1" *-- "1" ResponseHandler
 	Client "1" *-- "1" HTTPError
-	Client --> ServerConfig : uses
+	Client "1" *-- "1" ServerConfig
 	Client ..> e_ClientStatus : uses
 
 	ClientHandler "1" *-- "0..*" Client
@@ -605,20 +611,19 @@ namespace webserv {
 	ErrorPage "1" *-- "1..*" StatusCode
 
 	ExecutionHandler ..> e_ExecutionHandlerFlags : uses
-	
+
 	HTTPConfig "1" *-- "0..*" ErrorPage
 	HTTPConfig "1" *-- "1..*" ServerConfig
-	
-	HTTPHeader ..> HeaderRegistry : uses
-	
+
+	HTTPHeader ..> HTTPHeadersRegistry : uses
+
 	HTTPServer "1" *-- "1" ClientHandler
-	HTTPServer "1" *-- "1" HeaderRegistry
-	HTTPServer "1" *-- "1" HTTPConfig
+	HTTPServer --> "1" HTTPHeadersRegistry : ref
+	HTTPServer --> "1" HTTPConfig : ref
 	HTTPServer "1" *-- "1" Parser
 	HTTPServer "1" *-- "1..*" Server
 	HTTPServer "1" *-- "1" ServerFactory
-	HTTPServer "1" *-- "1" StatusCodeRegistry
-	HTTPServer "1" *-- "1" TypesRegistry
+	HTTPServer --> "1" StatusCodeRegistry : ref
 
 	LocationConfig "1" *-- "0..*" ErrorPage
 	LocationConfig "1" *-- "0..1" Return
@@ -634,21 +639,22 @@ namespace webserv {
 	ServerConfig "1" *-- "0..*" LocationConfig
 
 	ServerFactory ..> Server : creates
-	ServerFactory ..> HTTPConfig: uses
+	ServerFactory ..> HTTPConfig : uses
 
 	Server "1" --> "1" ServerConfig : configures
 
 	StatusCode ..> StatusCodeRegistry : uses
 
+	Request "1" *-- "1" LocationConfig
 	Request ..> HTTPHeader : uses
 	Request ..> e_RequestFlags : uses
 
 	RequestHandler "1" *-- "1" Request
 	RequestHandler "1" *-- "1" Parser
+	RequestHandler --> ServerConfig : ref
 
 	Response ..> HTTPHeader : uses
 	Response ..> StatusCode : uses
-	Response ..> TypesRegistry : uses
 
 	ResponseHandler "1" *-- "1" Response
 
@@ -660,17 +666,46 @@ namespace webserv {
 	ClientHandler ..> common.core.io.IEventIO : uses
 
 	Parser ..> abnf.Abnf : uses
-	
+
 	HTTPServer "1" *-- "1" log42.logger.Logger
 	HTTPServer "1" *-- "1" common.core.io.IEventIO
-	HTTPServer ..> common.loader.Loader : uses
 
 	Server "1" *-- "1..*" common.core.net.TcpServer
-	Server "1" *-- "1..*" common.core.net.GetAddrinfo
 
 	ExecutionHandler ..> common.core.utils.Directory : uses
 	ExecutionHandler ..> common.core.utils.DirectoryIterator : uses
 
 	HTTPError --|> std.exception : inherits
+
+note bottom of webserv
+	**Types (webserv/types.hpp)**
+	t_Logger           = common::core::raii::SharedPtr<log42::logger::Logger>
+	t_ioMultiplexer    = common::core::raii::SharedPtr<common::core::io::IEventIO>
+	t_Headers          = map<string, list<HTTPHeader>>
+	t_HeadersRegistry  = map<string, HTTPHeader>
+	t_StatusCodesRegistry = map<unsigned short, StatusCode>
+	t_MimeTypes        = map<string, string>
+	t_CgiExtensions    = map<string, string>
+	t_DavMethods       = set<e_Method>
+	t_AllowedMethods   = set<e_Method>
+	t_ErrorPages       = vector<ErrorPage>
+	t_ServerConfigs    = vector<ServerConfig>
+	t_LocationConfigs  = vector<LocationConfig>
+	t_Listen           = vector<Listen>
+	t_Servernames      = vector<string>
+	t_Index            = vector<string>
+	t_StatusCodes      = vector<StatusCode>
+	t_Servers          = vector<Server>
+	t_Clients          = map<int, Client>
+	t_raw              = vector<unsigned char>
+	t_SubRules         = vector<string>
+	t_clientMaxBodySize = unsigned int
+	t_keepAliveTimeout = unsigned int
+	t_Perms            = unsigned short
+	t_SocketPairServer = pair<common::core::net::TcpServer, sockaddr_storage>
+	t_SocketPairClient = pair<common::core::net::TcpClient, sockaddr_storage>
+	t_ServerSockets    = vector<t_SocketPairServer>
+	t_AddrPortPair     = pair<string, string>
+end note
 
 @enduml

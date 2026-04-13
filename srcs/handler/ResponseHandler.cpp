@@ -340,7 +340,6 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 	appendToBufferResponse(t_raw(crlf, crlf + 2));
 	appendToBufferResponse(t_raw(errorBody.begin(), errorBody.end()));
 	DEBUG(_logger, "headers and body serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
-
 }
 
 /**

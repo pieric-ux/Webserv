@@ -131,8 +131,6 @@ t_Clients::iterator	ClientHandler::removeClient(client::Client &client)
  */
 void	ClientHandler::processClients()
 {
-	// DEBUG(_logger, "Processing clients (" + common::core::utils::toString(_clients.size()) + " active)");
-
 	std::time_t now = std::time(NULL);
 
 	t_Clients::iterator it = _clients.begin();

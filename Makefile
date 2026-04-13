@@ -38,7 +38,6 @@ vpath %.cpp \
 	$(SRCDIR)/config \
 	$(SRCDIR)/handler \
 	$(SRCDIR)/headers \
-	$(SRCDIR)/MIMEtypes \
 	$(SRCDIR)/parser \
 	$(SRCDIR)/status \
 
@@ -52,8 +51,6 @@ SRCES += ClientHandler.cpp ExecutionHandler.cpp RequestHandler.cpp ResponseHandl
 SRCES += Client.cpp Request.cpp Response.cpp HTTPError.cpp
 		 # Headers
 SRCES += HTTPHeader.cpp HTTPHeadersRegistry.cpp
-		 # MIMETypes
-SRCES += TypesRegistry.cpp
 		 # Parser
 SRCES += Parser.cpp
 		 # Status

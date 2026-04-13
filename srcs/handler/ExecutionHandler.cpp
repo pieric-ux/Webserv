@@ -282,8 +282,8 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 				if (request.getMethod() == config::HEAD
 					&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
 				{
-					DEBUG(_logger, "HEAD complete for index file");
 					setFlags(getFlags() | E_EXEC_COMPLETE);
+					DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after HEAD index file");
 				}
 				return ;
 			}
@@ -313,6 +313,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 				}
 				_autoindexBuffer.clear();
 				setFlags(getFlags() | E_EXEC_COMPLETE);
+				DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after autoindex");
 			}
 			return ;
 		}
@@ -349,8 +350,8 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 		if (request.getMethod() == config::HEAD
 			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
 		{
-			DEBUG(_logger, "HEAD complete (no body)");
 			setFlags(getFlags() | E_EXEC_COMPLETE);
+			DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after HEAD file");
 		}
 		return ;
 	}
@@ -487,6 +488,7 @@ void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const
 
 	setFlags(getFlags() | E_EXEC_NOCONTENT);
 	setFlags(getFlags() | E_EXEC_COMPLETE);
+	DEBUG(_logger, "E_EXEC_COMPLETE flags set in execution handler after DELETE");
 }
 
 /**
@@ -608,6 +610,7 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 	if (rd == 0)
 	{
 		setFlags(getFlags() | E_EXEC_COMPLETE);
+		DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after EOF on file");
 		_fd.reset();
 		DEBUG(_logger, "EOF on fd=" + common::core::utils::toString(_fd.get()));
 		return ;
@@ -647,6 +650,7 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 	if (available == 0)
 	{
 		setFlags(getFlags() | E_EXEC_COMPLETE);
+		DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after all body received");
 		_fd.reset();
 		_bodyReceived = 0;
 		return ;
@@ -666,6 +670,7 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 		if (_bodyReceived >= static_cast<ssize_t>(std::stoul(it->second.front().getValue())))
 		{
 			setFlags(getFlags() | E_EXEC_COMPLETE);
+			DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after all body received");
 			_fd.reset();
 			_bodyReceived = 0;
 		}

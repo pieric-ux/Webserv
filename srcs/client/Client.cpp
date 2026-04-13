@@ -416,6 +416,7 @@ void Client::buildErrorResponse()
 	DEBUG(_logger, "Building error response: " + std::string(_HTTPError.what()));
 	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
 	_executionHandler.setFlags(_executionHandler.getFlags() | handler::E_EXEC_COMPLETE);
+	DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after building error response");
 }
 
 /**
@@ -423,12 +424,14 @@ void Client::buildErrorResponse()
  */
 void Client::resetAll()
 {
+	if (_status == E_CLI_ERR_PARSING)
+		_requestHandler.clearBufferRequest();
+	_responseHandler.clearBufferResponse();
+
 	if (_responseHandler.getResponse().shouldCloseConnection())
 		setStatus(client::E_CLI_DISCONNECTED);
 	else
 		this->setStatus(E_CLI_REQUEST);
-
-	_responseHandler.clearBufferResponse();
 
 	const config::LocationConfig &locationConfig = _requestHandler.getRequest().getLocationConfig();
 	_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
@@ -440,6 +443,8 @@ void Client::resetAll()
 	_responseHandler.getResponse().setFlags(0);
 	_executionHandler.setFlags(0);
 	this->setHTTPError(HTTPError());
+
+	DEBUG(_logger, "Client state reset for next request. Effective keep-alive timeout set to " + common::core::utils::toString(_effectiveKeepaliveTimeout) + " seconds");
 }
 
 } // !client
