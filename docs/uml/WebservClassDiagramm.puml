@@ -16,9 +16,9 @@ skinparam IconProtected {
   BackgroundColor #ff7f00
 }
 
-/'!include ../../libs/common/doc/puml/class.puml'/
-/'!include ../../libs/logger/doc/puml/class.puml'/
-/'!include ../../libs/parser/doc/puml/class.puml'/
+!include ../../libs/common/doc/puml/class.puml
+!include ../../libs/logger/doc/puml/class.puml
+!include ../../libs/parser/doc/puml/class.puml
 
 title Class Diagram for Webserv 
 
@@ -661,21 +661,21 @@ namespace webserv {
 	Return ..> StatusCode : uses
 }
 
-	Client "1" *-- "1" common.core.net.TcpClient
+	webserv.client.Client "1" *-- "1" common.core.net.TcpClient
 
-	ClientHandler ..> common.core.io.IEventIO : uses
+	webserv.handler.ClientHandler ..> common.core.io.IEventIO : uses
 
-	Parser ..> abnf.Abnf : uses
+	webserv.parser.Parser ..> ABNF : uses
 
-	HTTPServer "1" *-- "1" log42.logger.Logger
-	HTTPServer "1" *-- "1" common.core.io.IEventIO
+	webserv.HTTPServer "1" *-- "1" log42.logger.Logger
+	webserv.HTTPServer "1" *-- "1" common.core.io.IEventIO
 
-	Server "1" *-- "1..*" common.core.net.TcpServer
+	webserv.Server "1" *-- "1..*" common.core.net.TcpServer
 
-	ExecutionHandler ..> common.core.utils.Directory : uses
-	ExecutionHandler ..> common.core.utils.DirectoryIterator : uses
+	webserv.handler.ExecutionHandler ..> common.core.utils.Directory : uses
+	webserv.handler.ExecutionHandler ..> common.core.utils.DirectoryIterator : uses
 
-	HTTPError --|> std.exception : inherits
+	webserv.client.HTTPError --|> std.exception : inherits
 
 note bottom of webserv
 	**Types (webserv/types.hpp)**
