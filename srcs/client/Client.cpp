@@ -323,18 +323,6 @@ void	Client::receiveData()
 }
 
 /**
- * @brief Builds the HTTP error response from the stored HTTPError.
- */
-void Client::buildErrorResponse()
-{
-	if (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT)
-		return ;
-	INFO(_logger, "Building error response: " + std::string(_HTTPError.what()));
-	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
-	_executionHandler.setFlags(_executionHandler.getFlags() | handler::E_EXEC_COMPLETE);
-}
-
-/**
  * @brief [TODO:description]
  */
 void Client::sendData()
@@ -423,6 +411,18 @@ void Client::processHTTPCycle()
 }
 
 /**
+ * @brief Builds the HTTP error response from the stored HTTPError.
+ */
+void Client::buildErrorResponse()
+{
+	if (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT)
+		return ;
+	INFO(_logger, "Building error response: " + std::string(_HTTPError.what()));
+	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
+	_executionHandler.setFlags(_executionHandler.getFlags() | handler::E_EXEC_COMPLETE);
+}
+
+/**
  * @brief [TODO:description]
  */
 void Client::resetAll()
@@ -443,8 +443,6 @@ void Client::resetAll()
 	_executionHandler.setFlags(0);
 	this->setHTTPError(HTTPError());
 }
-
-
 
 } // !client
 } // !webserv

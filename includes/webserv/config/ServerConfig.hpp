@@ -33,37 +33,37 @@ class ServerConfig
 		static t_Logger				getLogger();
 
 		const t_clientMaxBodySize	&getClientMaxBodySize() const;
+		void						setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize);
 
 		const std::string			&getDavPutPath() const;
+		void						setDavPutPath(const std::string &davPutPath);
 		const t_Perms				&getDavAccess() const;
+		void						setDavAccess(const t_Perms &davAccess);
 		const t_DavMethods			&getDavMethods() const;
+		void						setDavMethods(const t_DavMethods &davMethods);
 
 		const std::string			&getDefaultType() const;
+		void						setDefaultType(const std::string &defaultType);
 		const t_ErrorPages			&getErrorPage() const;
+		void						setErrorPage(const t_ErrorPages &errorPage);
 		const t_keepAliveTimeout	&getKeepAliveTimeout() const;
+		void						setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout);
 		const t_Listen				&getListen() const;
+		void						setListen(const t_Listen &listen);
 		const t_LocationConfigs		&getLocationConfigs() const;
+		void						setLocationConfigs(const t_LocationConfigs &locationConfigs);
 		const std::string			&getRoot() const;
+		void						setRoot(const std::string &root);
 		const t_Servernames			&getServerNames() const;
+		void						setServerName(const t_Servernames &serverName);
 		const t_MimeTypes			&getTypes() const;
+		void						setTypes(const t_MimeTypes &types);
 		bool						getEnableCGI() const;
+		void						setEnableCGI(const bool enableCGI);
 		const t_CgiExtensions		&getCgiExtensions() const;
+		void						setCgiExtensions(const t_CgiExtensions &cgiExtensions);
 		const LocationConfig		&findLocationConfig(const std::string &requestTarget);
 
-		void				setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize);
-		void				setDavPutPath(const std::string &davPutPath);
-		void				setDavAccess(const t_Perms &davAccess);
-		void				setDavMethods(const t_DavMethods &davMethods);
-		void				setDefaultType(const std::string &defaultType);
-		void				setErrorPage(const t_ErrorPages &errorPage);
-		void				setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout);
-		void				setListen(const t_Listen &listen);
-		void				setLocationConfigs(const t_LocationConfigs &locationConfigs);
-		void				setRoot(const std::string &root);
-		void				setServerName(const t_Servernames &serverName);
-		void				setTypes(const t_MimeTypes &types);
-		void				setEnableCGI(const bool enableCGI);
-		void				setCgiExtensions(const t_CgiExtensions &cgiExtensions);
 
 	private:
 		t_Logger					_logger;

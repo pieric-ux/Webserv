@@ -87,6 +87,16 @@ HTTPServer &HTTPServer::getInstance()
 
 /**
  * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Logger HTTPServer::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
  */
 void	HTTPServer::setup()
 {

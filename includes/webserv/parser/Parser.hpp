@@ -90,6 +90,21 @@ class Parser
 		t_CgiExtensions				parseCgiExtensionDirs(const t_SubRules &extDirs,
 										const t_SubRules &extBlocks) const;
 
+		void						parseListenDirectives(const std::string &serverBlockStr,
+										config::ServerConfig &config);
+		void						parseServerNameDirectives(const std::string &serverBlockStr,
+										config::ServerConfig &config);
+		void						parseLocationUri(const std::string &locationBlockStr,
+										config::LocationConfig &config);
+		void						parseAutoindexDirective(const std::string &locationBlockStr,
+										config::LocationConfig &config);
+		void						parseIndexDirective(const std::string &locationBlockStr,
+										config::LocationConfig &config);
+		void						parseAllowedMethodsDirective(const std::string &locationBlockStr,
+										config::LocationConfig &config);
+		void						parseReturnDirective(const std::string &locationBlockStr,
+										config::LocationConfig &config);
+
 		template <typename ConfigT>
 		void						parseCommonDirectives(const std::string &parentRule,
 										const std::string &input,
@@ -105,21 +120,6 @@ class Parser
 
 		template <typename ValueT>
 		static ValueT				parseMultiplier(const std::string &val);
-
-		void						parseListenDirectives(const std::string &serverBlockStr,
-										config::ServerConfig &config);
-		void						parseServerNameDirectives(const std::string &serverBlockStr,
-										config::ServerConfig &config);
-		void						parseLocationUri(const std::string &locationBlockStr,
-										config::LocationConfig &config);
-		void						parseAutoindexDirective(const std::string &locationBlockStr,
-										config::LocationConfig &config);
-		void						parseIndexDirective(const std::string &locationBlockStr,
-										config::LocationConfig &config);
-		void						parseAllowedMethodsDirective(const std::string &locationBlockStr,
-										config::LocationConfig &config);
-		void						parseReturnDirective(const std::string &locationBlockStr,
-										config::LocationConfig &config);
 };
 
 /**

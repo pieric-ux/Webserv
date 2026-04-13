@@ -117,6 +117,17 @@ bool LocationConfig::getAutoindex() const
 {
 	return _autoindex;
 }
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param autoindex [TODO:parameter]
+ */
+void LocationConfig::setAutoindex(const bool autoindex)
+{
+	_autoindex = autoindex;
+}
+
 /**
  * @brief [TODO:description]
  *
@@ -125,6 +136,16 @@ bool LocationConfig::getAutoindex() const
 const t_clientMaxBodySize	&LocationConfig::getClientMaxBodySize() const
 {
 	return _clientMaxBodySize;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param clientMaxBodySize [TODO:parameter]
+ */
+void LocationConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
+{
+	_clientMaxBodySize = clientMaxBodySize;
 }
 
 /**
@@ -140,11 +161,31 @@ const std::string &LocationConfig::getDavPutPath() const
 /**
  * @brief [TODO:description]
  *
+ * @param davPutPath [TODO:parameter]
+ */
+void LocationConfig::setDavPutPath(const std::string &davPutPath)
+{
+	_davPutPath = davPutPath;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-const t_Perms				&LocationConfig::getDavAccess() const
+const t_Perms	&LocationConfig::getDavAccess() const
 {
 	return _davAccess;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param davAccess [TODO:parameter]
+ */
+void LocationConfig::setDavAccess(const t_Perms &davAccess)
+{
+	_davAccess = davAccess;
 }
 
 /**
@@ -160,11 +201,31 @@ const t_DavMethods	&LocationConfig::getDavMethods() const
 /**
  * @brief [TODO:description]
  *
+ * @param davMethods [TODO:parameter]
+ */
+void LocationConfig::setDavMethods(const t_DavMethods &davMethods)
+{
+	_davMethods = davMethods;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 const std::string &LocationConfig::getDefaultType() const
 {
 	return _defaultType;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param defaultType [TODO:parameter]
+ */
+void LocationConfig::setDefaultType(const std::string &defaultType)
+{
+	_defaultType = defaultType;
 }
 
 /**
@@ -180,11 +241,31 @@ const t_ErrorPages	&LocationConfig::getErrorPage() const
 /**
  * @brief [TODO:description]
  *
+ * @param errorPage [TODO:parameter]
+ */
+void LocationConfig::setErrorPage(const t_ErrorPages &errorPage)
+{
+	_errorPage = errorPage;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 const t_Index	&LocationConfig::getIndex() const
 {
 	return _index;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param index [TODO:parameter]
+ */
+void LocationConfig::setIndex(const t_Index &index)
+{
+	_index = index;
 }
 
 /**
@@ -200,41 +281,11 @@ const t_keepAliveTimeout	&LocationConfig::getKeepAliveTimeout() const
 /**
  * @brief [TODO:description]
  *
- * @return [TODO:return]
+ * @param keepAliveTimeout [TODO:parameter]
  */
-const std::string &LocationConfig::getRoot() const
+void LocationConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout)
 {
-	return _root;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-const t_MimeTypes	&LocationConfig::getTypes() const
-{
-	return _types;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-const std::string &LocationConfig::getUri() const
-{
-	return _uri;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-const e_Modifier &LocationConfig::getModifier() const
-{
-	return _modifier;
+	_keepAliveTimeout = keepAliveTimeout;
 }
 
 /**
@@ -250,11 +301,91 @@ const t_AllowedMethods	&LocationConfig::getAllowedMethods() const
 /**
  * @brief [TODO:description]
  *
+ * @param allowedMethods [TODO:parameter]
+ */
+void LocationConfig::setAllowedMethods(const t_AllowedMethods &allowedMethods)
+{
+	_allowedMethods = allowedMethods;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-bool LocationConfig::getEnableCGI() const
+const std::string &LocationConfig::getRoot() const
 {
-	return _enableCGI;
+	return _root;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param root [TODO:parameter]
+ */
+void LocationConfig::setRoot(const std::string &root)
+{
+	_root = root;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const t_MimeTypes	&LocationConfig::getTypes() const
+{
+	return _types;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param types [TODO:parameter]
+ */
+void LocationConfig::setTypes(const t_MimeTypes &types)
+{
+	_types = types;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const std::string &LocationConfig::getUri() const
+{
+	return _uri;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param uri [TODO:parameter]
+ */
+void LocationConfig::setUri(const std::string &uri)
+{
+	_uri = uri;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const e_Modifier &LocationConfig::getModifier() const
+{
+	return _modifier;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param modifier [TODO:parameter]
+ */
+void LocationConfig::setModifier(const e_Modifier modifier)
+{
+	_modifier = modifier;
 }
 
 /**
@@ -270,6 +401,36 @@ const Return &LocationConfig::getRedirect() const
 /**
  * @brief [TODO:description]
  *
+ * @param redirect [TODO:parameter]
+ */
+void LocationConfig::setRedirect(const Return &redirect)
+{
+	_redirect = redirect;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+bool LocationConfig::getEnableCGI() const
+{
+	return _enableCGI;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param enableCGI [TODO:parameter]
+ */
+void LocationConfig::setEnableCGI(const bool enableCGI)
+{
+	_enableCGI = enableCGI;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 const t_CgiExtensions	&LocationConfig::getCgiExtensions() const
@@ -280,88 +441,8 @@ const t_CgiExtensions	&LocationConfig::getCgiExtensions() const
 /**
  * @brief [TODO:description]
  *
- * @param modifier [TODO:parameter]
+ * @param cgiExtensions [TODO:parameter]
  */
-void LocationConfig::setModifier(const e_Modifier modifier)
-{
-	_modifier = modifier;
-}
-
-void LocationConfig::setAutoindex(const bool autoindex)
-{
-	_autoindex = autoindex;
-}
-
-void LocationConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
-{
-	_clientMaxBodySize = clientMaxBodySize;
-}
-
-void LocationConfig::setDavPutPath(const std::string &davPutPath)
-{
-	_davPutPath = davPutPath;
-}
-
-void LocationConfig::setDavAccess(const t_Perms &davAccess)
-{
-	_davAccess = davAccess;
-}
-
-void LocationConfig::setDavMethods(const t_DavMethods &davMethods)
-{
-	_davMethods = davMethods;
-}
-
-void LocationConfig::setDefaultType(const std::string &defaultType)
-{
-	_defaultType = defaultType;
-}
-
-void LocationConfig::setErrorPage(const t_ErrorPages &errorPage)
-{
-	_errorPage = errorPage;
-}
-
-void LocationConfig::setIndex(const t_Index &index)
-{
-	_index = index;
-}
-
-void LocationConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout)
-{
-	_keepAliveTimeout = keepAliveTimeout;
-}
-
-void LocationConfig::setAllowedMethods(const t_AllowedMethods &allowedMethods)
-{
-	_allowedMethods = allowedMethods;
-}
-
-void LocationConfig::setRoot(const std::string &root)
-{
-	_root = root;
-}
-
-void LocationConfig::setTypes(const t_MimeTypes &types)
-{
-	_types = types;
-}
-
-void LocationConfig::setUri(const std::string &uri)
-{
-	_uri = uri;
-}
-
-void LocationConfig::setRedirect(const Return &redirect)
-{
-	_redirect = redirect;
-}
-
-void LocationConfig::setEnableCGI(const bool enableCGI)
-{
-	_enableCGI = enableCGI;
-}
-
 void LocationConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
 {
 	_cgiExtensions = cgiExtensions;

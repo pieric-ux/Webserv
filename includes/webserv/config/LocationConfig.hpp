@@ -39,42 +39,43 @@ class LocationConfig
 		static t_Logger				getLogger();
 
 		bool						getAutoindex() const;
+		void						setAutoindex(const bool autoindex);
 
 		const t_clientMaxBodySize	&getClientMaxBodySize() const;
+		void						setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize);
+
 		const std::string			&getDavPutPath() const;
+		void						setDavPutPath(const std::string &davPutPath);
 		const t_Perms				&getDavAccess() const;
+		void						setDavAccess(const t_Perms &davAccess);
 		const t_DavMethods			&getDavMethods() const;
+		void						setDavMethods(const t_DavMethods &davMethods);
 
 		const std::string			&getDefaultType() const;
+		void						setDefaultType(const std::string &defaultType);
 		const t_ErrorPages			&getErrorPage() const;
+		void						setErrorPage(const t_ErrorPages &errorPage);
 		const t_Index				&getIndex() const;
+		void						setIndex(const t_Index &index);
 		const t_keepAliveTimeout	&getKeepAliveTimeout() const;
+		void						setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout);
 		const t_AllowedMethods		&getAllowedMethods() const;
+		void						setAllowedMethods(const t_AllowedMethods &allowedMethods);
 		const std::string			&getRoot() const;
+		void						setRoot(const std::string &root);
 		const t_MimeTypes			&getTypes() const;
+		void						setTypes(const t_MimeTypes &types);
 		const std::string			&getUri() const;
+		void						setUri(const std::string &uri);
 		const e_Modifier			&getModifier() const;
 		void						setModifier(const e_Modifier modifier);
 		const Return				&getRedirect() const;
+		void						setRedirect(const Return &redirect);
 		bool						getEnableCGI() const;
+		void						setEnableCGI(const bool enableCGI);
 		const t_CgiExtensions		&getCgiExtensions() const;
+		void						setCgiExtensions(const t_CgiExtensions &cgiExtensions);
 
-		void				setAutoindex(const bool autoindex);
-		void				setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize);
-		void				setDavPutPath(const std::string &davPutPath);
-		void				setDavAccess(const t_Perms &davAccess);
-		void				setDavMethods(const t_DavMethods &davMethods);
-		void				setDefaultType(const std::string &defaultType);
-		void				setErrorPage(const t_ErrorPages &errorPage);
-		void				setIndex(const t_Index &index);
-		void				setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout);
-		void				setAllowedMethods(const t_AllowedMethods &allowedMethods);
-		void				setRoot(const std::string &root);
-		void				setTypes(const t_MimeTypes &types);
-		void				setUri(const std::string &uri);
-		void				setRedirect(const Return &redirect);
-		void				setEnableCGI(const bool enableCGI);
-		void				setCgiExtensions(const t_CgiExtensions &cgiExtensions);
 
 	private:
 		t_Logger					_logger;
