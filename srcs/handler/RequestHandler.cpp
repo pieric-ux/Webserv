@@ -213,6 +213,18 @@ void RequestHandler::appendToBufferRequest(const t_raw &buffer)
 	_bufferRequest.insert(_bufferRequest.end(), buffer.begin(), buffer.end());
 	DEBUG(_logger, "Buffer request: +" + common::core::utils::toString(buffer.size()) + " bytes (total=" + common::core::utils::toString(_bufferRequest.size()) + "), buffer content: " + std::string(buffer.begin(), buffer.end()));
 }
+/**
+ * @brief [TODO:description]
+ *
+ * @param n [TODO:parameter]
+ */	
+void RequestHandler::eraseBufferRequestFront(std::size_t n)
+{
+	if (n >= _bufferRequest.size())
+		_bufferRequest.clear();
+	else
+		_bufferRequest.erase(_bufferRequest.begin(), _bufferRequest.begin() + n);
+}
 
 /**
  * @brief [TODO:description]

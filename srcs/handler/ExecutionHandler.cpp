@@ -401,7 +401,7 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
  * @param responseHandler [TODO:parameter]
  * @param locationConfig [TODO:parameter]
  */
-void ExecutionHandler::executePUT(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executePUT(RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
 	t_DavMethods davMethods = locationConfig.getDavMethods();
 
@@ -581,7 +581,7 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
  *
  * @param request Request whose body provides the bytes to flush.
  */
-void ExecutionHandler::writeChunk(const handler::RequestHandler &requestHandler)
+void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 {
 	if (!_fd.valid())
 	{
@@ -606,25 +606,30 @@ void ExecutionHandler::writeChunk(const handler::RequestHandler &requestHandler)
 	{
 		setFlags(getFlags() | E_EXEC_COMPLETE);
 		_fd.reset();
+		_bodyReceived = 0;
 		return ;
 	}
 	std::size_t		toWrite = remaining < config::DefaultConfig::BUFFER_SIZE ? remaining : config::DefaultConfig::BUFFER_SIZE;
 	toWrite = toWrite < available ? toWrite : available;
 	ssize_t			wr;
 
-	wr = ::write(_fd.get(), &buf[offset], toWrite);
+	DEBUG(_logger, "buff request :" + std::string(buf.begin(), buf.end()));
+	wr = ::write(_fd.get(), &buf, toWrite);
 
 	if (wr > 0)
 	{
+		requestHandler.eraseBufferRequestFront(wr);
 		_bodyReceived += wr;
 		DEBUG(_logger, "writeChunk: wrote " + common::core::utils::toString(wr) + " bytes to fd=" + common::core::utils::toString(_fd.get()));
 		if (_bodyReceived >= static_cast<ssize_t>(std::stoul(it->second.front().getValue())))
 		{
 			setFlags(getFlags() | E_EXEC_COMPLETE);
 			_fd.reset();
+			_bodyReceived = 0;
 		}
 		return ;
 	}
+	_bodyReceived = 0;
 	ERROR(_logger, "writeChunk: write() failed on fd=" + common::core::utils::toString(_fd.get()));
 	throw client::HTTPError(500);
 }

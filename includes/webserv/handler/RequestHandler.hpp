@@ -44,6 +44,7 @@ class RequestHandler
 		void					setRequest(const client::Request &request);
 		const t_raw				&getBufferRequest() const;
 		void					appendToBufferRequest(const t_raw &buffer);
+		void					eraseBufferRequestFront(std::size_t n);
 		void					clearBufferRequest();
 		parser::Parser			&getParser();
 
