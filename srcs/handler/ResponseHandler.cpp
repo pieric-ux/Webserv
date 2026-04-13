@@ -144,21 +144,24 @@ void ResponseHandler::eraseBufferResponseFront(std::size_t n)
  */
 void ResponseHandler::buildHeadersResponse(const client::Request &request, int execFlags, int parsFlags)
 {
-	DEBUG(_logger, "buildHeadersResponse: execFlags=0x" + common::core::utils::toString(execFlags)
+	DEBUG(_logger, "execFlags=0x" + common::core::utils::toString(execFlags)
 		+ " parsFlags=0x" + common::core::utils::toString(parsFlags));
 	
 	// set status codes
-
 	if (execFlags & E_EXEC_CREATED)
 		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(201));
 	else if (execFlags & E_EXEC_NOCONTENT)
 		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(204));
 	else if (_response.getStatusCode().getCode() == 0)
 		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(200));
-	DEBUG(_logger, "buildHeadersResponse: status code set to " + common::core::utils::toString(_response.getStatusCode().getCode()));
+	DEBUG(_logger, "status code set to " + common::core::utils::toString(_response.getStatusCode().getCode()));
 	
 	buildStatusLine(request.getHttpVersion(), _response.getStatusCode(), _response.getStatusCode().getMessage());
 	buildHeaders(request, parsFlags);
+
+	int code = _response.getStatusCode().getCode();
+	if (code == 201)
+		_response.addHeader("Content-Length", "0");
 
 	//append headers to bufferReponse
 	const t_Headers &headers = _response.getHeaders();
@@ -169,21 +172,27 @@ void ResponseHandler::buildHeadersResponse(const client::Request &request, int e
 		{
 			std::string headerLine = lit->getName() + ": " + lit->getValue() + "\r\n";
 			appendToBufferResponse(t_raw(headerLine.begin(), headerLine.end()));
-			DEBUG(_logger, "buildHeadersResponse: header added to buffer: " + headerLine);
+			DEBUG(_logger, "header added to buffer: " + headerLine);
 		}
 	}
 
 	unsigned char crlf[] = {'\r', '\n'};
 	appendToBufferResponse(t_raw(crlf, crlf + 2));
-	DEBUG(_logger, "buildHeadersResponse: headers serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
+	DEBUG(_logger, "headers serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
 }
 
+/**
+ * @brief [TODO:description]
+ *
+ * @param request [TODO:parameter]
+ * @param error [TODO:parameter]
+ */
 void ResponseHandler::buildErrorResponse(const client::Request &request, const client::HTTPError &error)
 {
-	DEBUG(_logger, "buildErrorResponse: building error response for " + common::core::utils::toString(error.getStatusCode().getCode()) + " " + error.getStatusCode().getMessage());
+	DEBUG(_logger, "building error response for " + common::core::utils::toString(error.getStatusCode().getCode()) + " " + error.getStatusCode().getMessage());
 
 	_response.setStatusCode(error.getStatusCode());
-	DEBUG(_logger, "buildErrorResponse: status code set to " + common::core::utils::toString(_response.getStatusCode().getCode()));
+	DEBUG(_logger, "status code set to " + common::core::utils::toString(_response.getStatusCode().getCode()));
 
 	std::string httpVersion = request.getHttpVersion();
 	if (httpVersion.empty())
@@ -310,7 +319,7 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 							+ "</h1><p>"
 							+ error.getStatusCode().getDescription()
 							+ "</p></body></html>";
-		DEBUG(_logger, "buildErrorResponse: error errorBody generated, size=" + common::core::utils::toString(errorBody.size()));
+		DEBUG(_logger, "errorBody generated, size=" + common::core::utils::toString(errorBody.size()));
 
 		_response.addHeader("Content-Length", common::core::utils::toString(errorBody.size()));
 		_response.addHeader("Content-Type", "text/html");
@@ -324,13 +333,13 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 		{
 			std::string headerLine = lit->getName() + ": " + lit->getValue() + "\r\n";
 			appendToBufferResponse(t_raw(headerLine.begin(), headerLine.end()));
-			DEBUG(_logger, "buildErrorResponse: header added to buffer: " + headerLine);
+			DEBUG(_logger, "header added to buffer: " + headerLine);
 		}
 	}
 	unsigned char crlf[] = {'\r', '\n'};
 	appendToBufferResponse(t_raw(crlf, crlf + 2));
 	appendToBufferResponse(t_raw(errorBody.begin(), errorBody.end()));
-	DEBUG(_logger, "buildErrorResponse: headers and body serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
+	DEBUG(_logger, "headers and body serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
 
 }
 
@@ -350,7 +359,7 @@ void ResponseHandler::buildStatusLine(const std::string &httpVersion, const stat
 							+ " "
 							+ reasonPhrase
 							+ "\r\n";
-	DEBUG(_logger, "buildStatusLine: " + httpVersion + " " + common::core::utils::toString(statusCode.getCode()) + " " + reasonPhrase);
+	DEBUG(_logger, httpVersion + " " + common::core::utils::toString(statusCode.getCode()) + " " + reasonPhrase);
 	appendToBufferResponse(t_raw(statusLine.begin(), statusLine.end()));
 }
 
@@ -361,7 +370,7 @@ void ResponseHandler::buildStatusLine(const std::string &httpVersion, const stat
  */
 void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags)
 {
-	DEBUG(_logger, "buildHeaders: building response headers");
+	DEBUG(_logger, "building response headers");
 	_response.addHeader("Server", "webserv/1.0");
 
 	std::time_t t = std::time(NULL);

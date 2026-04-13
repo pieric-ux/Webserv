@@ -508,7 +508,10 @@ t_keepAliveTimeout Parser::parseTimeoutValue(const std::string &str)
 	std::string digits = str.substr(start, end - start + 1);
 	unsigned long timeout = std::strtoul(digits.c_str(), NULL, 10);
 	if (timeout > static_cast<unsigned long>(std::numeric_limits<t_keepAliveTimeout>::max()))
+	{
+		WARNING(Parser::getLogger(), "Keepalive timeout value too large: " + digits);
 		throw std::runtime_error("Keepalive timeout value too large: " + digits + "\n");
+	}
 	return static_cast<t_keepAliveTimeout>(timeout);
 }
 

@@ -9,7 +9,7 @@
 # define WEBSERV_LOG_DIR "logs"
 #endif
 
-# define LOG_FMT "[%(asctime)] - %(name) - %(levelname) - %(message) - file: %(filename) - function: %(funcName)() at line: %(lineno)"
+# define LOG_FMT "[%(asctime)] - %(name) - %(levelname) - %(funcName)(): %(message) - file: %(filename) at line: %(lineno)"
 #if __APPLE__
 # define LOG_DATE_FMT "%Y-%m-%d %H:%M:%S,%%(msecs) %Z"
 #elif __linux__
