@@ -36,9 +36,7 @@ ErrorPage::ErrorPage() : _codes(), _path()
  * @param codes [TODO:parameter]
  * @param path [TODO:parameter]
  */
-ErrorPage::ErrorPage(const t_StatusCodes &codes, const std::string &path)
-:	_codes(codes),
-_path(path)
+ErrorPage::ErrorPage(const t_StatusCodes &codes, const std::string &path) :	_codes(codes), _path(path)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.ErrorPage");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -56,10 +54,7 @@ _path(path)
  *
  * @param rhs [TODO:parameter]
  */
-ErrorPage::ErrorPage(const ErrorPage &rhs)
-:	_logger(rhs._logger),
-_codes(rhs._codes),
-_path(rhs._path)
+ErrorPage::ErrorPage(const ErrorPage &rhs) : _logger(rhs._logger), _codes(rhs._codes), _path(rhs._path)
 {}
 
 /**

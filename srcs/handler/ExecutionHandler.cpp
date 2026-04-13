@@ -154,7 +154,7 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
 	const config::Return &redirect = locationConfig.getRedirect();
 	if (redirect.statusCode.getCode() != 0)
 	{
-		INFO(_logger, "execute: return directive " + common::core::utils::toString(redirect.statusCode.getCode())
+		INFO(_logger, "return directive " + common::core::utils::toString(redirect.statusCode.getCode())
 			+ (redirect.url.empty() ? "" : " -> " + redirect.url));
 		throw client::HTTPError(redirect.statusCode.getCode(), redirect.url);
 	}
@@ -198,23 +198,26 @@ void ExecutionHandler::executeRequest(RequestHandler &requestHandler, ResponseHa
 	{
 		case config::GET:
 		case config::HEAD:
-			DEBUG(_logger, "executeRequest: executeHEADorGET for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
+			DEBUG(_logger, "dispatching " + config::methodToStr(requestHandler.getRequest().getMethod()));
 			executeHEADorGET(requestHandler, responseHandler, locationConfig);
 			break;
 		case config::POST:
-			DEBUG(_logger, "executeRequest: executePOST for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
+			DEBUG(_logger, "dispatching " + config::methodToStr(requestHandler.getRequest().getMethod()));
 			executePOST(requestHandler, locationConfig);
 			break;
 		case config::PUT:
-			DEBUG(_logger, "executeRequest: executePUT for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
+			DEBUG(_logger, "dispatching " + config::methodToStr(requestHandler.getRequest().getMethod()));
 			executePUT(requestHandler, locationConfig);
 			break;
 		case config::DELETE:
-			DEBUG(_logger, "executeRequest: executeDELETE for method " + config::methodToStr(requestHandler.getRequest().getMethod()));
+			DEBUG(_logger, "dispatching " + config::methodToStr(requestHandler.getRequest().getMethod()));
 			executeDELETE(requestHandler, locationConfig);
 			break;
 		default:
+		{
+			INFO(_logger, "405: method not allowed: " + config::methodToStr(requestHandler.getRequest().getMethod()));
 			throw client::HTTPError(405);
+		}
 	}
 }
 
@@ -231,7 +234,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 	client::Response	&response = responseHandler.getResponse();
 	std::string			absPath = request.getAbsolutePath();
 
-	DEBUG(_logger, "executeHEADorGET: method=" + config::methodToStr(request.getMethod())
+	DEBUG(_logger, "method=" + config::methodToStr(request.getMethod())
 		+ " absPath=\"" + absPath + "\""
 		+ " flags=0x" + common::core::utils::toString(getFlags())
 		+ " respFlags=0x" + common::core::utils::toString(response.getFlags()));
@@ -239,12 +242,12 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 	// dir
 	if (isDirectory(absPath))
 	{
-		DEBUG(_logger, "executeHEADorGET: target is a directory");
+		DEBUG(_logger, "target is a directory");
 
 		// 301
 		if (absPath[absPath.size() - 1] != '/')
 		{
-			INFO(_logger, "executeHEADorGET: directory without trailing slash, 301 redirect");
+			INFO(_logger, "301: directory without trailing slash, redirect");
 			throw client::HTTPError(301, request.getRequestTarget() + "/");
 		}
 
@@ -255,7 +258,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 			std::string indexPath = absPath + *it;
 			if (isExisting(indexPath) && !isDirectory(indexPath)) // index file found
 			{
-				DEBUG(_logger, "executeHEADorGET: index file found: \"" + indexPath + "\"");
+				DEBUG(_logger, "index file found: \"" + indexPath + "\"");
 				request.setAbsolutePath(indexPath);
 				if (!(getFlags() & E_EXEC_FILE_OPENED))
 				{
@@ -268,18 +271,18 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 						response.addHeader("Content-Type", mimeIt->second);
 					else
 						response.addHeader("Content-Type", locationConfig.getDefaultType());
-					DEBUG(_logger, "executeHEADorGET: index opened, size=" + common::core::utils::toString(fileSize));
+					DEBUG(_logger, "index opened, size=" + common::core::utils::toString(fileSize));
 				}
 				if (request.getMethod() == config::GET
 					&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
 				{
-					DEBUG(_logger, "executeHEADorGET: reading chunk for index file");
+					DEBUG(_logger, "reading chunk for index file");
 					readChunk(responseHandler);
 				}
 				if (request.getMethod() == config::HEAD
 					&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
 				{
-					DEBUG(_logger, "executeHEADorGET: HEAD complete for index file");
+					DEBUG(_logger, "HEAD complete for index file");
 					setFlags(getFlags() | E_EXEC_COMPLETE);
 				}
 				return ;
@@ -291,7 +294,7 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 		{
 			if (!(response.getFlags() & client::E_RESP_HEADERS_SENT)) // E_RESP_HEADERS_SENT is NOT set
 			{
-				DEBUG(_logger, "executeHEADorGET: generating autoindex HTML");
+				DEBUG(_logger, "generating autoindex HTML");
 				std::string html = generateAutoindexHTML(absPath);
 				setAutoindexBuffer(t_raw(html.begin(), html.end()));
 				response.addHeader("Content-Length",common::core::utils::toString(static_cast<int>(_autoindexBuffer.size())));
@@ -301,11 +304,11 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 			{
 				if (request.getMethod() == config::HEAD)
 				{
-					DEBUG(_logger, "executeHEADorGET: HEAD autoindex complete (no body)");
+					DEBUG(_logger, "HEAD autoindex complete (no body)");
 				}
 				else
 				{
-					DEBUG(_logger, "executeHEADorGET: appending autoindex buffer to response");
+					DEBUG(_logger, "appending autoindex buffer to response");
 					responseHandler.appendToBufferResponse(_autoindexBuffer);
 				}
 				_autoindexBuffer.clear();
@@ -315,14 +318,14 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 		}
 
 		//403
-		INFO(_logger, "executeHEADorGET: no index, no autoindex -> 403");
+		INFO(_logger, "403: no index, no autoindex");
 		throw client::HTTPError(403);
 	}
 
 	// file
 	if (isExisting(absPath))
 	{
-		DEBUG(_logger, "executeHEADorGET: target is a file");
+		DEBUG(_logger, "target is a file");
 		if (!(getFlags() & E_EXEC_FILE_OPENED)) //E_EXEC_FILE_OPENED is NOT set
 		{
 			openFile(requestHandler, locationConfig);
@@ -334,26 +337,26 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 				response.addHeader("Content-Type", mimeIt->second);
 			else
 				response.addHeader("Content-Type", locationConfig.getDefaultType()); // octet-stream
-			DEBUG(_logger, "executeHEADorGET: file opened, size=" + common::core::utils::toString(fileSize)
+			DEBUG(_logger, "file opened, size=" + common::core::utils::toString(fileSize)
 				+ " ext=\"" + getFileExtension(absPath) + "\"");
 		}
 		if (request.getMethod() == config::GET
 			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
 		{
-			DEBUG(_logger, "executeHEADorGET: reading chunk (GET body phase)");
+			DEBUG(_logger, "reading chunk (GET body phase)");
 			readChunk(responseHandler);
 		}
 		if (request.getMethod() == config::HEAD
 			&& (response.getFlags() & client::E_RESP_HEADERS_SENT))
 		{
-			DEBUG(_logger, "executeHEADorGET: HEAD complete (no body)");
+			DEBUG(_logger, "HEAD complete (no body)");
 			setFlags(getFlags() | E_EXEC_COMPLETE);
 		}
 		return ;
 	}
 
 	// default 404
-	INFO(_logger, "executeHEADorGET: path not found -> 404");
+	INFO(_logger, "404: path not found");
 	throw client::HTTPError(404);
 }
 
@@ -374,9 +377,15 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
 	if (isDirectory(absPath))
 	{
 		if (absPath == root + '/')
+		{
+			INFO(_logger, "403: POST to root directory is not allowed");
 			throw client::HTTPError(403);
+		}
 		if (absPath[absPath.size() - 1] != '/')
+		{
+			INFO(_logger, "301: directory without trailing slash, redirect");
 			throw client::HTTPError(301, requestHandler.getRequest().getRequestTarget() + "/");
+		}
 		
 		const t_Index &indexes = locationConfig.getIndex();
 
@@ -384,14 +393,24 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
 		for (; it != indexes.end(); ++it)
 		{
 			if (isExisting(absPath + *it))
+			{
+				INFO(_logger, "403: index file found for POST target, but POST to index file is not allowed");
 				throw client::HTTPError(403);
+			}
 		}
+		INFO(_logger, "405: target is a directory, but no index file found and POST to directory is not allowed");
 		throw client::HTTPError(405);
 	}
 	else if (isExisting(absPath))
+	{
+		INFO(_logger, "405: target is an existing file, but POST to existing file is not allowed");
 		throw client::HTTPError(405);
+	}
 	else
+	{
+		INFO(_logger, "404: target is a non-existing file, but POST to non-existing file is not allowed");
 		throw client::HTTPError(404);
+	}
 }
 
 /**
@@ -411,10 +430,15 @@ void ExecutionHandler::executePUT(RequestHandler &requestHandler, const config::
 	const std::string &absPath = requestHandler.getRequest().getAbsolutePath();
 
 	if (absPath[absPath.size() - 1] == '/')
+	{
+		INFO(_logger, "409: PUT to directory is not allowed");
 		throw client::HTTPError(409);
-
+	}
 	if (isDirectory(absPath))
+	{
+		INFO(_logger, "409: PUT to directory is not allowed");
 		throw client::HTTPError(409);
+	}
 
 	if (!(getFlags() & E_EXEC_FILE_OPENED))
 		openFile(requestHandler, locationConfig);
@@ -434,18 +458,30 @@ void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const
 	t_DavMethods davMethods = locationConfig.getDavMethods();
 
 	if (davMethods.find(config::DELETE) == davMethods.end())
+	{
+		INFO(_logger, "405: DELETE method not allowed by dav_methods");
 		throw client::HTTPError(405);
+	}
 
 	if (absPath[absPath.size() - 1] == '/')
 	{
 		if (!isExisting(absPath))
+		{
+			INFO(_logger, "404: target directory not found");
 			throw client::HTTPError(404);
+		}
 		if (!isDirectory(absPath))
+		{
+			INFO(_logger, "409: target is not a directory");
 			throw client::HTTPError(409);
+		}
 		deleteDirectory(absPath);
 	}
 	else if (isDirectory(absPath))
+	{
+		INFO(_logger, "409: target is a directory, but DELETE to directory is not allowed");
 		throw client::HTTPError(409);
+	}
 	else
 		deleteFile(absPath);
 
@@ -497,11 +533,18 @@ void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, c
 		if ((fd = ::open(absPath.c_str(), flags, mode)) < 0)
 		{
 			int e = errno;
-			ERROR(_logger, "openFile: open failed on \"" + absPath + "\": " + std::string(std::strerror(e)));
+			ERROR(_logger, "500: open failed on \"" + absPath + "\": " + std::string(std::strerror(e)));
 			if (e == ENOENT)
+			{
+				INFO(_logger, "404: file not found");
 				throw client::HTTPError(404);
+			}
 			if (e == EACCES)
+			{
+				INFO(_logger, "403: access denied");
 				throw client::HTTPError(403);
+			}
+			ERROR(_logger, "500: open failed");
 			throw client::HTTPError(500);
 		}
 	}
@@ -516,7 +559,7 @@ void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, c
 		if ((fd = ::open(absPath.c_str(), flags, mode)) < 0)
 		{
 			int e = errno;
-			ERROR(_logger, "openFile: open failed on \"" + absPath + "\": " + std::string(std::strerror(e)));
+			ERROR(_logger, "open failed on \"" + absPath + "\": " + std::string(std::strerror(e)));
 			if (e != ENOENT)
 				throw client::HTTPError(500);
 		}
@@ -527,14 +570,14 @@ void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, c
 	}
 	else
 	{
-		ERROR(_logger, "openFile: unsupported method " + config::methodToStr(method));
+		ERROR(_logger, "500: unsupported method " + config::methodToStr(method));
 		throw client::HTTPError(500);
 	}
 
 	setFlags(getFlags() | E_EXEC_FILE_OPENED);
 
 	_fd.reset(fd);
-	DEBUG(_logger, "openFile: opened \"" + absPath + "\" fd=" + common::core::utils::toString(fd));
+	DEBUG(_logger, "opened \"" + absPath + "\" fd=" + common::core::utils::toString(fd));
 }
 
 /**
@@ -548,7 +591,7 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 {
 	if (!_fd.valid())
 	{
-		ERROR(_logger, "readChunk: _fd is not open");
+		ERROR(_logger, "500: _fd is not open");
 		throw client::HTTPError(500);
 	}
 
@@ -566,10 +609,10 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 	{
 		setFlags(getFlags() | E_EXEC_COMPLETE);
 		_fd.reset();
-		DEBUG(_logger, "readChunk: EOF on fd=" + common::core::utils::toString(_fd.get()));
+		DEBUG(_logger, "EOF on fd=" + common::core::utils::toString(_fd.get()));
 		return ;
 	}
-	ERROR(_logger, "readChunk: read() failed on fd=" + common::core::utils::toString(_fd.get()));
+	ERROR(_logger, "500: read() failed on fd=" + common::core::utils::toString(_fd.get()));
 	throw client::HTTPError(500);
 }
 
@@ -585,23 +628,22 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 {
 	if (!_fd.valid())
 	{
-		ERROR(_logger, "writeChunk: _fd is not open");
+		ERROR(_logger, "500: _fd is not open");
 		throw client::HTTPError(500);
 	}
 
 	const t_raw		&buf = requestHandler.getBufferRequest();
-	std::size_t		offset = _bodyReceived;
 
 	const t_Headers	&headers = requestHandler.getRequest().getHeaders();
 	t_Headers::const_iterator it = headers.find("content-length");
 	if (it == headers.end() || it->second.empty())
 	{
-		ERROR(_logger, "writeChunk: missing Content-Length header");
+		INFO(_logger, "411: missing Content-Length header");
 		throw client::HTTPError(411);
 	}
 
-	std::size_t		remaining = std::stoul(it->second.front().getValue()) - offset;
-	std::size_t		available = buf.size() > offset ? buf.size() - offset : 0;
+	std::size_t		remaining = std::stoul(it->second.front().getValue()) - _bodyReceived;
+	std::size_t		available = buf.size();
 	if (available == 0)
 	{
 		setFlags(getFlags() | E_EXEC_COMPLETE);
@@ -614,13 +656,13 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 	ssize_t			wr;
 
 	DEBUG(_logger, "buff request :" + std::string(buf.begin(), buf.end()));
-	wr = ::write(_fd.get(), &buf, toWrite);
+	wr = ::write(_fd.get(), &buf[0], toWrite);
 
 	if (wr > 0)
 	{
 		requestHandler.eraseBufferRequestFront(wr);
 		_bodyReceived += wr;
-		DEBUG(_logger, "writeChunk: wrote " + common::core::utils::toString(wr) + " bytes to fd=" + common::core::utils::toString(_fd.get()));
+		DEBUG(_logger, "wrote " + common::core::utils::toString(wr) + " bytes to fd=" + common::core::utils::toString(_fd.get()));
 		if (_bodyReceived >= static_cast<ssize_t>(std::stoul(it->second.front().getValue())))
 		{
 			setFlags(getFlags() | E_EXEC_COMPLETE);
@@ -630,7 +672,7 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 		return ;
 	}
 	_bodyReceived = 0;
-	ERROR(_logger, "writeChunk: write() failed on fd=" + common::core::utils::toString(_fd.get()));
+	ERROR(_logger, "500: write() failed on fd=" + common::core::utils::toString(_fd.get()));
 	throw client::HTTPError(500);
 }
 
@@ -706,11 +748,18 @@ void ExecutionHandler::deleteFile(const std::string& filePath)
 	if (std::remove(filePath.c_str()) != 0)
 	{
 		int e = errno;
-		ERROR(_logger, "deleteFile: failed to unlink " + filePath + "\": " + std::string(std::strerror(e)));
+		ERROR(_logger, "500: failed to unlink \"" + filePath + "\": " + std::string(std::strerror(e)));
 		if (e == ENOENT)
+		{
+			INFO(_logger, "404: file not found");
 			throw client::HTTPError(404);
+		}
 		if (e == EACCES)
+		{
+			INFO(_logger, "403: access denied");
 			throw client::HTTPError(403);
+		}
+		ERROR(_logger, "500: remove failed");
 		throw client::HTTPError(500);
 	}
 }
@@ -747,23 +796,30 @@ void ExecutionHandler::deleteDirectory(const std::string& dirPath)
 	}
 	catch (const client::HTTPError &e)
 	{
-		ERROR(_logger, "deleteDirectory: " + std::string(e.what()));
+		ERROR(_logger, std::string(e.what()));
 		throw;
 	}
 	catch (const std::exception &e)
 	{
-		ERROR(_logger, "deleteDirectory: " + std::string(e.what()));
+		ERROR(_logger, "500: " + std::string(e.what()));
 		throw client::HTTPError(500);
 	}
 
 	if (std::remove(dirPath.c_str()) != 0)
 	{
 		int e = errno;
-		ERROR(_logger, "deleteDirectory: failed to rmdir " + dirPath + "\": " + std::string(std::strerror(e)));
+		ERROR(_logger, "500: failed to rmdir \"" + dirPath + "\": " + std::string(std::strerror(e)));
 		if (e == ENOENT)
+		{
+			INFO(_logger, "404: directory not found");
 			throw client::HTTPError(404);
+		}
 		if (e == EACCES)
+		{
+			INFO(_logger, "403: access denied");
 			throw client::HTTPError(403);
+		}
+		ERROR(_logger, "500: remove failed");
 		throw client::HTTPError(500);
 	}
 }
@@ -796,8 +852,7 @@ std::string ExecutionHandler::generateAutoindexHTML(const std::string &dirPath)
 						+ dirPath
 						+ "</h1><ul>";
 
-	DEBUG(_logger, "generateAutoindexHTML: generating autoindex HTML for \"" + dirPath + "\"");
-	DEBUG(_logger, "generateAutoindexHTML: " + html);
+	DEBUG(_logger, "generating autoindex HTML for \"" + dirPath + "\"\n curent HTML:\n" + html);
 
 	try
 	{
@@ -815,21 +870,21 @@ std::string ExecutionHandler::generateAutoindexHTML(const std::string &dirPath)
 				path += "/";
 			path += name;
 			std::string tmp = "<li><a href=\"" + name + (isDirectory(path) ? "/" : "") + "\">" + name + "</a></li>";
-			DEBUG(_logger, "generateAutoindexHTML: " + tmp);
+			DEBUG(_logger, tmp);
 			html += tmp;
 		}
 	}
 	catch (const std::exception &e)
 	{
-		ERROR(_logger, "generateAutoindexHTML: " + std::string(e.what()));
+		ERROR(_logger, "500: " + std::string(e.what()));
 		throw client::HTTPError(500);
 		return "";
 	}
 
 	std::string tail = "</ul></body></html>";
-	DEBUG(_logger, "generateAutoindexHTML: " + tail);	
+	DEBUG(_logger, tail);	
 	html += tail;
-	DEBUG(_logger, "generateAutoindexHTML: generated autoindex HTML for \"" + dirPath + "\"");
+	DEBUG(_logger, "generated autoindex HTML for \"" + dirPath + "\"");
  
 	return html;
 }

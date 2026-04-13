@@ -340,7 +340,7 @@ void Client::sendData()
 	{
 		try {
 			t_AddrPortPair addr = common::core::net::getNameInfo(this->getSockaddrStorage());
-			DEBUG(_logger, "send error to " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(this->getSocket().getFd())
+			WARNING(_logger, "send error to " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(this->getSocket().getFd())
 				+ ": " + std::string(e.what()));
 		} catch (const std::exception &e) {
 			WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
@@ -370,7 +370,6 @@ void Client::processHTTPCycle()
 		try{
 			_requestHandler.parseHeaders();
 		} catch (const HTTPError &e) {
-			INFO(_logger, "While parsing request headers: " + std::string(e.what()));
 			setHTTPError(e);
 			setStatus(E_CLI_ERR_PARSING);
 			return ;
@@ -380,7 +379,6 @@ void Client::processHTTPCycle()
 		try{
 			_requestHandler.parseBody();
 		} catch (const HTTPError &e) {
-			INFO(_logger, "While parsing request body: " + std::string(e.what()));
 			setHTTPError(e);
 			setStatus(E_CLI_ERR_PARSING);
 			return ;
@@ -389,7 +387,6 @@ void Client::processHTTPCycle()
 		try{
 			_executionHandler.execute(_requestHandler, _responseHandler, _requestHandler.getRequest().getLocationConfig());
 		} catch (const HTTPError &e) {
-			INFO(_logger, "While executing request: " + std::string(e.what()));
 			setHTTPError(e);
 			setStatus(E_CLI_ERR_PARSING);
 			return ;
@@ -403,7 +400,6 @@ void Client::processHTTPCycle()
 		try{
 			_responseHandler.buildHeadersResponse(_requestHandler.getRequest(), _executionHandler.getFlags(), _requestHandler.getParser().getFlags());
 		} catch (const HTTPError &e) {
-			INFO(_logger, "While preparing response headers: " + std::string(e.what()));
 			setHTTPError(e);
 			setStatus(E_CLI_ERR_PARSING);
 			return ;
@@ -417,7 +413,7 @@ void Client::buildErrorResponse()
 {
 	if (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT)
 		return ;
-	INFO(_logger, "Building error response: " + std::string(_HTTPError.what()));
+	DEBUG(_logger, "Building error response: " + std::string(_HTTPError.what()));
 	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
 	_executionHandler.setFlags(_executionHandler.getFlags() | handler::E_EXEC_COMPLETE);
 }
