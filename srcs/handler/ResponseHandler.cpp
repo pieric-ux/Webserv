@@ -178,72 +178,6 @@ void ResponseHandler::buildHeadersResponse(const client::Request &request, int e
 	DEBUG(_logger, "buildHeadersResponse: headers serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
 }
 
-/**
- * @brief [TODO:description]
- *
- * @param httpVersion [TODO:parameter]
- * @param statusCode [TODO:parameter]
- * @param reasonPhrase [TODO:parameter]
- */
-void ResponseHandler::buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase)
-{
-	//status-line = HTTP-version SP status-code SP [ reason-phrase ]
-	std::string statusLine = httpVersion
-							+ " "
-							+ common::core::utils::toString(statusCode.getCode())
-							+ " "
-							+ reasonPhrase
-							+ "\r\n";
-	DEBUG(_logger, "buildStatusLine: " + httpVersion + " " + common::core::utils::toString(statusCode.getCode()) + " " + reasonPhrase);
-	appendToBufferResponse(t_raw(statusLine.begin(), statusLine.end()));
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param request [TODO:parameter]
- */
-void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags)
-{
-	DEBUG(_logger, "buildHeaders: building response headers");
-	_response.addHeader("Server", "webserv/1.0");
-
-	std::time_t t = std::time(NULL);
-	std::tm tm = *std::gmtime(&t);
-	char dateStr[100];
-	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S %Z", &tm);
-	_response.addHeader("Date", dateStr);
-
-	if (parsFlags & parser::E_PARS_CONNECTION)
-	{
-		t_Headers::const_iterator it = request.getHeaders().find("Connection");
-		if (it == request.getHeaders().end())
-			_response.addHeader("Connection", "keep-alive");
-		else
-		{
-			const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
-			std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
-			bool closeFlag = 0;
-			for (; lit != headerList.end(); ++lit)
-			{
-				if (lit->getName() == "Connection")
-				{
-					DEBUG(_logger, "buildHeaders: E_PARS_CONNECTION set, client Connection=" + lit->getValue());
-					if (lit->getValue() == "close")
-						closeFlag = 1;
-				}
-			}
-			if (closeFlag)
-			{
-				_response.addHeader("Connection", "close");
-				_response.setShouldCloseConnection(true);
-			}
-			else
-				_response.addHeader("Connection", "keep-alive");
-		}
-	}
-}
-
 void ResponseHandler::buildErrorResponse(const client::Request &request, const client::HTTPError &error)
 {
 	DEBUG(_logger, "buildErrorResponse: building error response for " + common::core::utils::toString(error.getStatusCode().getCode()) + " " + error.getStatusCode().getMessage());
@@ -369,6 +303,72 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 	appendToBufferResponse(t_raw(errorBody.begin(), errorBody.end()));
 	DEBUG(_logger, "buildErrorResponse: headers and body serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
 
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param httpVersion [TODO:parameter]
+ * @param statusCode [TODO:parameter]
+ * @param reasonPhrase [TODO:parameter]
+ */
+void ResponseHandler::buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase)
+{
+	//status-line = HTTP-version SP status-code SP [ reason-phrase ]
+	std::string statusLine = httpVersion
+							+ " "
+							+ common::core::utils::toString(statusCode.getCode())
+							+ " "
+							+ reasonPhrase
+							+ "\r\n";
+	DEBUG(_logger, "buildStatusLine: " + httpVersion + " " + common::core::utils::toString(statusCode.getCode()) + " " + reasonPhrase);
+	appendToBufferResponse(t_raw(statusLine.begin(), statusLine.end()));
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param request [TODO:parameter]
+ */
+void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags)
+{
+	DEBUG(_logger, "buildHeaders: building response headers");
+	_response.addHeader("Server", "webserv/1.0");
+
+	std::time_t t = std::time(NULL);
+	std::tm tm = *std::gmtime(&t);
+	char dateStr[100];
+	std::strftime(dateStr, sizeof(dateStr), "%a, %d %b %Y %H:%M:%S %Z", &tm);
+	_response.addHeader("Date", dateStr);
+
+	if (parsFlags & parser::E_PARS_CONNECTION)
+	{
+		t_Headers::const_iterator it = request.getHeaders().find("Connection");
+		if (it == request.getHeaders().end())
+			_response.addHeader("Connection", "keep-alive");
+		else
+		{
+			const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+			std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
+			bool closeFlag = 0;
+			for (; lit != headerList.end(); ++lit)
+			{
+				if (lit->getName() == "Connection")
+				{
+					DEBUG(_logger, "buildHeaders: E_PARS_CONNECTION set, client Connection=" + lit->getValue());
+					if (lit->getValue() == "close")
+						closeFlag = 1;
+				}
+			}
+			if (closeFlag)
+			{
+				_response.addHeader("Connection", "close");
+				_response.setShouldCloseConnection(true);
+			}
+			else
+				_response.addHeader("Connection", "keep-alive");
+		}
+	}
 }
 
 } // !handler

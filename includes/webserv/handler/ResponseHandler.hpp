@@ -42,7 +42,7 @@ class ResponseHandler
 		void					clearBufferResponse();
 		const t_raw				&getBufferResponse() const;
 		void					eraseBufferResponseFront(std::size_t n);
-		void					buildHeadersResponse(const client::Request &request, int execFlags, int parsFlags);
+		void					buildHeadersResponse(const client::Request &request, int execFlags, int parseFlags);
 		void					buildErrorResponse(const client::Request &request, const client::HTTPError &error);
 
 	private:
@@ -51,7 +51,7 @@ class ResponseHandler
 		t_raw					_bufferResponse;
 
 		void					buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase);
-		void					buildHeaders(const client::Request &request, int parsFlags);
+		void					buildHeaders(const client::Request &request, int parseFlags);
 };
 
 } // !handler

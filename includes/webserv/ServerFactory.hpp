@@ -25,9 +25,9 @@ class ServerFactory
 		ServerFactory(const ServerFactory &rhs);
 		ServerFactory &operator=(const ServerFactory &rhs);
 
-		static t_Logger	getLogger();
+		static t_Logger				getLogger();
 
-		t_Servers	createServers() const;
+		t_Servers					createServers() const;
 
 	private:
 		t_Logger					_logger;

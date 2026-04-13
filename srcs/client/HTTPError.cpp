@@ -111,6 +111,11 @@ void HTTPError::setStatusCode(const status::StatusCode &statusCode)
 	_statusCode = statusCode;
 }
 
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 const std::string &HTTPError::getLocation() const
 {
 	return _location;

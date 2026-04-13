@@ -77,76 +77,6 @@ t_Logger	RequestHandler::getLogger()
 
 /**
  * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-client::Request &RequestHandler::getRequest()
-{
-	return _request;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-const client::Request &RequestHandler::getRequest() const
-{
-	return _request;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param request [TODO:parameter]
- */
-void RequestHandler::setRequest(const client::Request &request)
-{
-	_request = request;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-parser::Parser &RequestHandler::getParser()
-{
-	return _parser;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-const t_raw &RequestHandler::getBufferRequest() const
-{
-	return _bufferRequest;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param buffer [TODO:parameter]
- */
-void RequestHandler::appendToBufferRequest(const t_raw &buffer)
-{
-	_bufferRequest.insert(_bufferRequest.end(), buffer.begin(), buffer.end());
-	DEBUG(_logger, "Buffer request: +" + common::core::utils::toString(buffer.size()) + " bytes (total=" + common::core::utils::toString(_bufferRequest.size()) + "), buffer content: " + std::string(buffer.begin(), buffer.end()));
-}
-
-/**
- * @brief [TODO:description]
- */
-void RequestHandler::clearBufferRequest()
-{
-	_bufferRequest.clear();
-}
-
-/**
- * @brief Orchestrate header parsing on the buffered request bytes.
- *
  */
 void RequestHandler::parseHeaders()
 {
@@ -197,6 +127,99 @@ void RequestHandler::parseHeaders()
 
 		INFO(_logger, "headers validated, remaining buffer=" + common::core::utils::toString(_bufferRequest.size()) + " bytes");
 	}
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void RequestHandler::parseBody()
+{
+	const config::LocationConfig &locationConfig = _request.getLocationConfig();
+
+	t_clientMaxBodySize contentLength = 0;
+	const t_Headers &headers = _request.getHeaders();
+	t_Headers::const_iterator it = headers.find("content-length");
+	if (it != headers.end() && !it->second.empty())
+	{
+		std::istringstream iss(it->second.front().getValue());
+		iss >> contentLength;
+	}
+
+	t_clientMaxBodySize maxBodySize = locationConfig.getClientMaxBodySize();
+	if (contentLength > maxBodySize)
+		throw client::HTTPError(413);
+
+	_request.setFlags(_request.getFlags() | client::E_REQ_BODY_STARTED);
+	DEBUG(_logger, "Body started, Content-Length=" + common::core::utils::toString(contentLength));
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+client::Request &RequestHandler::getRequest()
+{
+	return _request;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const client::Request &RequestHandler::getRequest() const
+{
+	return _request;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param request [TODO:parameter]
+ */
+void RequestHandler::setRequest(const client::Request &request)
+{
+	_request = request;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const t_raw &RequestHandler::getBufferRequest() const
+{
+	return _bufferRequest;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param buffer [TODO:parameter]
+ */
+void RequestHandler::appendToBufferRequest(const t_raw &buffer)
+{
+	_bufferRequest.insert(_bufferRequest.end(), buffer.begin(), buffer.end());
+	DEBUG(_logger, "Buffer request: +" + common::core::utils::toString(buffer.size()) + " bytes (total=" + common::core::utils::toString(_bufferRequest.size()) + "), buffer content: " + std::string(buffer.begin(), buffer.end()));
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void RequestHandler::clearBufferRequest()
+{
+	_bufferRequest.clear();
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+parser::Parser &RequestHandler::getParser()
+{
+	return _parser;
 }
 
 /**
@@ -292,30 +315,6 @@ void RequestHandler::validateHeaders()
 	}
 
 	DEBUG(_logger, "all checks passed");
-}
-
-/**
- * @brief [TODO:description]
- */
-void RequestHandler::parseBody()
-{
-	const config::LocationConfig &locationConfig = _request.getLocationConfig();
-
-	t_clientMaxBodySize contentLength = 0;
-	const t_Headers &headers = _request.getHeaders();
-	t_Headers::const_iterator it = headers.find("content-length");
-	if (it != headers.end() && !it->second.empty())
-	{
-		std::istringstream iss(it->second.front().getValue());
-		iss >> contentLength;
-	}
-
-	t_clientMaxBodySize maxBodySize = locationConfig.getClientMaxBodySize();
-	if (contentLength > maxBodySize)
-		throw client::HTTPError(413);
-
-	_request.setFlags(_request.getFlags() | client::E_REQ_BODY_STARTED);
-	DEBUG(_logger, "Body started, Content-Length=" + common::core::utils::toString(contentLength));
 }
 
 /**

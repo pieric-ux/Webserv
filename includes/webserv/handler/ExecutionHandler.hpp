@@ -48,8 +48,8 @@ class ExecutionHandler
 
 		int								getFd() const;
 		std::size_t						getBodyReceived() const;
-		void							setFlags(const int flags);
 		void							setBodyReceived(const std::size_t bodyReceived);
+		void							setFlags(const int flags);
 		int								getFlags() const;
 		t_raw 							getAutoindexBuffer(t_raw &buffer) const;
 		void							setAutoindexBuffer(const t_raw &buffer);

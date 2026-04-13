@@ -11,11 +11,6 @@
 namespace webserv
 {
 
-/**
- * @brief [TODO:description]
- *
- * @param config [TODO:parameter]
- */
 static std::string	formatServerInfo(const config::ServerConfig &config);
 
 /**

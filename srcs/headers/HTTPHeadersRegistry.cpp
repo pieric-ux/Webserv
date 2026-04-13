@@ -376,6 +376,16 @@ HTTPHeadersRegistry &HTTPHeadersRegistry::getInstance()
 
 /**
  * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Logger	HTTPHeadersRegistry::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
  * @param name [TODO:description]
  * @return [TODO:description]
  */
@@ -388,16 +398,6 @@ HTTPHeader HTTPHeadersRegistry::getHeader(const std::string name) const
 	if (it == _headers.end())
 		return HTTPHeader();
 	return it->second;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-t_Logger	HTTPHeadersRegistry::getLogger() const
-{
-	return _logger;
 }
 
 } // !HTTPheaders

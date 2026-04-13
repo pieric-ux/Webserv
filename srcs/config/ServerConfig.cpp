@@ -116,11 +116,31 @@ const t_clientMaxBodySize	&ServerConfig::getClientMaxBodySize() const
 /**
  * @brief [TODO:description]
  *
+ * @param clientMaxBodySize [TODO:parameter]
+ */
+void ServerConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
+{
+	_clientMaxBodySize = clientMaxBodySize;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 const std::string &ServerConfig::getDavPutPath() const
 {
 	return _davPutPath;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param davPutPath [TODO:parameter]
+ */
+void ServerConfig::setDavPutPath(const std::string &davPutPath)
+{
+	_davPutPath = davPutPath;
 }
 
 /**
@@ -136,11 +156,31 @@ const t_Perms				&ServerConfig::getDavAccess() const
 /**
  * @brief [TODO:description]
  *
+ * @param davAccess [TODO:parameter]
+ */
+void ServerConfig::setDavAccess(const t_Perms &davAccess)
+{
+	_davAccess = davAccess;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 const t_DavMethods	&ServerConfig::getDavMethods() const
 {
 	return _davMethods;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param davMethods [TODO:parameter]
+ */
+void ServerConfig::setDavMethods(const t_DavMethods &davMethods)
+{
+	_davMethods = davMethods;
 }
 
 /**
@@ -156,11 +196,31 @@ const std::string &ServerConfig::getDefaultType() const
 /**
  * @brief [TODO:description]
  *
+ * @param defaultType [TODO:parameter]
+ */
+void ServerConfig::setDefaultType(const std::string &defaultType)
+{
+	_defaultType = defaultType;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 const t_ErrorPages	&ServerConfig::getErrorPage() const
 {
 	return _errorPage;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param errorPage [TODO:parameter]
+ */
+void ServerConfig::setErrorPage(const t_ErrorPages &errorPage)
+{
+	_errorPage = errorPage;
 }
 
 /**
@@ -176,11 +236,31 @@ const t_keepAliveTimeout	&ServerConfig::getKeepAliveTimeout() const
 /**
  * @brief [TODO:description]
  *
+ * @param keepAliveTimeout [TODO:parameter]
+ */
+void ServerConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout)
+{
+	_keepAliveTimeout = keepAliveTimeout;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 const t_Listen &ServerConfig::getListen() const
 {
 	return _listen;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param listen [TODO:parameter]
+ */
+void ServerConfig::setListen(const t_Listen &listen)
+{
+	_listen = listen;
 }
 
 /**
@@ -196,11 +276,31 @@ const t_LocationConfigs	&ServerConfig::getLocationConfigs() const
 /**
  * @brief [TODO:description]
  *
+ * @param locationConfigs [TODO:parameter]
+ */
+void ServerConfig::setLocationConfigs(const t_LocationConfigs &locationConfigs)
+{
+	_locationConfigs = locationConfigs;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 const std::string &ServerConfig::getRoot() const
 {
 	return _root;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param root [TODO:parameter]
+ */
+void ServerConfig::setRoot(const std::string &root)
+{
+	_root = root;
 }
 
 /**
@@ -216,11 +316,31 @@ const t_Servernames	&ServerConfig::getServerNames() const
 /**
  * @brief [TODO:description]
  *
+ * @param serverName [TODO:parameter]
+ */
+void ServerConfig::setServerName(const t_Servernames &serverName)
+{
+	_serverName = serverName;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 const t_MimeTypes	&ServerConfig::getTypes() const
 {
 	return _types;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param types [TODO:parameter]
+ */
+void ServerConfig::setTypes(const t_MimeTypes &types)
+{
+	_types = types;
 }
 
 /**
@@ -236,6 +356,16 @@ bool ServerConfig::getEnableCGI() const
 /**
  * @brief [TODO:description]
  *
+ * @param enableCGI [TODO:parameter]
+ */
+void ServerConfig::setEnableCGI(const bool enableCGI)
+{
+	_enableCGI = enableCGI;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
 const t_CgiExtensions	&ServerConfig::getCgiExtensions() const
@@ -243,71 +373,11 @@ const t_CgiExtensions	&ServerConfig::getCgiExtensions() const
 	return _cgiExtensions;
 }
 
-void ServerConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
-{
-	_clientMaxBodySize = clientMaxBodySize;
-}
-
-void ServerConfig::setDavPutPath(const std::string &davPutPath)
-{
-	_davPutPath = davPutPath;
-}
-
-void ServerConfig::setDavAccess(const t_Perms &davAccess)
-{
-	_davAccess = davAccess;
-}
-
-void ServerConfig::setDavMethods(const t_DavMethods &davMethods)
-{
-	_davMethods = davMethods;
-}
-
-void ServerConfig::setDefaultType(const std::string &defaultType)
-{
-	_defaultType = defaultType;
-}
-
-void ServerConfig::setErrorPage(const t_ErrorPages &errorPage)
-{
-	_errorPage = errorPage;
-}
-
-void ServerConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout)
-{
-	_keepAliveTimeout = keepAliveTimeout;
-}
-
-void ServerConfig::setListen(const t_Listen &listen)
-{
-	_listen = listen;
-}
-
-void ServerConfig::setLocationConfigs(const t_LocationConfigs &locationConfigs)
-{
-	_locationConfigs = locationConfigs;
-}
-
-void ServerConfig::setRoot(const std::string &root)
-{
-	_root = root;
-}
-
-void ServerConfig::setServerName(const t_Servernames &serverName)
-{
-	_serverName = serverName;
-}
-
-void ServerConfig::setTypes(const t_MimeTypes &types)
-{
-	_types = types;
-}
-
-void ServerConfig::setEnableCGI(const bool enableCGI)
-{
-	_enableCGI = enableCGI;
-}
-
+/**
+ * @brief [TODO:description]
+ *
+ * @param cgiExtensions [TODO:parameter]
+ */
 void ServerConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
 {
 	_cgiExtensions = cgiExtensions;
