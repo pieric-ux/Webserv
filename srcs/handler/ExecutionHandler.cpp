@@ -489,7 +489,7 @@ void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, c
 	int					flags = 0;
 	mode_t				mode = 0;
 	int					fd;
-	bool				isCreated = false;
+	bool				isCreated = true;
 
 	if (method == config::GET || method == config::HEAD)
 	{
