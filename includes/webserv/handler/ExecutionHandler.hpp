@@ -67,12 +67,12 @@ class ExecutionHandler
 
 		void							executeHEADorGET(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
-		void							executePUT(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							executePUT(RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 		void							executeDELETE(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 
 		void							openFile(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 		void							readChunk(ResponseHandler &responseHandler);
-		void							writeChunk(const RequestHandler &requestHandler);
+		void							writeChunk(RequestHandler &requestHandler);
 		int								getFileSize(const std::string &path);
 		std::string						getFileExtension(const std::string &path);
 		bool							isFile(const std::string& path);

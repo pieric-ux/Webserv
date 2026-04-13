@@ -432,6 +432,8 @@ void Client::resetAll()
 	else
 		this->setStatus(E_CLI_REQUEST);
 
+	_responseHandler.clearBufferResponse();
+
 	const config::LocationConfig &locationConfig = _requestHandler.getRequest().getLocationConfig();
 	_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
 
