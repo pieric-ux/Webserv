@@ -436,6 +436,7 @@ void Client::resetAll()
 	const config::LocationConfig &locationConfig = _requestHandler.getRequest().getLocationConfig();
 	_effectiveKeepaliveTimeout = locationConfig.getKeepAliveTimeout();
 
+	_responseHandler.getResponse().setStatusCode(status::StatusCode());
 	_requestHandler.getRequest().getHeaders().clear();
 	_responseHandler.getResponse().getHeaders().clear();
 	_requestHandler.getParser().setFlags(0);
