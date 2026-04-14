@@ -645,7 +645,7 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 		throw client::HTTPError(411);
 	}
 
-	std::size_t		remaining = std::stoul(it->second.front().getValue()) - _bodyReceived;
+	std::size_t		remaining = std::strtoul(it->second.front().getValue().c_str(), NULL, 10) - _bodyReceived;
 	std::size_t		available = buf.size();
 	if (available == 0)
 	{
@@ -667,7 +667,7 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 		requestHandler.eraseBufferRequestFront(wr);
 		_bodyReceived += wr;
 		DEBUG(_logger, "wrote " + common::core::utils::toString(wr) + " bytes to fd=" + common::core::utils::toString(_fd.get()));
-		if (_bodyReceived >= static_cast<ssize_t>(std::stoul(it->second.front().getValue())))
+		if (_bodyReceived >= static_cast<ssize_t>(std::strtoul(it->second.front().getValue().c_str(), NULL, 10)))
 		{
 			setFlags(getFlags() | E_EXEC_COMPLETE);
 			DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after all body received");

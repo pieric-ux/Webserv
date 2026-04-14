@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string>
+#include <cstdlib>
 #include <common/common.hpp>
 #include <webserv/client/HTTPError.hpp>
 #include <webserv/client/Request.hpp>

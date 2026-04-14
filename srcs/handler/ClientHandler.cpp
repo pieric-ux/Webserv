@@ -115,7 +115,10 @@ t_Clients::iterator	ClientHandler::removeClient(client::Client &client)
 		} catch (const std::exception &e) {
 			WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
 		}
-		return _clients.erase(it);
+		t_Clients::iterator nextIt = it;
+		++nextIt;
+		_clients.erase(it);
+		return nextIt;
 	}
 	else
 	{
