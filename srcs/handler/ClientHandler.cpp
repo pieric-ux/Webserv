@@ -185,7 +185,7 @@ void	ClientHandler::processClients()
 		if (events & common::core::io::IEventIO::E_OUT)
 			client.sendData();
 
-		if (client.getExecutionHandler().getFlags() & handler::E_EXEC_COMPLETE)
+		if (client.getExecutionHandler().getFlags() & handler::E_EXEC_COMPLETE || client.getRequestHandler().getParser().getFlags() & parser::E_PARS_EXPECT)
 			client.resetAll(); 
 
 		++it;

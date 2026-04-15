@@ -5,6 +5,7 @@
  * @brief [TODO:description]
  */
 
+#include "webserv/parser/Parser.hpp"
 #include <webserv/client/Client.hpp>
 
 namespace webserv
@@ -359,8 +360,6 @@ void Client::sendData()
 		_responseHandler.getResponse().setFlags(flags | E_RESP_HEADERS_SENT);
 }
 
-
-
 /**
  * @brief [TODO:description]
  */
@@ -375,7 +374,9 @@ void Client::processHTTPCycle()
 			return ;
 		}
 	int method = _requestHandler.getRequest().getMethod();
-	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED && (method == config::POST || method == config::PUT || method == config::DELETE))
+	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED &&
+			(method == config::POST || method == config::PUT || method == config::DELETE) &&
+			!(_requestHandler.getParser().getFlags() & parser::E_PARS_EXPECT))
 		try{
 			_requestHandler.parseBody();
 		} catch (const HTTPError &e) {
@@ -383,7 +384,8 @@ void Client::processHTTPCycle()
 			setStatus(E_CLI_ERR_PARSING);
 			return ;
 		}
-	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED)
+	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED &&
+			!(_requestHandler.getParser().getFlags() & parser::E_PARS_EXPECT))
 		try{
 			_executionHandler.execute(_requestHandler, _responseHandler, _requestHandler.getRequest().getLocationConfig());
 		} catch (const HTTPError &e) {
@@ -392,11 +394,11 @@ void Client::processHTTPCycle()
 			return ;
 		}
 	method = _requestHandler.getRequest().getMethod();
-	if ((_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED)
-		&& !(_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT)
-		&& ((_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
-			|| method == config::GET
-			|| method == config::HEAD))
+	int parserFlags = _requestHandler.getParser().getFlags();
+	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED &&
+			!(_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT) &&
+			((_executionHandler.getFlags() & handler::E_EXEC_COMPLETE) || method == config::GET ||
+				method == config::HEAD || parserFlags & parser::E_PARS_EXPECT))
 		try{
 			_responseHandler.buildHeadersResponse(_requestHandler.getRequest(), _executionHandler.getFlags(), _requestHandler.getParser().getFlags());
 		} catch (const HTTPError &e) {
@@ -424,6 +426,15 @@ void Client::buildErrorResponse()
  */
 void Client::resetAll()
 {
+	DEBUG(_logger, "Client state reset for next request. Effective keep-alive timeout set to " + common::core::utils::toString(_effectiveKeepaliveTimeout) + " seconds");
+
+	if (_requestHandler.getParser().getFlags() & parser::E_PARS_EXPECT)
+	{
+		_requestHandler.getParser().setFlags(_requestHandler.getParser().getFlags() & ~parser::E_PARS_EXPECT);
+		_responseHandler.getResponse().setFlags(_responseHandler.getResponse().getFlags() & ~E_RESP_HEADERS_SENT);
+		return ;
+	}
+
 	if (_status == E_CLI_ERR_PARSING)
 		_requestHandler.clearBufferRequest();
 	_responseHandler.clearBufferResponse();
@@ -444,8 +455,6 @@ void Client::resetAll()
 	_responseHandler.getResponse().setFlags(0);
 	_executionHandler.setFlags(0);
 	this->setHTTPError(HTTPError());
-
-	DEBUG(_logger, "Client state reset for next request. Effective keep-alive timeout set to " + common::core::utils::toString(_effectiveKeepaliveTimeout) + " seconds");
 }
 
 } // !client

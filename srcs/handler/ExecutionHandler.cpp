@@ -645,21 +645,25 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 		throw client::HTTPError(411);
 	}
 
-	std::size_t		remaining = std::strtoul(it->second.front().getValue().c_str(), NULL, 10) - _bodyReceived;
+	ssize_t			contentLengthVal = std::strtoul(it->second.front().getValue().c_str(), NULL, 10);
+	std::size_t		remaining = contentLengthVal - _bodyReceived;
 	std::size_t		available = buf.size();
 	if (available == 0)
 	{
-		setFlags(getFlags() | E_EXEC_COMPLETE);
-		DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after all body received");
-		_fd.reset();
-		_bodyReceived = 0;
+		if (_bodyReceived >= contentLengthVal)
+		{
+			setFlags(getFlags() | E_EXEC_COMPLETE);
+			DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after all body received");
+			_fd.reset();
+			_bodyReceived = 0;
+		}
 		return ;
 	}
-	std::size_t		toWrite = remaining < config::DefaultConfig::BUFFER_SIZE ? remaining : config::DefaultConfig::BUFFER_SIZE;
-	toWrite = toWrite < available ? toWrite : available;
-	ssize_t			wr;
+	std::size_t		toWrite = std::min(remaining, std::min(config::DefaultConfig::BUFFER_SIZE, available));
 
 	DEBUG(_logger, "buff request :" + std::string(buf.begin(), buf.end()));
+
+	ssize_t			wr;
 	wr = ::write(_fd.get(), &buf[0], toWrite);
 
 	if (wr > 0)
@@ -667,7 +671,7 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 		requestHandler.eraseBufferRequestFront(wr);
 		_bodyReceived += wr;
 		DEBUG(_logger, "wrote " + common::core::utils::toString(wr) + " bytes to fd=" + common::core::utils::toString(_fd.get()));
-		if (_bodyReceived >= static_cast<ssize_t>(std::strtoul(it->second.front().getValue().c_str(), NULL, 10)))
+		if (_bodyReceived >= contentLengthVal)
 		{
 			setFlags(getFlags() | E_EXEC_COMPLETE);
 			DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after all body received");
