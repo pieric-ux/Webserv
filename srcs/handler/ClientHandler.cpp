@@ -115,7 +115,10 @@ t_Clients::iterator	ClientHandler::removeClient(client::Client &client)
 		} catch (const std::exception &e) {
 			WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
 		}
-		return _clients.erase(it);
+		t_Clients::iterator nextIt = it;
+		++nextIt;
+		_clients.erase(it);
+		return nextIt;
 	}
 	else
 	{
@@ -131,8 +134,6 @@ t_Clients::iterator	ClientHandler::removeClient(client::Client &client)
  */
 void	ClientHandler::processClients()
 {
-	// DEBUG(_logger, "Processing clients (" + common::core::utils::toString(_clients.size()) + " active)");
-
 	std::time_t now = std::time(NULL);
 
 	t_Clients::iterator it = _clients.begin();
@@ -184,7 +185,7 @@ void	ClientHandler::processClients()
 		if (events & common::core::io::IEventIO::E_OUT)
 			client.sendData();
 
-		if (client.getExecutionHandler().getFlags() & handler::E_EXEC_COMPLETE)
+		if (client.getExecutionHandler().getFlags() & handler::E_EXEC_COMPLETE || client.getRequestHandler().getParser().getFlags() & parser::E_PARS_EXPECT)
 			client.resetAll(); 
 
 		++it;

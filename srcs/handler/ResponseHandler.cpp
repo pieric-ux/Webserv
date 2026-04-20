@@ -142,37 +142,42 @@ void ResponseHandler::eraseBufferResponseFront(std::size_t n)
  *
  * @param request [TODO:parameter]
  */
-void ResponseHandler::buildHeadersResponse(const client::Request &request, int execFlags, int parsFlags)
+void ResponseHandler::buildHeadersResponse(const client::Request &request, int execFlags, int parseFlags)
 {
 	DEBUG(_logger, "execFlags=0x" + common::core::utils::toString(execFlags)
-		+ " parsFlags=0x" + common::core::utils::toString(parsFlags));
-	
+		+ " parsFlags=0x" + common::core::utils::toString(parseFlags));
+
 	// set status codes
 	if (execFlags & E_EXEC_CREATED)
 		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(201));
 	else if (execFlags & E_EXEC_NOCONTENT)
 		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(204));
-	else if (_response.getStatusCode().getCode() == 0)
+	else if (parseFlags & parser::E_PARS_EXPECT)
+		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(100));
+	else
 		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(200));
 	DEBUG(_logger, "status code set to " + common::core::utils::toString(_response.getStatusCode().getCode()));
 	
 	buildStatusLine(request.getHttpVersion(), _response.getStatusCode(), _response.getStatusCode().getMessage());
-	buildHeaders(request, parsFlags);
+	buildHeaders(request, parseFlags);
 
 	int code = _response.getStatusCode().getCode();
 	if (code == 201)
 		_response.addHeader("Content-Length", "0");
 
 	//append headers to bufferReponse
-	const t_Headers &headers = _response.getHeaders();
-	for (t_Headers::const_reverse_iterator rit = headers.rbegin(); rit != headers.rend(); ++rit)
+	if (!(parseFlags & parser::E_PARS_EXPECT))
 	{
-		const std::list<HTTPheaders::HTTPHeader> &headerList = rit->second;
-		for (std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin(); lit != headerList.end(); ++lit)
+		const t_Headers &headers = _response.getHeaders();
+		for (t_Headers::const_reverse_iterator rit = headers.rbegin(); rit != headers.rend(); ++rit)
 		{
-			std::string headerLine = lit->getName() + ": " + lit->getValue() + "\r\n";
-			appendToBufferResponse(t_raw(headerLine.begin(), headerLine.end()));
-			DEBUG(_logger, "header added to buffer: " + headerLine);
+			const std::list<HTTPheaders::HTTPHeader> &headerList = rit->second;
+			for (std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin(); lit != headerList.end(); ++lit)
+			{
+				std::string headerLine = lit->getName() + ": " + lit->getValue() + "\r\n";
+				appendToBufferResponse(t_raw(headerLine.begin(), headerLine.end()));
+				DEBUG(_logger, "header added to buffer: " + headerLine);
+			}
 		}
 	}
 
@@ -340,7 +345,6 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 	appendToBufferResponse(t_raw(crlf, crlf + 2));
 	appendToBufferResponse(t_raw(errorBody.begin(), errorBody.end()));
 	DEBUG(_logger, "headers and body serialized, buffer size=" + common::core::utils::toString(_bufferResponse.size()));
-
 }
 
 /**

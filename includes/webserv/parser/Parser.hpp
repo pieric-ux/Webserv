@@ -12,6 +12,8 @@
 #include <string>
 #include <sstream>
 #include <cctype>
+#include <limits>
+#include <cstdlib>
 #include <abnf/Abnf.hpp>
 #include <webserv/headers/HTTPHeader.hpp>
 #include <webserv/config/Listen.hpp>

@@ -21,8 +21,7 @@ HTTPServer::HTTPServer() :	_defaultConfigPath(config::DefaultConfig::defaultConf
 							_ioMultiplexer(),
 							_clientHandler(),
 							_headerRegistry(HTTPheaders::HTTPHeadersRegistry::getInstance()),
-							_statusCodeRegistry(status::StatusCodeRegistry::getInstance()),
-							_typesRegistry(types::TypesRegistry::getInstance())
+							_statusCodeRegistry(status::StatusCodeRegistry::getInstance())
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -49,8 +48,7 @@ HTTPServer::HTTPServer(const HTTPServer &rhs)
 		_ioMultiplexer(rhs._ioMultiplexer),
 		_clientHandler(rhs._clientHandler),
 		_headerRegistry(rhs._headerRegistry),
-		_statusCodeRegistry(rhs._statusCodeRegistry),
-		_typesRegistry(rhs._typesRegistry)
+		_statusCodeRegistry(rhs._statusCodeRegistry)
 {}
 
 /**

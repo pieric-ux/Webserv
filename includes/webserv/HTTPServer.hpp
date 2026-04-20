@@ -18,7 +18,6 @@
 #include <webserv/headers/HTTPHeadersRegistry.hpp>
 #include <webserv/parser/Parser.hpp>
 #include <webserv/status/StatusCodeRegistry.hpp>
-#include <webserv/MIMEtypes/TypesRegistry.hpp>
 #include <webserv/Server.hpp>
 #include <webserv/ServerFactory.hpp>
 #include <webserv/types.hpp>
@@ -52,7 +51,6 @@ class HTTPServer
 		handler::ClientHandler				_clientHandler;
 		HTTPheaders::HTTPHeadersRegistry	&_headerRegistry;
 		status::StatusCodeRegistry			&_statusCodeRegistry;
-		types::TypesRegistry				&_typesRegistry;
 
 		void								loadConfig();
 		void								connectClient(const t_SocketPairServer &socket, const config::ServerConfig &serverConfig);
