@@ -25,6 +25,7 @@ HTTPConfig::HTTPConfig()
 		_defaultType(DefaultConfig::defaultType),
 		_errorPage(DefaultConfig::errorPage),
 		_keepAliveTimeout(DefaultConfig::keepAliveTimeout),
+		_sessionTTL(DefaultConfig::sessionTTL),
 		_root(DefaultConfig::root),
 		_serverConfigs(t_ServerConfigs()),
 		_types(DefaultConfig::types),
@@ -220,6 +221,26 @@ t_keepAliveTimeout HTTPConfig::getKeepAliveTimeout() const
 void	HTTPConfig::setKeepAliveTimeout(const t_keepAliveTimeout keepAliveTimeout)
 {
 	_keepAliveTimeout = keepAliveTimeout;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_sessionTTL HTTPConfig::getSessionTTL() const
+{
+	return _sessionTTL;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param sessionTTL [TODO:parameter]
+ */
+void HTTPConfig::setSessionTTL(const t_sessionTTL sessionTTL)
+{
+	_sessionTTL = sessionTTL;
 }
 
 /**

@@ -6,6 +6,7 @@
  */
 
 #include <webserv/HTTPServer.hpp>
+#include <webserv/session/SessionStore.hpp>
 
 namespace webserv
 {
@@ -187,6 +188,14 @@ void	HTTPServer::run()
 			}
 		}
 		_clientHandler.processClients();
+
+		static std::time_t lastPurge = std::time(NULL);
+		std::time_t now = std::time(NULL);
+		if (now - lastPurge >= SESSION_PURGE_INTERVAL_S)
+		{
+			session::SessionStore::getInstance().purgeExpired();
+			lastPurge = now;
+		}
 	}
 }
 

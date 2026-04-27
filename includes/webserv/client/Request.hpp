@@ -62,6 +62,8 @@ class Request
 		void							setFlags(const int flags);
 		const config::LocationConfig	&getLocationConfig() const;
 		void							setLocationConfig(const config::LocationConfig &locationConfig);
+		const t_Cookies					&getCookies() const;
+		void							setCookies(const t_Cookies &cookies);
 
 	private:
 		t_Logger						_logger;
@@ -75,6 +77,7 @@ class Request
 		std::string						_query;
 		t_Headers						_headers;
 		e_RequestFlags					_flags;
+		t_Cookies						_cookies;
 };
 
 } // !client

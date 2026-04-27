@@ -25,6 +25,7 @@ LocationConfig::LocationConfig()
 		_errorPage(DefaultConfig::errorPage),
 		_index(DefaultConfig::index),
 		_keepAliveTimeout(DefaultConfig::keepAliveTimeout),
+		_sessionTTL(DefaultConfig::sessionTTL),
 		_allowedMethods(DefaultConfig::allowedMethods),
 		_root(DefaultConfig::root),
 		_types(DefaultConfig::types),
@@ -57,6 +58,7 @@ LocationConfig::LocationConfig(const LocationConfig &rhs)
 	  _errorPage(rhs._errorPage),
 	  _index(rhs._index),
 	  _keepAliveTimeout(rhs._keepAliveTimeout),
+  _sessionTTL(rhs._sessionTTL),
 	  _allowedMethods(rhs._allowedMethods),
 	  _root(rhs._root),
 	  _types(rhs._types),
@@ -86,6 +88,7 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &rhs)
 		_errorPage = rhs._errorPage;
 		_index = rhs._index;
 		_keepAliveTimeout = rhs._keepAliveTimeout;
+		_sessionTTL = rhs._sessionTTL;
 		_allowedMethods = rhs._allowedMethods;
 		_root = rhs._root;
 		_types = rhs._types;
@@ -286,6 +289,26 @@ const t_keepAliveTimeout	&LocationConfig::getKeepAliveTimeout() const
 void LocationConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout)
 {
 	_keepAliveTimeout = keepAliveTimeout;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const t_sessionTTL &LocationConfig::getSessionTTL() const
+{
+	return _sessionTTL;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param sessionTTL [TODO:parameter]
+ */
+void LocationConfig::setSessionTTL(const t_sessionTTL &sessionTTL)
+{
+	_sessionTTL = sessionTTL;
 }
 
 /**

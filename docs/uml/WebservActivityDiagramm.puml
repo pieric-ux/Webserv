@@ -804,6 +804,27 @@ start
 									:Add `Connection: close` header;
 								endif
 							endif
+							:Get `SessionStore` singleton;
+							:Get `cookies` from `request`;
+							:Get `sessionTTL` from `locationConfig`;
+							if (`sid` cookie present in request?) then (yes)
+								:Call `store.getSession(sid)`;
+								if (Session found and not expired?) then (yes)
+									:Slide TTL: `setExpires(now + ttl)`;
+									:Build `Cookie("sid", session.getId())` with `setExpires(session.getExpires())`;
+									:Add `Set-Cookie: sid=<existing-uuid>; Path=/; Expires=...; HttpOnly` header;
+								else (no)
+									note right: Session expired or not found
+									:Call `store.createSession(ttl)`;
+									:Build `Cookie("sid", newSession.getId())` with `setExpires(newSession.getExpires())`;
+									:Add `Set-Cookie: sid=<new-uuid>; Path=/; Expires=...; HttpOnly` header;
+								endif
+							else (no)
+								:Call `store.createSession(ttl)`;
+								:Build `Cookie("sid", newSession.getId())` with `setExpires(newSession.getExpires())`;
+								:Add `Set-Cookie: sid=<new-uuid>; Path=/; Expires=...; HttpOnly` header;
+							endif
+							| __ResponseHandler__ |
 							:Append all headers to `bufferResponse`;
 								:Add final CRLF after headers;
 					else (yes)
@@ -830,6 +851,14 @@ start
 			endif
 		endwhile
 	| __HTTPServer__ |
+		if (now - lastPurge >= SESSION_PURGE_INTERVAL_S (60s)?) then (yes)
+			| __SessionStore__ |
+			:Call `purgeExpired()`;
+			:Iterate `_sessions`, erase entries where `isExpired()`;
+			| __HTTPServer__ |
+			:Update `lastPurge` = now;
+			else (no)
+			endif
 	endwhile (no)
 	end
 

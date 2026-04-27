@@ -7,6 +7,8 @@
 
 #include <webserv/handler/ResponseHandler.hpp>
 #include <webserv/handler/ExecutionHandler.hpp>
+#include <webserv/session/SessionStore.hpp>
+#include <webserv/session/Cookie.hpp>
 
 namespace webserv
 {
@@ -409,6 +411,33 @@ void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags
 	else
 	{
 		_response.addHeader("Connection", "keep-alive");
+	}
+
+	session::SessionStore &store = session::SessionStore::getInstance();
+	const t_Cookies &cookies = request.getCookies();
+	t_sessionTTL ttl = request.getLocationConfig().getSessionTTL();
+
+	t_Cookies::const_iterator sidIt = cookies.find("sid");
+	bool needNewSession = (sidIt == cookies.end());
+	if (!needNewSession)
+	{
+		try {
+			session::Session &s = store.getSession(sidIt->second);
+			session::Cookie cookie("sid", s.getId());
+			cookie.setExpires(s.getExpires());
+			_response.addHeader("Set-Cookie", cookie.serializeCookie());
+		}
+		catch (const std::exception &) {
+			needNewSession = true;
+		}
+	}
+	if (needNewSession)
+	{
+		session::Session newSession = store.createSession(ttl);
+		session::Cookie cookie("sid", newSession.getId());
+		cookie.setExpires(newSession.getExpires());
+		_response.addHeader("Set-Cookie", cookie.serializeCookie());
+		DEBUG(_logger, "Set-Cookie: sid=" + newSession.getId());
 	}
 }
 

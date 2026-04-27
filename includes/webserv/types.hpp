@@ -30,6 +30,7 @@ namespace config
 	class ServerConfig;
 }
 namespace status { class StatusCode; }
+namespace session { class Session; class SessionStore; class Cookie; }
 
 /**
  * @typedef t_Logger
@@ -79,6 +80,8 @@ typedef unsigned int																		t_clientMaxBodySize;
 
 typedef unsigned int																		t_keepAliveTimeout;
 
+typedef unsigned int																		t_sessionTTL;
+
 typedef unsigned short																		t_Perms;
 
 typedef std::pair<common::core::net::TcpServer, sockaddr_storage>							t_SocketPairServer;
@@ -88,6 +91,14 @@ typedef std::pair<common::core::net::TcpClient, sockaddr_storage>							t_Socket
 typedef std::vector<t_SocketPairServer>														t_ServerSockets;
 
 typedef std::pair<std::string, std::string>													t_AddrPortPair;
+
+typedef std::string 																		t_uuid;
+
+typedef std::map<std::string, std::string>													t_Cookies;
+
+typedef std::map<std::string, std::string>													t_SessionData;
+
+typedef std::map<t_uuid, session::Session>													t_SessionStore;
 	
 } // !webserv
 

@@ -25,7 +25,8 @@ Request::Request()
 		_path(),
 		_query(),
 		_headers(),
-		_flags(static_cast<e_RequestFlags>(0))
+		_flags(static_cast<e_RequestFlags>(0)),
+		_cookies()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.request");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -52,7 +53,8 @@ Request::Request(const Request &rhs)
 		_path(rhs._path),
 		_query(rhs._query),
 		_headers(rhs._headers),
-		_flags(rhs._flags)
+		_flags(rhs._flags),
+		_cookies(rhs._cookies)
 {}
 
 /**
@@ -75,6 +77,7 @@ Request &Request::operator=(const Request &rhs)
 		_headers = rhs._headers;
 		_locationConfig = rhs._locationConfig;
 		_flags = rhs._flags;
+		_cookies = rhs._cookies;
 	}
 	return (*this);
 }
@@ -319,6 +322,26 @@ const config::LocationConfig &Request::getLocationConfig() const
 void Request::setLocationConfig(const config::LocationConfig &locationConfig)
 {
 	_locationConfig = locationConfig;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const t_Cookies &Request::getCookies() const
+{
+	return _cookies;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param cookies [TODO:parameter]
+ */
+void Request::setCookies(const t_Cookies &cookies)
+{
+	_cookies = cookies;
 }
 
 } // !client

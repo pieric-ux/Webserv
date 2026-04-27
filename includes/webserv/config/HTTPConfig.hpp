@@ -45,6 +45,8 @@ class HTTPConfig
 		void						setErrorPage(const t_ErrorPages &errorPage);
 		t_keepAliveTimeout			getKeepAliveTimeout() const;
 		void						setKeepAliveTimeout(const t_keepAliveTimeout keepAliveTimeout);
+		t_sessionTTL				getSessionTTL() const;
+		void						setSessionTTL(const t_sessionTTL sessionTTL);
 		const std::string			&getRoot() const;
 		void						setRoot(const std::string &root);
 		const t_ServerConfigs		&getServerConfigs() const;
@@ -66,6 +68,7 @@ class HTTPConfig
 		std::string					_defaultType;
 		t_ErrorPages				_errorPage;
 		t_keepAliveTimeout			_keepAliveTimeout;
+		t_sessionTTL				_sessionTTL;
 		std::string					_root;
 		t_ServerConfigs				_serverConfigs;
 		t_MimeTypes					_types;

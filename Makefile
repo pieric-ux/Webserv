@@ -39,6 +39,7 @@ vpath %.cpp \
 	$(SRCDIR)/handler \
 	$(SRCDIR)/headers \
 	$(SRCDIR)/parser \
+	$(SRCDIR)/session \
 	$(SRCDIR)/status \
 
 # Sources and object files
@@ -53,6 +54,8 @@ SRCES += Client.cpp Request.cpp Response.cpp HTTPError.cpp
 SRCES += HTTPHeader.cpp HTTPHeadersRegistry.cpp
 		 # Parser
 SRCES += Parser.cpp
+		 # Session
+SRCES += Cookie.cpp Session.cpp SessionStore.cpp
 		 # Status
 SRCES += StatusCode.cpp StatusCodeRegistry.cpp
 
