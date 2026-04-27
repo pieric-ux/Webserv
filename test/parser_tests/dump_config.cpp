@@ -49,7 +49,7 @@ static void dumpLocation(const config::LocationConfig &loc, const std::string &i
 	for (size_t i = 0; i < ep.size(); ++i)
 		std::cout << indent << "error_page: (defined)\n";
 
-	std::cout << indent << "enable_cgi: " << (loc.getEnableCGI() ? "on" : "off") << "\n";
+	std::cout << indent << "enable_cgi: " << (loc.isEnableCGI() ? "on" : "off") << "\n";
 
 	t_CgiExtensions ce = loc.getCgiExtensions();
 	if (!ce.empty()) {

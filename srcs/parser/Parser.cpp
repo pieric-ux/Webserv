@@ -96,7 +96,7 @@ void Parser::parseConfig(const t_raw &buffer)
 	httpOss.str(""); httpOss << "Keepalive timeout: " << _config.getKeepAliveTimeout() << "s";
 	DEBUG(_logger, httpOss.str());
 	DEBUG(_logger, "Root: " + _config.getRoot());
-	DEBUG(_logger, std::string("Enable CGI: ") + (_config.getEnableCGI() ? "on" : "off"));
+	DEBUG(_logger, std::string("Enable CGI: ") + (_config.isEnableCGI() ? "on" : "off"));
 	httpOss.str(""); httpOss << "DAV access: 0" << std::oct << _config.getDavAccess() << std::dec;
 	DEBUG(_logger, httpOss.str());
 

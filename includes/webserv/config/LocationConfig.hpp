@@ -71,7 +71,7 @@ class LocationConfig
 		void						setModifier(const e_Modifier modifier);
 		const Return				&getRedirect() const;
 		void						setRedirect(const Return &redirect);
-		bool						getEnableCGI() const;
+		bool						isEnableCGI() const;
 		void						setEnableCGI(const bool enableCGI);
 		const t_CgiExtensions		&getCgiExtensions() const;
 		void						setCgiExtensions(const t_CgiExtensions &cgiExtensions);

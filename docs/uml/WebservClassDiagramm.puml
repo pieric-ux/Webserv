@@ -430,7 +430,7 @@ namespace webserv.config {
 		+ setServerConfigs(serverConfigs : t_ServerConfigs) : void
 		+ getTypes() : t_MimeTypes
 		+ setTypes(types : t_MimeTypes) : void
-		+ getEnableCGI() : bool
+		+ isEnableCGI() : bool
 		+ setEnableCGI(enableCGI : bool) : void
 		+ getCgiExtensions() : t_CgiExtensions
 		+ setCgiExtensions(cgiExtensions : t_CgiExtensions) : void
@@ -479,7 +479,7 @@ namespace webserv.config {
 		+ setServerNames(serverNames : t_Servernames) : void
 		+ getTypes() : t_MimeTypes
 		+ setTypes(types : t_MimeTypes) : void
-		+ getEnableCGI() : bool
+		+ isEnableCGI() : bool
 		+ setEnableCGI(enableCGI : bool) : void
 		+ getCgiExtensions() : t_CgiExtensions
 		+ setCgiExtensions(cgiExtensions : t_CgiExtensions) : void
@@ -508,7 +508,7 @@ namespace webserv.config {
 		--
 		+ LocationConfig()
 		+ {static} getLogger() : t_Logger
-		+ getAutoindex() : bool
+		+ isAutoindex() : bool
 		+ setAutoindex(autoindex : bool) : void
 		+ getClientMaxBodySize() : t_clientMaxBodySize
 		+ setClientMaxBodySize(clientMaxBodySize : t_clientMaxBodySize) : void
@@ -538,7 +538,7 @@ namespace webserv.config {
 		+ setModifier(modifier : e_Modifier) : void
 		+ getRedirect() : Return
 		+ setRedirect(redirect : Return) : void
-		+ getEnableCGI() : bool
+		+ isEnableCGI() : bool
 		+ setEnableCGI(enableCGI : bool) : void
 		+ getCgiExtensions() : t_CgiExtensions
 		+ setCgiExtensions(cgiExtensions : t_CgiExtensions) : void

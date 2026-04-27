@@ -348,7 +348,7 @@ void ServerConfig::setTypes(const t_MimeTypes &types)
  *
  * @return [TODO:return]
  */
-bool ServerConfig::getEnableCGI() const
+bool ServerConfig::isEnableCGI() const
 {
 	return _enableCGI;
 }

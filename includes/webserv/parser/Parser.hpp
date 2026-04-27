@@ -281,7 +281,7 @@ void Parser::parseCommonDirectives(const std::string &parentRule,
 	if (!dirs.empty())
 	{
 		config.setEnableCGI(extractValue("enable-cgi-dir", "on-off", dirs[0]) == "on");
-		DEBUG(_logger, ctx + "Enable CGI: " + (config.getEnableCGI() ? "on" : "off"));
+		DEBUG(_logger, ctx + "Enable CGI: " + (config.isEnableCGI() ? "on" : "off"));
 	}
 
 	// cgi-extension-dir + cgi-extensions-block
@@ -320,7 +320,7 @@ void Parser::applyParentDefaults(const ParentT &parent, ChildT &child)
 	child.setKeepAliveTimeout(parent.getKeepAliveTimeout());
 	child.setRoot(parent.getRoot());
 	child.setTypes(parent.getTypes());
-	child.setEnableCGI(parent.getEnableCGI());
+	child.setEnableCGI(parent.isEnableCGI());
 	child.setCgiExtensions(parent.getCgiExtensions());
 }
 

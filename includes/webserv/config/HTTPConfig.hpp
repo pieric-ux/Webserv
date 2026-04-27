@@ -51,7 +51,7 @@ class HTTPConfig
 		void						setServerConfigs(const t_ServerConfigs &serverConfigs);
 		const t_MimeTypes			&getTypes() const;
 		void						setTypes(const t_MimeTypes &types);
-		bool						getEnableCGI() const;
+		bool						isEnableCGI() const;
 		void						setEnableCGI(const bool enableCGI);
 		const t_CgiExtensions		&getCgiExtensions() const;
 		void						setCgiExtensions(const t_CgiExtensions &cgiExtensions);

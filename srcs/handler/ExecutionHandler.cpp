@@ -159,7 +159,7 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
 		throw client::HTTPError(redirect.statusCode.getCode(), redirect.url);
 	}
 
-	if (locationConfig.getEnableCGI())
+	if (locationConfig.isEnableCGI())
 	{
 		std::string ext = getFileExtension(requestHandler.getRequest().getAbsolutePath());
 		const t_CgiExtensions &cgiExts = locationConfig.getCgiExtensions();

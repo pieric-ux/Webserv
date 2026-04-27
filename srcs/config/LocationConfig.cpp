@@ -413,7 +413,7 @@ void LocationConfig::setRedirect(const Return &redirect)
  *
  * @return [TODO:return]
  */
-bool LocationConfig::getEnableCGI() const
+bool LocationConfig::isEnableCGI() const
 {
 	return _enableCGI;
 }

@@ -287,7 +287,7 @@ void	HTTPConfig::setTypes(const t_MimeTypes &types)
  *
  * @return [TODO:return]
  */
-bool HTTPConfig::getEnableCGI() const
+bool HTTPConfig::isEnableCGI() const
 {
 	return _enableCGI;
 }
