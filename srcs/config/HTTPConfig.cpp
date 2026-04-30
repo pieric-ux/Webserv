@@ -25,6 +25,7 @@ HTTPConfig::HTTPConfig()
 		_defaultType(DefaultConfig::defaultType),
 		_errorPage(DefaultConfig::errorPage),
 		_keepAliveTimeout(DefaultConfig::keepAliveTimeout),
+		_sessionTTL(DefaultConfig::sessionTTL),
 		_root(DefaultConfig::root),
 		_serverConfigs(t_ServerConfigs()),
 		_types(DefaultConfig::types),
@@ -227,6 +228,26 @@ void	HTTPConfig::setKeepAliveTimeout(const t_keepAliveTimeout keepAliveTimeout)
  *
  * @return [TODO:return]
  */
+t_sessionTTL HTTPConfig::getSessionTTL() const
+{
+	return _sessionTTL;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param sessionTTL [TODO:parameter]
+ */
+void HTTPConfig::setSessionTTL(const t_sessionTTL sessionTTL)
+{
+	_sessionTTL = sessionTTL;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 const std::string &HTTPConfig::getRoot() const
 {
 	return _root;
@@ -287,7 +308,7 @@ void	HTTPConfig::setTypes(const t_MimeTypes &types)
  *
  * @return [TODO:return]
  */
-bool HTTPConfig::getEnableCGI() const
+bool HTTPConfig::isEnableCGI() const
 {
 	return _enableCGI;
 }

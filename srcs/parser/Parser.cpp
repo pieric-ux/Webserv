@@ -96,7 +96,7 @@ void Parser::parseConfig(const t_raw &buffer)
 	httpOss.str(""); httpOss << "Keepalive timeout: " << _config.getKeepAliveTimeout() << "s";
 	DEBUG(_logger, httpOss.str());
 	DEBUG(_logger, "Root: " + _config.getRoot());
-	DEBUG(_logger, std::string("Enable CGI: ") + (_config.getEnableCGI() ? "on" : "off"));
+	DEBUG(_logger, std::string("Enable CGI: ") + (_config.isEnableCGI() ? "on" : "off"));
 	httpOss.str(""); httpOss << "DAV access: 0" << std::oct << _config.getDavAccess() << std::dec;
 	DEBUG(_logger, httpOss.str());
 
@@ -355,6 +355,26 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 				DEBUG(_logger, "Parsed Expect header: " + value);
 			setFlags(getFlags() | E_PARS_EXPECT);
 		}
+		else if (name == "cookie")
+		{
+			if (!_abnf.match("cookie-header", "Cookie", "Cookie: " + value))
+			{
+				INFO(_logger, "400: invalid Cookie header format: " + value.substr(0, 80));
+				throw client::HTTPError(400);
+			}
+			t_Cookies cookies;
+			std::vector<std::string> pairs;
+			_abnf.extractSubRulesVector("cookie-header", "Cookie", "Cookie: " + value, "cookie-pair", pairs);
+			for (std::size_t i = 0; i < pairs.size(); ++i)
+			{
+				std::string::size_type eq = pairs[i].find('=');
+				if (eq != std::string::npos)
+					cookies[pairs[i].substr(0, eq)] = pairs[i].substr(eq + 1);
+			}
+			request.setCookies(cookies);
+			setFlags(getFlags() | E_PARS_COOKIE);
+			DEBUG(_logger, "Parsed Cookie header: " + common::core::utils::toString(cookies.size()) + " pair(s)");
+		}
 		else if (name =="last-modified")
 		{
 			if (!_abnf.match("Last-Modified", "HTTP", value))
@@ -518,6 +538,32 @@ t_keepAliveTimeout Parser::parseTimeoutValue(const std::string &str)
 /**
  * @brief [TODO:description]
  */
+t_sessionTTL Parser::parseSessionTTLValue(const std::string &str)
+{
+	std::string::size_type start = str.find_first_of("0123456789");
+	if (start == std::string::npos)
+		return config::DefaultConfig::sessionTTL;
+
+	char *endptr = NULL;
+	unsigned long value = std::strtoul(str.c_str() + start, &endptr, 10);
+
+	if (endptr && *endptr != '\0')
+	{
+		switch (*endptr)
+		{
+			case 'w': value *= 7 * 24 * 3600; break;
+			case 'd': value *= 24 * 3600;     break;
+			case 'h': value *= 3600;           break;
+			case 'm': value *= 60;             break;
+			case 's': break;
+			default: break;
+		}
+	}
+	if (value > static_cast<unsigned long>(std::numeric_limits<t_sessionTTL>::max()))
+		throw std::runtime_error("session_ttl value too large: " + str + "\n");
+	return static_cast<t_sessionTTL>(value);
+}
+
 t_Perms Parser::parseDavAccessValue(const std::string &val) const
 {
 	t_Perms davAccess = 0;

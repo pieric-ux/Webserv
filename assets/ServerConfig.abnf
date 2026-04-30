@@ -11,13 +11,13 @@ config          = OWS http-block OWS
 
 http-block      = "http" OWS "{" *(OWS http-directive) OWS "}"
 
-http-directive  = client-max-body-size-dir / default-type-dir / keepalive-timeout-dir / root-dir / types-block / error-page-dir / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / io-multiplexer-dir / location-block / server-block
+http-directive  = client-max-body-size-dir / default-type-dir / keepalive-timeout-dir / session-ttl-dir / root-dir / types-block / error-page-dir / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / io-multiplexer-dir / location-block / server-block
 
 ; ── Server block ─────────────────────────────────────────────────────────────
 
 server-block    = "server" OWS "{" *(OWS server-directive) OWS "}"
 
-server-directive = listen-dir / server-name-dir / root-dir / client-max-body-size-dir / keepalive-timeout-dir / default-type-dir / error-page-dir / types-block / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / location-block
+server-directive = listen-dir / server-name-dir / root-dir / client-max-body-size-dir / keepalive-timeout-dir / session-ttl-dir / default-type-dir / error-page-dir / types-block / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / location-block
 
 ; ── Location block ───────────────────────────────────────────────────────────
 
@@ -25,7 +25,7 @@ location-block  = "location" RWS [modifier RWS] uri-path OWS "{" *(OWS location-
 
 modifier        = "=" / "^~"
 
-location-directive = root-dir / index-dir / autoindex-dir / allowed-methods-dir / client-max-body-size-dir / keepalive-timeout-dir / default-type-dir / error-page-dir / types-block / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / return-dir / location-block
+location-directive = root-dir / index-dir / autoindex-dir / allowed-methods-dir / client-max-body-size-dir / keepalive-timeout-dir / session-ttl-dir / default-type-dir / error-page-dir / types-block / enable-cgi-dir / cgi-extensions-block / cgi-extension-dir / create-full-put-path-dir / dav-access-dir / dav-methods-dir / dav-put-path-dir / return-dir / location-block
 
 ; ── Directives ───────────────────────────────────────────────────────────────
 
@@ -53,6 +53,10 @@ method                  = "GET" / "HEAD" / "POST" / "PUT" / "DELETE"
 client-max-body-size-dir = "client_max_body_size" RWS size-value ";"
 
 keepalive-timeout-dir   = "keepalive_timeout" RWS 1*DIGIT ";"
+
+session-ttl-dir         = "session_ttl" RWS time-value ";"
+time-value              = 1*DIGIT [ time-unit ]
+time-unit               = "s" / "m" / "h" / "d" / "w"
 
 default-type-dir        = "default_type" RWS mime-type ";"
 

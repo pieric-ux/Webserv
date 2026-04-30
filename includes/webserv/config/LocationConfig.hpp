@@ -59,6 +59,8 @@ class LocationConfig
 		void						setIndex(const t_Index &index);
 		const t_keepAliveTimeout	&getKeepAliveTimeout() const;
 		void						setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout);
+		const t_sessionTTL			&getSessionTTL() const;
+		void						setSessionTTL(const t_sessionTTL &sessionTTL);
 		const t_AllowedMethods		&getAllowedMethods() const;
 		void						setAllowedMethods(const t_AllowedMethods &allowedMethods);
 		const std::string			&getRoot() const;
@@ -71,7 +73,7 @@ class LocationConfig
 		void						setModifier(const e_Modifier modifier);
 		const Return				&getRedirect() const;
 		void						setRedirect(const Return &redirect);
-		bool						getEnableCGI() const;
+		bool						isEnableCGI() const;
 		void						setEnableCGI(const bool enableCGI);
 		const t_CgiExtensions		&getCgiExtensions() const;
 		void						setCgiExtensions(const t_CgiExtensions &cgiExtensions);
@@ -88,6 +90,7 @@ class LocationConfig
 		t_ErrorPages				_errorPage;
 		t_Index						_index;
 		t_keepAliveTimeout			_keepAliveTimeout;
+		t_sessionTTL				_sessionTTL;
 		t_AllowedMethods			_allowedMethods;
 		std::string					_root;
 		t_MimeTypes					_types;

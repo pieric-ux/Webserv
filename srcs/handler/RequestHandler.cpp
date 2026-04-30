@@ -293,7 +293,7 @@ void RequestHandler::validateHeaders()
 						break;
 					}
 				}
-				if (!locationConfig.getEnableCGI() || !cgiMatch)
+				if (!locationConfig.isEnableCGI() || !cgiMatch)
 				{
 					INFO(_logger, "415: multipart/form-data requires CGI but CGI disabled or no extension match");
 					throw client::HTTPError(415);

@@ -69,6 +69,7 @@ const std::string			DefaultConfig::defaultType = "text/plain";
 const t_ErrorPages			DefaultConfig::errorPage = t_ErrorPages();
 const t_Index				DefaultConfig::index = t_Index(1, "index.html");
 const t_keepAliveTimeout	DefaultConfig::keepAliveTimeout = 75;
+const t_sessionTTL			DefaultConfig::sessionTTL = SESSION_TTL_S;
 const t_AllowedMethods		DefaultConfig::allowedMethods = initAllowedMethods();
 const t_Listen				DefaultConfig::listen = t_Listen(1, Listen());
 const std::string			DefaultConfig::root = "html";

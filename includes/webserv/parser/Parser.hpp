@@ -42,7 +42,8 @@ enum e_ParserFlags
 	E_PARS_CONTENT_TYPE = 1 << 3,
 	E_PARS_CONTENT_ENCODING = 1 << 4,
 	E_PARS_EXPECT = 1 << 5,
-	E_PARS_CLRF = 1 << 6
+	E_PARS_CLRF = 1 << 6,
+	E_PARS_COOKIE = 1 << 7
 };
 
 class Parser
@@ -85,6 +86,7 @@ class Parser
 		void						ensureAtMostOne(const t_SubRules &dirs,
 										const std::string &name) const;
 		static t_keepAliveTimeout	parseTimeoutValue(const std::string &str);
+		static t_sessionTTL			parseSessionTTLValue(const std::string &str);
 		t_Perms						parseDavAccessValue(const std::string &val) const;
 		t_DavMethods				parseDavMethodsValue(const std::string &val) const;
 		t_ErrorPages				parseErrorPageDirs(const t_SubRules &dirs) const;
@@ -252,6 +254,17 @@ void Parser::parseCommonDirectives(const std::string &parentRule,
 		DEBUG(_logger, oss.str());
 	}
 
+	// session-ttl-dir
+	dirs = extractDirectives(parentRule, input, "session-ttl-dir", depth);
+	ensureAtMostOne(dirs, "session-ttl-dir");
+	if (!dirs.empty())
+	{
+		config.setSessionTTL(parseSessionTTLValue(extractValue("session-ttl-dir", "time-value", dirs[0])));
+		std::ostringstream oss;
+		oss << ctx << "Session TTL: " << config.getSessionTTL() << "s";
+		DEBUG(_logger, oss.str());
+	}
+
 	// root-dir
 	dirs = extractDirectives(parentRule, input, "root-dir", depth);
 	ensureAtMostOne(dirs, "root-dir");
@@ -281,7 +294,7 @@ void Parser::parseCommonDirectives(const std::string &parentRule,
 	if (!dirs.empty())
 	{
 		config.setEnableCGI(extractValue("enable-cgi-dir", "on-off", dirs[0]) == "on");
-		DEBUG(_logger, ctx + "Enable CGI: " + (config.getEnableCGI() ? "on" : "off"));
+		DEBUG(_logger, ctx + "Enable CGI: " + (config.isEnableCGI() ? "on" : "off"));
 	}
 
 	// cgi-extension-dir + cgi-extensions-block
@@ -318,9 +331,10 @@ void Parser::applyParentDefaults(const ParentT &parent, ChildT &child)
 	child.setDefaultType(parent.getDefaultType());
 	child.setErrorPage(parent.getErrorPage());
 	child.setKeepAliveTimeout(parent.getKeepAliveTimeout());
+	child.setSessionTTL(parent.getSessionTTL());
 	child.setRoot(parent.getRoot());
 	child.setTypes(parent.getTypes());
-	child.setEnableCGI(parent.getEnableCGI());
+	child.setEnableCGI(parent.isEnableCGI());
 	child.setCgiExtensions(parent.getCgiExtensions());
 }
 

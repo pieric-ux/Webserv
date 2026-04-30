@@ -45,13 +45,15 @@ class HTTPConfig
 		void						setErrorPage(const t_ErrorPages &errorPage);
 		t_keepAliveTimeout			getKeepAliveTimeout() const;
 		void						setKeepAliveTimeout(const t_keepAliveTimeout keepAliveTimeout);
+		t_sessionTTL				getSessionTTL() const;
+		void						setSessionTTL(const t_sessionTTL sessionTTL);
 		const std::string			&getRoot() const;
 		void						setRoot(const std::string &root);
 		const t_ServerConfigs		&getServerConfigs() const;
 		void						setServerConfigs(const t_ServerConfigs &serverConfigs);
 		const t_MimeTypes			&getTypes() const;
 		void						setTypes(const t_MimeTypes &types);
-		bool						getEnableCGI() const;
+		bool						isEnableCGI() const;
 		void						setEnableCGI(const bool enableCGI);
 		const t_CgiExtensions		&getCgiExtensions() const;
 		void						setCgiExtensions(const t_CgiExtensions &cgiExtensions);
@@ -66,6 +68,7 @@ class HTTPConfig
 		std::string					_defaultType;
 		t_ErrorPages				_errorPage;
 		t_keepAliveTimeout			_keepAliveTimeout;
+		t_sessionTTL				_sessionTTL;
 		std::string					_root;
 		t_ServerConfigs				_serverConfigs;
 		t_MimeTypes					_types;

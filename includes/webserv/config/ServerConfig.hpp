@@ -48,6 +48,8 @@ class ServerConfig
 		void						setErrorPage(const t_ErrorPages &errorPage);
 		const t_keepAliveTimeout	&getKeepAliveTimeout() const;
 		void						setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout);
+		const t_sessionTTL			&getSessionTTL() const;
+		void						setSessionTTL(const t_sessionTTL &sessionTTL);
 		const t_Listen				&getListen() const;
 		void						setListen(const t_Listen &listen);
 		const t_LocationConfigs		&getLocationConfigs() const;
@@ -58,7 +60,7 @@ class ServerConfig
 		void						setServerName(const t_Servernames &serverName);
 		const t_MimeTypes			&getTypes() const;
 		void						setTypes(const t_MimeTypes &types);
-		bool						getEnableCGI() const;
+		bool						isEnableCGI() const;
 		void						setEnableCGI(const bool enableCGI);
 		const t_CgiExtensions		&getCgiExtensions() const;
 		void						setCgiExtensions(const t_CgiExtensions &cgiExtensions);
@@ -74,6 +76,7 @@ class ServerConfig
 		std::string					_defaultType;
 		t_ErrorPages				_errorPage;
 		t_keepAliveTimeout			_keepAliveTimeout;
+		t_sessionTTL				_sessionTTL;
 		t_Listen					_listen;
 		t_LocationConfigs			_locationConfigs;
 		std::string					_root;

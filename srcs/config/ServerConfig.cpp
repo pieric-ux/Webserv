@@ -15,7 +15,7 @@ namespace config
 /**
  * @brief [TODO:description]
  */
-ServerConfig::ServerConfig() 
+ServerConfig::ServerConfig()
 	:	_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
 		_davPutPath(DefaultConfig::davPutPath),
 		_davAccess(DefaultConfig::davAccess),
@@ -23,6 +23,7 @@ ServerConfig::ServerConfig()
 		_defaultType(DefaultConfig::defaultType),
 		_errorPage(DefaultConfig::errorPage),
 		_keepAliveTimeout(DefaultConfig::keepAliveTimeout),
+		_sessionTTL(DefaultConfig::sessionTTL),
 		_listen(DefaultConfig::listen),
 		_locationConfigs(t_LocationConfigs()),
 		_root(DefaultConfig::root),
@@ -55,6 +56,7 @@ ServerConfig::ServerConfig(const ServerConfig &rhs)
 		_defaultType(rhs._defaultType),
 		_errorPage(rhs._errorPage),
 		_keepAliveTimeout(rhs._keepAliveTimeout),
+		_sessionTTL(rhs._sessionTTL),
 		_listen(rhs._listen),
 		_locationConfigs(rhs._locationConfigs),
 		_root(rhs._root),
@@ -82,6 +84,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &rhs)
 		_defaultType = rhs._defaultType;
 		_errorPage = rhs._errorPage;
 		_keepAliveTimeout = rhs._keepAliveTimeout;
+		_sessionTTL = rhs._sessionTTL;
 		_listen = rhs._listen;
 		_locationConfigs = rhs._locationConfigs;
 		_root = rhs._root;
@@ -248,6 +251,26 @@ void ServerConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeou
  *
  * @return [TODO:return]
  */
+const t_sessionTTL &ServerConfig::getSessionTTL() const
+{
+	return _sessionTTL;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param sessionTTL [TODO:parameter]
+ */
+void ServerConfig::setSessionTTL(const t_sessionTTL &sessionTTL)
+{
+	_sessionTTL = sessionTTL;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 const t_Listen &ServerConfig::getListen() const
 {
 	return _listen;
@@ -348,7 +371,7 @@ void ServerConfig::setTypes(const t_MimeTypes &types)
  *
  * @return [TODO:return]
  */
-bool ServerConfig::getEnableCGI() const
+bool ServerConfig::isEnableCGI() const
 {
 	return _enableCGI;
 }

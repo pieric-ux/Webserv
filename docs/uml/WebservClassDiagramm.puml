@@ -96,6 +96,7 @@ namespace webserv.client {
 		- _path : string
 		- _query : string
 		- _headers : t_Headers
+		- _cookies : t_Cookies
 		- _flags : e_RequestFlags
 		--
 		+ Request()
@@ -118,6 +119,8 @@ namespace webserv.client {
 		+ setHeaders(headers : t_Headers) : void
 		+ findHeader(headerName : string, headerValue : string) : HTTPHeader
 		+ addHeader(headerName : string, headerValue : string) : void
+		+ getCookies() : t_Cookies
+		+ setCookies(cookies : t_Cookies) : void
 		+ getFlags() : e_RequestFlags
 		+ setFlags(flags : e_RequestFlags) : void
 		+ getLocationConfig() : LocationConfig
@@ -326,6 +329,7 @@ namespace webserv.parser {
 		E_PARS_CONTENT_ENCODING = 1 << 4
 		E_PARS_EXPECT = 1 << 5
 		E_PARS_CLRF = 1 << 6
+		E_PARS_COOKIE = 1 << 7
 	}
 
 	class "Parser" as Parser {
@@ -430,7 +434,7 @@ namespace webserv.config {
 		+ setServerConfigs(serverConfigs : t_ServerConfigs) : void
 		+ getTypes() : t_MimeTypes
 		+ setTypes(types : t_MimeTypes) : void
-		+ getEnableCGI() : bool
+		+ isEnableCGI() : bool
 		+ setEnableCGI(enableCGI : bool) : void
 		+ getCgiExtensions() : t_CgiExtensions
 		+ setCgiExtensions(cgiExtensions : t_CgiExtensions) : void
@@ -479,7 +483,7 @@ namespace webserv.config {
 		+ setServerNames(serverNames : t_Servernames) : void
 		+ getTypes() : t_MimeTypes
 		+ setTypes(types : t_MimeTypes) : void
-		+ getEnableCGI() : bool
+		+ isEnableCGI() : bool
 		+ setEnableCGI(enableCGI : bool) : void
 		+ getCgiExtensions() : t_CgiExtensions
 		+ setCgiExtensions(cgiExtensions : t_CgiExtensions) : void
@@ -508,7 +512,7 @@ namespace webserv.config {
 		--
 		+ LocationConfig()
 		+ {static} getLogger() : t_Logger
-		+ getAutoindex() : bool
+		+ isAutoindex() : bool
 		+ setAutoindex(autoindex : bool) : void
 		+ getClientMaxBodySize() : t_clientMaxBodySize
 		+ setClientMaxBodySize(clientMaxBodySize : t_clientMaxBodySize) : void
@@ -538,10 +542,73 @@ namespace webserv.config {
 		+ setModifier(modifier : e_Modifier) : void
 		+ getRedirect() : Return
 		+ setRedirect(redirect : Return) : void
-		+ getEnableCGI() : bool
+		+ isEnableCGI() : bool
 		+ setEnableCGI(enableCGI : bool) : void
 		+ getCgiExtensions() : t_CgiExtensions
 		+ setCgiExtensions(cgiExtensions : t_CgiExtensions) : void
+	}
+}
+
+namespace webserv.session {
+
+	class "Cookie" as Cookie {
+		- _logger : t_Logger
+		- _name : string
+		- _value : string
+		- _expires : time_t
+		- _path : string
+		- _domain : string
+		- _secure : bool
+		- _httpOnly : bool
+		--
+		+ Cookie(name : string, value : string)
+		+ {static} getLogger() : t_Logger
+		+ getName() : string
+		+ getValue() : string
+		+ setValue(value : string) : void
+		+ getExpires() : time_t
+		+ setExpires(expires : time_t) : void
+		+ getPath() : string
+		+ setPath(path : string) : void
+		+ getDomain() : string
+		+ setDomain(domain : string) : void
+		+ isSecure() : bool
+		+ setSecure(secure : bool) : void
+		+ isHttpOnly() : bool
+		+ setHttpOnly(httpOnly : bool) : void
+		+ isExpired() : bool
+		+ serializeCookie() : string
+	}
+
+	class "Session" as Session {
+		- _logger : t_Logger
+		- _id : t_uuid
+		- _data : map<string, string>
+		- _expires : time_t
+		--
+		+ Session(id : t_uuid)
+		+ {static} getLogger() : t_Logger
+		+ getId() : t_uuid
+		+ getData() : map<string, string>
+		+ setData(data : map<string, string>) : void
+		+ getExpires() : time_t
+		+ setExpires(expires : time_t) : void
+		+ isExpired() : bool
+		+ get(key : string) : string
+		+ set(key : string, value : string) : void
+	}
+
+	class "SessionStore" as SessionStore <<singleton>> {
+		- _logger : t_Logger
+		- _sessions : t_SessionStore
+		--
+		- SessionStore()
+		+ {static} getInstance() : SessionStore
+		+ {static} getLogger() : t_Logger
+		+ createSession() : Session
+		+ getSession(id : t_uuid) : Session
+		+ deleteSession(id : t_uuid) : void
+		+ purgeExpired() : void
 	}
 }
 
@@ -563,6 +630,7 @@ namespace webserv {
 		- _clientHandler : ClientHandler
 		- _headerRegistry : HTTPHeadersRegistry
 		- _statusCodeRegistry : StatusCodeRegistry
+		- _sessionStore : t_SessionStore
 		--
 		- HTTPServer()
 		- loadConfig() : void
@@ -679,33 +747,37 @@ namespace webserv {
 
 note bottom of webserv
 	**Types (webserv/types.hpp)**
-	t_Logger           = common::core::raii::SharedPtr<log42::logger::Logger>
-	t_ioMultiplexer    = common::core::raii::SharedPtr<common::core::io::IEventIO>
-	t_Headers          = map<string, list<HTTPHeader>>
-	t_HeadersRegistry  = map<string, HTTPHeader>
-	t_StatusCodesRegistry = map<unsigned short, StatusCode>
-	t_MimeTypes        = map<string, string>
-	t_CgiExtensions    = map<string, string>
-	t_DavMethods       = set<e_Method>
-	t_AllowedMethods   = set<e_Method>
-	t_ErrorPages       = vector<ErrorPage>
-	t_ServerConfigs    = vector<ServerConfig>
-	t_LocationConfigs  = vector<LocationConfig>
-	t_Listen           = vector<Listen>
-	t_Servernames      = vector<string>
-	t_Index            = vector<string>
-	t_StatusCodes      = vector<StatusCode>
-	t_Servers          = vector<Server>
-	t_Clients          = map<int, Client>
-	t_raw              = vector<unsigned char>
-	t_SubRules         = vector<string>
-	t_clientMaxBodySize = unsigned int
-	t_keepAliveTimeout = unsigned int
-	t_Perms            = unsigned short
-	t_SocketPairServer = pair<common::core::net::TcpServer, sockaddr_storage>
-	t_SocketPairClient = pair<common::core::net::TcpClient, sockaddr_storage>
-	t_ServerSockets    = vector<t_SocketPairServer>
-	t_AddrPortPair     = pair<string, string>
+	t_Logger				= common::core::raii::SharedPtr<log42::logger::Logger>
+	t_ioMultiplexer			= common::core::raii::SharedPtr<common::core::io::IEventIO>
+	t_Headers				= map<string, list<HTTPHeader>>
+	t_HeadersRegistry		= map<string, HTTPHeader>
+	t_StatusCodesRegistry	= map<unsigned short, StatusCode>
+	t_MimeTypes				= map<string, string>
+	t_CgiExtensions			= map<string, string>
+	t_DavMethods			= set<e_Method>
+	t_AllowedMethods		= set<e_Method>
+	t_ErrorPages			= vector<ErrorPage>
+	t_ServerConfigs			= vector<ServerConfig>
+	t_LocationConfigs		= vector<LocationConfig>
+	t_Listen				= vector<Listen>
+	t_Servernames			= vector<string>
+	t_Index					= vector<string>
+	t_StatusCodes			= vector<StatusCode>
+	t_Servers				= vector<Server>
+	t_Clients				= map<int, Client>
+	t_raw					= vector<unsigned char>
+	t_SubRules				= vector<string>
+	t_clientMaxBodySize		= unsigned int
+	t_keepAliveTimeout		= unsigned int
+	t_Perms					= unsigned short
+	t_SocketPairServer		= pair<common::core::net::TcpServer, sockaddr_storage>
+	t_SocketPairClient		= pair<common::core::net::TcpClient, sockaddr_storage>
+	t_ServerSockets			= vector<t_SocketPairServer>
+	t_AddrPortPair			= pair<string, string>
+	t_uuid					= string
+	t_Cookies				= map<string, string>
+	t_SessionData			= map<string, string>
+	t_SessionStore			= map<t_uuid, Session>>>
 end note
 
 @enduml

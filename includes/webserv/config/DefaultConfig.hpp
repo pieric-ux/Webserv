@@ -14,6 +14,14 @@
 # define IO_TIMEOUT_MS 100
 #endif
 
+#ifndef SESSION_PURGE_INTERVAL_S
+# define SESSION_PURGE_INTERVAL_S 60
+#endif
+
+#ifndef SESSION_TTL_S
+# define SESSION_TTL_S 604800
+#endif
+
 #ifndef DEFAULT_CONFIG_PATH
 # define DEFAULT_CONFIG_PATH "configs/default.conf"
 #endif
@@ -46,6 +54,7 @@ struct DefaultConfig
 	static const t_ErrorPages			errorPage;
 	static const t_Index				index;
 	static const t_keepAliveTimeout		keepAliveTimeout;
+	static const t_sessionTTL			sessionTTL;
 	static const t_AllowedMethods		allowedMethods;
 	static const t_Listen				listen;
 	static const std::string			root;
