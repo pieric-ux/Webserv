@@ -18,6 +18,7 @@
 #include <webserv/client/Response.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
+#include <webserv/handler/CGIHandler.hpp>
 #include <webserv/handler/RequestHandler.hpp>
 #include <webserv/handler/ResponseHandler.hpp>
 #include <webserv/status/StatusCodeRegistry.hpp>
@@ -25,6 +26,7 @@
 
 namespace webserv
 {
+namespace client { class Client; }
 namespace handler
 {
 
@@ -62,7 +64,17 @@ class ExecutionHandler
 
 		void							execute(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executeCGI(RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							executeCGI(RequestHandler &requestHandler,
+											ResponseHandler &responseHandler,
+											const config::LocationConfig &locationConfig,
+											const client::Client &client,
+											t_ioMultiplexer mux);
 		void							executeRequest(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+
+		bool							hasCgiActivity() const;
+		CGIHandler						&getCgi();
+
+		static std::string				getFileExtension(const std::string &path);
 
 	private:
 		t_Logger						_logger;
@@ -70,6 +82,7 @@ class ExecutionHandler
 		ssize_t							_bodyReceived;
 		e_ExecutionHandlerFlags			_flags;
 		t_raw							_autoindexBuffer;
+		CGIHandler						_cgi;
 
 		void							executeHEADorGET(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
@@ -80,7 +93,6 @@ class ExecutionHandler
 		void							readChunk(ResponseHandler &responseHandler);
 		void							writeChunk(RequestHandler &requestHandler);
 		int								getFileSize(const std::string &path);
-		std::string						getFileExtension(const std::string &path);
 		bool							isFile(const std::string& path);
 		bool							isExisting(const std::string& path);
 		void							deleteFile(const std::string& filePath);

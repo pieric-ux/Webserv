@@ -192,6 +192,74 @@ void ExecutionHandler::executeCGI(RequestHandler &requestHandler, const config::
  * @param requestHandler [TODO:parameter]
  * @param responseHandler [TODO:parameter]
  * @param locationConfig [TODO:parameter]
+ * @param client [TODO:parameter]
+ * @param mux [TODO:parameter]
+ */
+void ExecutionHandler::executeCGI(RequestHandler &requestHandler,
+		ResponseHandler &responseHandler,
+		const config::LocationConfig &locationConfig,
+		const client::Client &client,
+		t_ioMultiplexer mux)
+{
+	switch (requestHandler.getRequest().getMethod())
+	{
+		case config::GET:
+		case config::HEAD:
+		case config::POST:
+		case config::PUT:
+		case config::DELETE:
+			break;
+		default:
+			INFO(_logger, "executeCGI: 405 method not allowed: " + config::methodToStr(requestHandler.getRequest().getMethod()));
+			throw client::HTTPError(405);
+	}
+
+	if (!_cgi.isSpawned())
+	{
+		DEBUG(_logger, "executeCGI: not spawned yet, spawning");
+		_cgi.spawn(requestHandler.getRequest(), locationConfig, client, mux);
+		setFlags(getFlags() | E_EXEC_CGI_SPAWNED);
+		return ;
+	}
+
+	_cgi.driveIO(requestHandler, mux, getFlags());
+
+	if (_cgi.isReaped() && !_cgi.isParsed())
+	{
+		DEBUG(_logger, "executeCGI: child reaped, parsing response");
+		_cgi.parse(responseHandler.getResponse());
+		setFlags(getFlags() | E_EXEC_COMPLETE);
+		DEBUG(_logger, "executeCGI: E_EXEC_COMPLETE set");
+		return ;
+	}
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+bool ExecutionHandler::hasCgiActivity() const
+{
+	return _cgi.isSpawned() && !(_flags & E_EXEC_COMPLETE);
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+CGIHandler &ExecutionHandler::getCgi()
+{
+	return _cgi;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param requestHandler [TODO:parameter]
+ * @param responseHandler [TODO:parameter]
+ * @param locationConfig [TODO:parameter]
  */
 void ExecutionHandler::executeRequest(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
