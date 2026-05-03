@@ -10,8 +10,10 @@
 #include <webserv/handler/ResponseHandler.hpp>
 #include <webserv/client/Client.hpp>
 #include <webserv/client/HTTPError.hpp>
+#include <webserv/config/DefaultConfig.hpp>
 #include <webserv/config/method.hpp>
 
+#include <algorithm>
 #include <cctype>
 #include <cerrno>
 #include <cstdlib>
@@ -222,10 +224,11 @@ void CGIHandler::buildEnv(const client::Request &request,
 	(void)interpreter;
 	(void)locationConfig;
 
-	DEBUG(_logger, "buildEnv method=" + config::methodToStr(request.getMethod())
+	DEBUG(_logger, "buildEnv: enter method=" + config::methodToStr(request.getMethod())
 		+ " script=" + scriptPath
 		+ " interpreter=" + interpreter
-		+ " query=\"" + request.getQuery() + "\"");
+		+ " query=\"" + request.getQuery() + "\""
+		+ " headers=" + common::core::utils::toString(request.getHeaders().size()));
 
 	const t_Headers &headers = request.getHeaders();
 
@@ -285,6 +288,7 @@ void CGIHandler::buildEnv(const client::Request &request,
 		}
 		addEnv(headerToCgiName(it->first), joined);
 	}
+	DEBUG(_logger, "buildEnv: done, total=" + common::core::utils::toString(_envBuilder.size()));
 }
 
 /**
@@ -300,10 +304,15 @@ void CGIHandler::spawn(const client::Request &request,
 		const client::Client &client,
 		t_ioMultiplexer mux)
 {
+	DEBUG(_logger, "spawn: enter spawned=" + common::core::utils::toString(_spawned));
 	if (_spawned)
+	{
+		DEBUG(_logger, "spawn: already spawned, skip");
 		return ;
+	}
 
 	const std::string scriptPath = request.getAbsolutePath();
+	DEBUG(_logger, "spawn: scriptPath=" + scriptPath);
 
 	std::string ext;
 	{
@@ -311,6 +320,8 @@ void CGIHandler::spawn(const client::Request &request,
 		if (dot != std::string::npos)
 			ext = scriptPath.substr(dot);
 	}
+	DEBUG(_logger, "spawn: extension=\"" + ext + "\"");
+
 	const t_CgiExtensions &exts = locationConfig.getCgiExtensions();
 	t_CgiExtensions::const_iterator extIt = exts.find(ext);
 	if (extIt == exts.end())
@@ -319,6 +330,7 @@ void CGIHandler::spawn(const client::Request &request,
 		throw client::HTTPError(500);
 	}
 	const std::string interpreter = extIt->second;
+	DEBUG(_logger, "spawn: interpreter resolved -> " + interpreter);
 
 	errno = 0;
 	if (::access(scriptPath.c_str(), F_OK) == -1)
@@ -326,6 +338,7 @@ void CGIHandler::spawn(const client::Request &request,
 		INFO(_logger, "spawn: 404 script not found: " + scriptPath);
 		throw client::HTTPError(404);
 	}
+	DEBUG(_logger, "spawn: F_OK passed");
 	errno = 0;
 	if (::access(scriptPath.c_str(), X_OK) == -1)
 	{
@@ -336,6 +349,7 @@ void CGIHandler::spawn(const client::Request &request,
 		}
 		throw client::HTTPError(500);
 	}
+	DEBUG(_logger, "spawn: X_OK passed");
 
 	buildEnv(request, locationConfig, client, interpreter, scriptPath);
 	finalizeEnvp();
@@ -348,6 +362,8 @@ void CGIHandler::spawn(const client::Request &request,
 	}
 	common::core::raii::UniqueFd stdinR(rawStdin[0]);
 	common::core::raii::UniqueFd stdinW(rawStdin[1]);
+	DEBUG(_logger, "spawn: stdin pipe r=" + common::core::utils::toString(rawStdin[0])
+		+ " w=" + common::core::utils::toString(rawStdin[1]));
 
 	int rawStdout[2] = { -1, -1 };
 	if (::pipe(rawStdout) == -1)
@@ -357,6 +373,8 @@ void CGIHandler::spawn(const client::Request &request,
 	}
 	common::core::raii::UniqueFd stdoutR(rawStdout[0]);
 	common::core::raii::UniqueFd stdoutW(rawStdout[1]);
+	DEBUG(_logger, "spawn: stdout pipe r=" + common::core::utils::toString(rawStdout[0])
+		+ " w=" + common::core::utils::toString(rawStdout[1]));
 
 	std::string scriptDir;
 	{
@@ -365,7 +383,9 @@ void CGIHandler::spawn(const client::Request &request,
 		if (scriptDir.empty())
 			scriptDir = "/";
 	}
+	DEBUG(_logger, "spawn: scriptDir=" + scriptDir);
 
+	DEBUG(_logger, "spawn: forking...");
 	_pid = ::fork();
 	if (_pid == -1)
 	{
@@ -394,32 +414,44 @@ void CGIHandler::spawn(const client::Request &request,
 		::_exit(127);
 	}
 
+	DEBUG(_logger, "spawn: parent — child pid=" + common::core::utils::toString(_pid));
+
 	_stdinFd.reset(stdinW.release());
 	_stdoutFd.reset(stdoutR.release());
+	DEBUG(_logger, "spawn: ownership transferred stdin=" + common::core::utils::toString(_stdinFd.get())
+		+ " stdout=" + common::core::utils::toString(_stdoutFd.get()));
 
 	try {
 		setNonblock(_stdinFd.get());
 		setNonblock(_stdoutFd.get());
 	}
 	catch (...) {
+		ERROR(_logger, "spawn: setNonblock failed, killing child");
 		killAndReap();
 		throw;
 	}
+	DEBUG(_logger, "spawn: O_NONBLOCK set on both pipes");
 
 	const t_Headers &headers = request.getHeaders();
 	t_Headers::const_iterator clIt = headers.find("content-length");
 	bool hasBody = (clIt != headers.end() && !clIt->second.empty()
 			&& std::strtoul(clIt->second.front().getValue().c_str(), NULL, 10) > 0);
+	DEBUG(_logger, "spawn: hasBody=" + common::core::utils::toString(hasBody));
 
 	if (hasBody)
+	{
 		mux->add(_stdinFd.get(), common::core::io::IEventIO::E_OUT);
+		DEBUG(_logger, "spawn: registered stdin fd=" + common::core::utils::toString(_stdinFd.get()) + " E_OUT");
+	}
 	else
 	{
+		DEBUG(_logger, "spawn: no body, closing stdin to signal EOF to child");
 		_stdinFd.reset();
 		_bodySentDone = true;
 	}
 
 	mux->add(_stdoutFd.get(), common::core::io::IEventIO::E_IN);
+	DEBUG(_logger, "spawn: registered stdout fd=" + common::core::utils::toString(_stdoutFd.get()) + " E_IN");
 
 	_cgiStartTime = std::time(NULL);
 	_spawned = true;
@@ -442,6 +474,229 @@ void CGIHandler::killAndReap()
 	_reaped = true;
 	_exitStatus = status;
 	DEBUG(_logger, "killAndReap: child reaped status=" + common::core::utils::toString(status));
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void CGIHandler::checkTimeout()
+{
+	if (_reaped || !_spawned)
+		return ;
+	std::time_t now = std::time(NULL);
+	if (now - _cgiStartTime > static_cast<std::time_t>(CGI_TIMEOUT_S))
+	{
+		WARNING(_logger, "checkTimeout: 504 elapsed=" + common::core::utils::toString(now - _cgiStartTime) + "s");
+		killAndReap();
+		throw client::HTTPError(504);
+	}
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void CGIHandler::tryReap()
+{
+	if (_pid <= 0 || _reaped)
+		return ;
+	DEBUG(_logger, "tryReap: waitpid(WNOHANG) on pid=" + common::core::utils::toString(_pid));
+	int status = 0;
+	pid_t rc = ::waitpid(_pid, &status, WNOHANG);
+	if (rc == 0)
+	{
+		DEBUG(_logger, "tryReap: child still alive");
+		return ;
+	}
+	if (rc == _pid)
+	{
+		_reaped = true;
+		_exitStatus = status;
+		_pid = -1;
+		DEBUG(_logger, "tryReap: child reaped status=" + common::core::utils::toString(status));
+		if (WIFSIGNALED(status))
+		{
+			ERROR(_logger, "tryReap: child died by signal " + common::core::utils::toString(WTERMSIG(status)));
+			throw client::HTTPError(502);
+		}
+		if (WIFEXITED(status) && WEXITSTATUS(status) != 0 && _cgiBuffer.empty())
+		{
+			ERROR(_logger, "tryReap: child exited " + common::core::utils::toString(WEXITSTATUS(status)) + " with no output");
+			throw client::HTTPError(502);
+		}
+		return ;
+	}
+	if (rc == -1 && errno == ECHILD)
+		_reaped = true;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param requestHandler [TODO:parameter]
+ * @param mux [TODO:parameter]
+ */
+void CGIHandler::writeChunkToCGI(handler::RequestHandler &requestHandler, t_ioMultiplexer mux)
+{
+	const t_raw &buf = requestHandler.getBufferRequest();
+	const t_Headers &headers = requestHandler.getRequest().getHeaders();
+	t_Headers::const_iterator clIt = headers.find("content-length");
+	if (clIt == headers.end() || clIt->second.empty())
+	{
+		DEBUG(_logger, "writeChunkToCGI: no Content-Length, closing stdin");
+		mux->remove(_stdinFd.get());
+		_stdinFd.reset();
+		_bodySentDone = true;
+		return ;
+	}
+	std::size_t total = std::strtoul(clIt->second.front().getValue().c_str(), NULL, 10);
+
+	if (buf.empty())
+	{
+		DEBUG(_logger, "writeChunkToCGI: client buffer empty, sent=" + common::core::utils::toString(_bodySent) + "/" + common::core::utils::toString(total));
+		if (_bodySent >= total)
+		{
+			DEBUG(_logger, "writeChunkToCGI: body fully sent, closing stdin");
+			mux->remove(_stdinFd.get());
+			_stdinFd.reset();
+			_bodySentDone = true;
+		}
+		return ;
+	}
+
+	std::size_t remaining = total - _bodySent;
+	std::size_t toWrite = std::min(remaining,
+			std::min(static_cast<std::size_t>(config::DefaultConfig::BUFFER_SIZE), buf.size()));
+
+	ssize_t wr = ::write(_stdinFd.get(), &buf[0], toWrite);
+	if (wr > 0)
+	{
+		requestHandler.eraseBufferRequestFront(static_cast<std::size_t>(wr));
+		_bodySent += static_cast<std::size_t>(wr);
+		DEBUG(_logger, "writeChunkToCGI: " + common::core::utils::toString(wr)
+			+ " bytes (" + common::core::utils::toString(_bodySent) + "/"
+			+ common::core::utils::toString(total) + ")");
+		if (_bodySent >= total)
+		{
+			mux->remove(_stdinFd.get());
+			_stdinFd.reset();
+			_bodySentDone = true;
+		}
+		return ;
+	}
+	ERROR(_logger, "writeChunkToCGI: write failed, terminating CGI");
+	mux->remove(_stdinFd.get());
+	_stdinFd.reset();
+	throw client::HTTPError(502);
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void CGIHandler::readChunkFromCGI()
+{
+	unsigned char buf[config::DefaultConfig::BUFFER_SIZE];
+	ssize_t rd = ::read(_stdoutFd.get(), buf, sizeof(buf));
+	if (rd > 0)
+	{
+		_cgiBuffer.insert(_cgiBuffer.end(), buf, buf + rd);
+		DEBUG(_logger, "readChunkFromCGI: " + common::core::utils::toString(rd)
+			+ " bytes (total=" + common::core::utils::toString(_cgiBuffer.size()) + ")");
+		return ;
+	}
+	if (rd == 0)
+	{
+		_eof = true;
+		DEBUG(_logger, "readChunkFromCGI: EOF on stdout (total=" + common::core::utils::toString(_cgiBuffer.size()) + ")");
+		return ;
+	}
+	ERROR(_logger, "readChunkFromCGI: read failed");
+	throw client::HTTPError(502);
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param requestHandler [TODO:parameter]
+ * @param mux [TODO:parameter]
+ * @param execFlags [TODO:parameter]
+ */
+void CGIHandler::driveIO(handler::RequestHandler &requestHandler,
+		t_ioMultiplexer mux,
+		int execFlags)
+{
+	if (!_spawned || (execFlags & E_EXEC_COMPLETE))
+		return ;
+
+	DEBUG(_logger, "driveIO: enter spawned=" + common::core::utils::toString(_spawned)
+		+ " stdinValid=" + common::core::utils::toString(_stdinFd.valid())
+		+ " stdoutValid=" + common::core::utils::toString(_stdoutFd.valid())
+		+ " eof=" + common::core::utils::toString(_eof)
+		+ " reaped=" + common::core::utils::toString(_reaped));
+
+	checkTimeout();
+
+	if (_stdinFd.valid())
+	{
+		common::core::io::IEventIO::e_Event ev = mux->getEvents(_stdinFd.get());
+		if (ev & common::core::io::IEventIO::E_OUT)
+		{
+			DEBUG(_logger, "driveIO: stdin ready -> write");
+			writeChunkToCGI(requestHandler, mux);
+		}
+	}
+
+	if (_stdoutFd.valid())
+	{
+		common::core::io::IEventIO::e_Event ev = mux->getEvents(_stdoutFd.get());
+		if (ev & common::core::io::IEventIO::E_IN)
+		{
+			DEBUG(_logger, "driveIO: stdout ready -> read");
+			readChunkFromCGI();
+		}
+	}
+
+	if (_eof && !_reaped)
+	{
+		DEBUG(_logger, "driveIO: eof reached -> tryReap");
+		tryReap();
+	}
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param mux [TODO:parameter]
+ */
+void CGIHandler::reset(t_ioMultiplexer mux)
+{
+	if (_stdinFd.valid())
+	{
+		try { mux->remove(_stdinFd.get()); } catch (...) {}
+		_stdinFd.reset();
+	}
+	if (_stdoutFd.valid())
+	{
+		try { mux->remove(_stdoutFd.get()); } catch (...) {}
+		_stdoutFd.reset();
+	}
+	if (_pid > 0 && !_reaped)
+		killAndReap();
+
+	_envp.reset();
+	_envBuilder.clear();
+	_cgiBuffer.clear();
+	_cgiResponseBody.clear();
+	_pid = -1;
+	_cgiStartTime = 0;
+	_bodySent = 0;
+	_exitStatus = 0;
+	_spawned = false;
+	_bodySentDone = false;
+	_eof = false;
+	_reaped = false;
+	_parsed = false;
+	_pushed = false;
+	DEBUG(_logger, "reset: state cleared");
 }
 
 } // !handler
