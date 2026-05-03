@@ -183,6 +183,7 @@ void ExecutionHandler::executeCGI(RequestHandler &requestHandler, const config::
 {
 	(void)requestHandler;
 	(void)locationConfig;
+	throw client::HTTPError(501);
 }
 
 /**

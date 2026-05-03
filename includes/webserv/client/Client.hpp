@@ -43,6 +43,10 @@ class Client
 		Client(const Client &rhs);
 		Client &operator=(const Client &rhs);
 
+		void								init(const t_SocketPairClient &client,
+												const config::ServerConfig &serverConfig,
+												const t_ioMultiplexer &mux);
+
 		static t_Logger						getLogger() ;
 
 		const common::core::net::TcpClient	&getSocket() const;
@@ -81,6 +85,7 @@ class Client
 		HTTPError							_HTTPError;
 		std::time_t							_lastActivityTime;
 		std::time_t							_effectiveKeepaliveTimeout;
+		t_ioMultiplexer						_ioMultiplexer;
 };
 
 } // !client

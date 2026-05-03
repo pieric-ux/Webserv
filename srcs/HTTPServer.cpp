@@ -99,6 +99,8 @@ t_Logger HTTPServer::getLogger() const
  */
 void	HTTPServer::setup()
 {
+	std::signal(SIGPIPE, SIG_IGN);
+
 	INFO(_logger, "Setting up HTTPServer...");
 
 	try{
@@ -157,8 +159,7 @@ void	HTTPServer::run()
 
 		try {
 			ready = _ioMultiplexer->wait(IO_TIMEOUT_MS);
-			if (!ready)
-				continue;
+			(void)ready;
 		} catch (const std::exception &e) {
 			ERROR(_logger, "I/O multiplexer wait failed: " + std::string(e.what()));
 		}

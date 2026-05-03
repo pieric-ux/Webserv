@@ -27,7 +27,8 @@ Client::Client()
 		_responseHandler(),
 		_HTTPError(),
 		_lastActivityTime(0),
-		_effectiveKeepaliveTimeout(0)
+		_effectiveKeepaliveTimeout(0),
+		_ioMultiplexer()
 {
 	std::memset(&_sockaddr_storage, 0, sizeof(_sockaddr_storage));
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
@@ -52,7 +53,8 @@ Client::Client(const t_SocketPairClient &client, const config::ServerConfig &ser
 		_responseHandler(),
 		_HTTPError(),
 		_lastActivityTime(std::time(NULL)),
-		_effectiveKeepaliveTimeout(static_cast<std::time_t>(serverConfig.getKeepAliveTimeout()))
+		_effectiveKeepaliveTimeout(static_cast<std::time_t>(serverConfig.getKeepAliveTimeout())),
+		_ioMultiplexer()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -81,7 +83,8 @@ Client::Client(const Client &rhs)
 		_responseHandler(rhs._responseHandler),
 		_HTTPError(rhs._HTTPError),
 		_lastActivityTime(rhs._lastActivityTime),
-		_effectiveKeepaliveTimeout(rhs._effectiveKeepaliveTimeout)
+		_effectiveKeepaliveTimeout(rhs._effectiveKeepaliveTimeout),
+		_ioMultiplexer(rhs._ioMultiplexer)
 {
 	_requestHandler = rhs._requestHandler;
 }
@@ -108,8 +111,31 @@ Client &Client::operator=(const Client &rhs)
 		_HTTPError = rhs._HTTPError;
 		_lastActivityTime = rhs._lastActivityTime;
 		_effectiveKeepaliveTimeout = rhs._effectiveKeepaliveTimeout;
+		_ioMultiplexer = rhs._ioMultiplexer;
 	}
 	return (*this);
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param client [TODO:parameter]
+ * @param serverConfig [TODO:parameter]
+ * @param mux [TODO:parameter]
+ */
+void Client::init(const t_SocketPairClient &client,
+		const config::ServerConfig &serverConfig,
+		const t_ioMultiplexer &mux)
+{
+	_socket = client.first;
+	_sockaddr_storage = client.second;
+	_id = _socket.getFd();
+	_serverConfig = serverConfig;
+	_status = E_CLI_REQUEST;
+	_lastActivityTime = std::time(NULL);
+	_effectiveKeepaliveTimeout = static_cast<std::time_t>(serverConfig.getKeepAliveTimeout());
+	_ioMultiplexer = mux;
+	INFO(_logger, "Client initialized in place fd=" + common::core::utils::toString(_id));
 }
 
 /**
