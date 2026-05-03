@@ -30,10 +30,15 @@ namespace handler
 
 enum e_ExecutionHandlerFlags
 {
-	E_EXEC_FILE_OPENED = 1 << 0,
-	E_EXEC_COMPLETE = 1 << 1,
-	E_EXEC_CREATED = 1 << 2,
-	E_EXEC_NOCONTENT = 1 << 3
+	E_EXEC_FILE_OPENED		= 1 << 0,
+	E_EXEC_COMPLETE			= 1 << 1,
+	E_EXEC_CREATED			= 1 << 2,
+	E_EXEC_NOCONTENT		= 1 << 3,
+	E_EXEC_CGI_SPAWNED		= 1 << 4,
+	E_EXEC_CGI_BODY_SENT	= 1 << 5,
+	E_EXEC_CGI_EOF			= 1 << 6,
+	E_EXEC_CGI_REAPED		= 1 << 7,
+	E_EXEC_CGI_PUSHED		= 1 << 8
 };
 
 class ExecutionHandler
