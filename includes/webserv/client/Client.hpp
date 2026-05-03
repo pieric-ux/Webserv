@@ -69,6 +69,8 @@ class Client
 		void								receiveData();
 		void								sendData();
 		void								processHTTPCycle();
+		void								driveCgiIO();
+		bool								isCgiRoute() const;
 		void								buildErrorResponse();
 		void								resetAll();
 

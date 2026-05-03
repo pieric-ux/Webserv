@@ -411,7 +411,9 @@ void Client::processHTTPCycle()
 			return ;
 		}
 	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED &&
-			!(_requestHandler.getParser().getFlags() & parser::E_PARS_EXPECT))
+			!(_requestHandler.getParser().getFlags() & parser::E_PARS_EXPECT) &&
+			!isCgiRoute() &&
+			!(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE))
 		try{
 			_executionHandler.execute(_requestHandler, _responseHandler, _requestHandler.getRequest().getLocationConfig());
 		} catch (const HTTPError &e) {
@@ -421,17 +423,75 @@ void Client::processHTTPCycle()
 		}
 	method = _requestHandler.getRequest().getMethod();
 	int parserFlags = _requestHandler.getParser().getFlags();
+	bool cgiNotReady = isCgiRoute() && !(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE);
 	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED &&
 			!(_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT) &&
-			((_executionHandler.getFlags() & handler::E_EXEC_COMPLETE) || method == config::GET ||
-				method == config::HEAD || parserFlags & parser::E_PARS_EXPECT))
+			((_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
+				|| ((method == config::GET || method == config::HEAD) && !cgiNotReady)
+				|| (parserFlags & parser::E_PARS_EXPECT)))
 		try{
 			_responseHandler.buildHeadersResponse(_requestHandler.getRequest(), _executionHandler.getFlags(), _requestHandler.getParser().getFlags());
+			if (isCgiRoute()
+					&& (_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
+					&& !_executionHandler.getCgi().isPushed())
+			{
+				DEBUG(_logger, "processHTTPCycle: pushing CGI body after headers");
+				_executionHandler.getCgi().pushBody(_responseHandler);
+			}
 		} catch (const HTTPError &e) {
 			setHTTPError(e);
 			setStatus(E_CLI_ERR_PARSING);
 			return ;
 		}
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+bool Client::isCgiRoute() const
+{
+	if (!(_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED))
+		return false;
+	const config::LocationConfig &loc = _requestHandler.getRequest().getLocationConfig();
+	if (!loc.isEnableCGI())
+		return false;
+	std::string ext = "." + handler::ExecutionHandler::getFileExtension(_requestHandler.getRequest().getAbsolutePath());
+	return loc.getCgiExtensions().find(ext) != loc.getCgiExtensions().end();
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void Client::driveCgiIO()
+{
+	if (!isCgiRoute())
+		return ;
+
+	try
+	{
+		if (!(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE))
+		{
+			_executionHandler.executeCGI(_requestHandler, _responseHandler,
+				_requestHandler.getRequest().getLocationConfig(),
+				*this, _ioMultiplexer);
+		}
+
+		if ((_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
+				&& (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT)
+				&& !_executionHandler.getCgi().isPushed())
+		{
+			DEBUG(_logger, "driveCgiIO: pushing CGI body to response buffer");
+			_executionHandler.getCgi().pushBody(_responseHandler);
+		}
+	}
+	catch (const HTTPError &e)
+	{
+		ERROR(_logger, "driveCgiIO: " + std::string(e.what()));
+		setHTTPError(e);
+		setStatus(E_CLI_ERR_PARSING);
+	}
 }
 
 /**
@@ -479,6 +539,7 @@ void Client::resetAll()
 	_requestHandler.getParser().setFlags(0);
 	_requestHandler.getRequest().setFlags(0);
 	_responseHandler.getResponse().setFlags(0);
+	_executionHandler.getCgi().reset(_ioMultiplexer);
 	_executionHandler.setFlags(0);
 	this->setHTTPError(HTTPError());
 }
