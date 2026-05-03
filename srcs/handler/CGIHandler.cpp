@@ -13,6 +13,14 @@
 #include <webserv/config/method.hpp>
 
 #include <cctype>
+#include <cerrno>
+#include <cstdlib>
+#include <ctime>
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 namespace webserv
 {
@@ -36,6 +44,17 @@ namespace
 			out += (c == '-') ? '_' : static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
 		}
 		return out;
+	}
+
+	/**
+	 * @brief [TODO:description]
+	 *
+	 * @param fd [TODO:parameter]
+	 */
+	void setNonblock(int fd)
+	{
+		if (::fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
+			throw client::HTTPError(500);
 	}
 }
 
@@ -73,6 +92,8 @@ CGIHandler::~CGIHandler()
 	DEBUG(_logger, "CGIHandler instance destroyed pid=" + common::core::utils::toString(_pid)
 		+ " spawned=" + common::core::utils::toString(_spawned)
 		+ " reaped=" + common::core::utils::toString(_reaped));
+	if (_pid > 0 && !_reaped)
+		killAndReap();
 }
 
 /**
@@ -264,6 +285,163 @@ void CGIHandler::buildEnv(const client::Request &request,
 		}
 		addEnv(headerToCgiName(it->first), joined);
 	}
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param request [TODO:parameter]
+ * @param locationConfig [TODO:parameter]
+ * @param client [TODO:parameter]
+ * @param mux [TODO:parameter]
+ */
+void CGIHandler::spawn(const client::Request &request,
+		const config::LocationConfig &locationConfig,
+		const client::Client &client,
+		t_ioMultiplexer mux)
+{
+	if (_spawned)
+		return ;
+
+	const std::string scriptPath = request.getAbsolutePath();
+
+	std::string ext;
+	{
+		std::string::size_type dot = scriptPath.rfind('.');
+		if (dot != std::string::npos)
+			ext = scriptPath.substr(dot);
+	}
+	const t_CgiExtensions &exts = locationConfig.getCgiExtensions();
+	t_CgiExtensions::const_iterator extIt = exts.find(ext);
+	if (extIt == exts.end())
+	{
+		ERROR(_logger, "spawn: no interpreter for extension \"" + ext + "\"");
+		throw client::HTTPError(500);
+	}
+	const std::string interpreter = extIt->second;
+
+	errno = 0;
+	if (::access(scriptPath.c_str(), F_OK) == -1)
+	{
+		INFO(_logger, "spawn: 404 script not found: " + scriptPath);
+		throw client::HTTPError(404);
+	}
+	errno = 0;
+	if (::access(scriptPath.c_str(), X_OK) == -1)
+	{
+		if (errno == EACCES)
+		{
+			INFO(_logger, "spawn: 403 script not executable: " + scriptPath);
+			throw client::HTTPError(403);
+		}
+		throw client::HTTPError(500);
+	}
+
+	buildEnv(request, locationConfig, client, interpreter, scriptPath);
+	finalizeEnvp();
+
+	int rawStdin[2] = { -1, -1 };
+	if (::pipe(rawStdin) == -1)
+	{
+		ERROR(_logger, "spawn: pipe(stdin) failed");
+		throw client::HTTPError(500);
+	}
+	common::core::raii::UniqueFd stdinR(rawStdin[0]);
+	common::core::raii::UniqueFd stdinW(rawStdin[1]);
+
+	int rawStdout[2] = { -1, -1 };
+	if (::pipe(rawStdout) == -1)
+	{
+		ERROR(_logger, "spawn: pipe(stdout) failed");
+		throw client::HTTPError(500);
+	}
+	common::core::raii::UniqueFd stdoutR(rawStdout[0]);
+	common::core::raii::UniqueFd stdoutW(rawStdout[1]);
+
+	std::string scriptDir;
+	{
+		std::string::size_type slash = scriptPath.rfind('/');
+		scriptDir = (slash == std::string::npos) ? "." : scriptPath.substr(0, slash);
+		if (scriptDir.empty())
+			scriptDir = "/";
+	}
+
+	_pid = ::fork();
+	if (_pid == -1)
+	{
+		ERROR(_logger, "spawn: fork() failed");
+		throw client::HTTPError(500);
+	}
+
+	if (_pid == 0)
+	{
+		if (::dup2(stdinR.get(), STDIN_FILENO) == -1)
+			::_exit(127);
+		if (::dup2(stdoutW.get(), STDOUT_FILENO) == -1)
+			::_exit(127);
+		stdinR.reset();
+		stdinW.reset();
+		stdoutR.reset();
+		stdoutW.reset();
+
+		::chdir(scriptDir.c_str());
+
+		char *argv[3];
+		argv[0] = const_cast<char *>(interpreter.c_str());
+		argv[1] = const_cast<char *>(scriptPath.c_str());
+		argv[2] = NULL;
+		::execve(interpreter.c_str(), argv, _envp.get());
+		::_exit(127);
+	}
+
+	_stdinFd.reset(stdinW.release());
+	_stdoutFd.reset(stdoutR.release());
+
+	try {
+		setNonblock(_stdinFd.get());
+		setNonblock(_stdoutFd.get());
+	}
+	catch (...) {
+		killAndReap();
+		throw;
+	}
+
+	const t_Headers &headers = request.getHeaders();
+	t_Headers::const_iterator clIt = headers.find("content-length");
+	bool hasBody = (clIt != headers.end() && !clIt->second.empty()
+			&& std::strtoul(clIt->second.front().getValue().c_str(), NULL, 10) > 0);
+
+	if (hasBody)
+		mux->add(_stdinFd.get(), common::core::io::IEventIO::E_OUT);
+	else
+	{
+		_stdinFd.reset();
+		_bodySentDone = true;
+	}
+
+	mux->add(_stdoutFd.get(), common::core::io::IEventIO::E_IN);
+
+	_cgiStartTime = std::time(NULL);
+	_spawned = true;
+	INFO(_logger, "spawn: pid=" + common::core::utils::toString(_pid)
+		+ " script=" + scriptPath
+		+ " interpreter=" + interpreter);
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void CGIHandler::killAndReap()
+{
+	if (_pid <= 0 || _reaped)
+		return ;
+	::kill(_pid, SIGKILL);
+	int status = 0;
+	::waitpid(_pid, &status, 0);
+	_pid = -1;
+	_reaped = true;
+	_exitStatus = status;
+	DEBUG(_logger, "killAndReap: child reaped status=" + common::core::utils::toString(status));
 }
 
 } // !handler
