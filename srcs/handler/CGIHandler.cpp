@@ -238,7 +238,8 @@ void CGIHandler::buildEnv(const client::Request &request,
 		t_AddrPortPair addr = common::core::net::getNameInfo(client.getSockaddrStorage());
 		remoteAddr = addr.first;
 		remotePort = addr.second;
-	} catch (const std::exception &e) {
+	}
+	catch (const std::exception &e) {
 		WARNING(_logger, "buildEnv: getNameInfo failed: " + std::string(e.what()));
 	}
 	addEnv("REMOTE_ADDR", remoteAddr);
