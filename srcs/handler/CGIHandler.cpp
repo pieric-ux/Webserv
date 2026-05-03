@@ -12,12 +12,16 @@
 #include <webserv/client/HTTPError.hpp>
 #include <webserv/config/DefaultConfig.hpp>
 #include <webserv/config/method.hpp>
+#include <webserv/status/StatusCodeRegistry.hpp>
+
+#include <abnf/Abnf.hpp>
 
 #include <algorithm>
 #include <cctype>
 #include <cerrno>
 #include <cstdlib>
 #include <ctime>
+#include <utility>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -57,6 +61,25 @@ namespace
 	{
 		if (::fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
 			throw client::HTTPError(500);
+	}
+
+	/**
+	 * @brief [TODO:description]
+	 *
+	 * @param v [TODO:parameter]
+	 * @return [TODO:return]
+	 */
+	std::pair<std::size_t, std::size_t> findHeaderEnd(const t_raw &v)
+	{
+		for (std::size_t i = 0; i + 1 < v.size(); ++i)
+		{
+			if (i + 3 < v.size() && v[i] == '\r' && v[i+1] == '\n'
+					&& v[i+2] == '\r' && v[i+3] == '\n')
+				return std::make_pair(i, static_cast<std::size_t>(4));
+			if (v[i] == '\n' && v[i+1] == '\n')
+				return std::make_pair(i, static_cast<std::size_t>(2));
+		}
+		return std::make_pair(std::string::npos, static_cast<std::size_t>(0));
 	}
 }
 
@@ -660,6 +683,139 @@ void CGIHandler::driveIO(handler::RequestHandler &requestHandler,
 		DEBUG(_logger, "driveIO: eof reached -> tryReap");
 		tryReap();
 	}
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param response [TODO:parameter]
+ */
+void CGIHandler::parse(client::Response &response)
+{
+	if (_parsed)
+	{
+		DEBUG(_logger, "parse: already parsed, skip");
+		return ;
+	}
+
+	DEBUG(_logger, "parse: enter buffer=" + common::core::utils::toString(_cgiBuffer.size()) + " bytes");
+
+	std::pair<std::size_t, std::size_t> sep = findHeaderEnd(_cgiBuffer);
+	if (sep.first == std::string::npos)
+	{
+		ERROR(_logger, "parse: no CRLFCRLF/LFLF separator found, malformed CGI output");
+		throw client::HTTPError(502);
+	}
+	DEBUG(_logger, "parse: header/body separator at offset=" + common::core::utils::toString(sep.first)
+		+ " sepLen=" + common::core::utils::toString(sep.second));
+
+	std::string headerBlock(_cgiBuffer.begin(), _cgiBuffer.begin() + sep.first);
+	_cgiResponseBody.assign(_cgiBuffer.begin() + sep.first + sep.second, _cgiBuffer.end());
+	_cgiBuffer.clear();
+	DEBUG(_logger, "parse: headerBlock=" + common::core::utils::toString(headerBlock.size())
+		+ " body=" + common::core::utils::toString(_cgiResponseBody.size()));
+
+	bool hasContentType = false;
+	bool hasLocation = false;
+	bool hasStatus = false;
+
+	std::size_t pos = 0;
+	while (pos < headerBlock.size())
+	{
+		std::size_t lineEnd = headerBlock.find('\n', pos);
+		if (lineEnd == std::string::npos)
+			lineEnd = headerBlock.size();
+		std::string line = headerBlock.substr(pos, lineEnd - pos);
+		pos = lineEnd + 1;
+		if (!line.empty() && line[line.size() - 1] == '\r')
+			line.erase(line.size() - 1);
+		if (line.empty())
+			continue;
+
+		if (!abnf::Abnf::getInstance().match("field-line", "HTTP", line))
+		{
+			ERROR(_logger, "parse: invalid field-line per RFC 9110: \"" + line + "\"");
+			throw client::HTTPError(502);
+		}
+
+		std::size_t colon = line.find(':');
+		if (colon == std::string::npos)
+		{
+			ERROR(_logger, "parse: header line without colon: \"" + line + "\"");
+			throw client::HTTPError(502);
+		}
+		std::string name = common::core::utils::trim(line.substr(0, colon));
+		std::string value = common::core::utils::trim(line.substr(colon + 1));
+		if (name.empty())
+		{
+			ERROR(_logger, "parse: empty header name");
+			throw client::HTTPError(502);
+		}
+		std::string lower = common::core::utils::toLower(name);
+
+		if (lower == "status")
+		{
+			std::size_t sp = value.find(' ');
+			std::string codeStr = (sp == std::string::npos) ? value : value.substr(0, sp);
+			char *endp = NULL;
+			long code = std::strtol(codeStr.c_str(), &endp, 10);
+			if (codeStr.empty() || endp == codeStr.c_str() || code < 100 || code > 599)
+			{
+				ERROR(_logger, "parse: invalid Status header value: \"" + value + "\"");
+				throw client::HTTPError(502);
+			}
+			response.setStatusCode(
+				status::StatusCodeRegistry::getInstance().getStatusCode(
+					static_cast<unsigned short>(code)));
+			hasStatus = true;
+			DEBUG(_logger, "parse: Status -> " + common::core::utils::toString(code));
+			continue;
+		}
+		if (lower == "location")
+			hasLocation = true;
+		if (lower == "content-type")
+			hasContentType = true;
+
+		response.addHeader(name, value);
+		DEBUG(_logger, "parse: header " + name + ": " + value);
+	}
+
+	if (!hasContentType && !hasLocation && !hasStatus)
+	{
+		ERROR(_logger, "parse: missing Content-Type / Location / Status header");
+		throw client::HTTPError(502);
+	}
+
+	if (response.findHeader("content-length", "").getName().empty())
+	{
+		response.addHeader("Content-Length",
+			common::core::utils::toString(_cgiResponseBody.size()));
+		DEBUG(_logger, "parse: Content-Length defaulted to " + common::core::utils::toString(_cgiResponseBody.size()));
+	}
+
+	_parsed = true;
+	INFO(_logger, "parse: done body=" + common::core::utils::toString(_cgiResponseBody.size()) + " bytes");
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param responseHandler [TODO:parameter]
+ */
+void CGIHandler::pushBody(handler::ResponseHandler &responseHandler)
+{
+	if (_pushed)
+	{
+		DEBUG(_logger, "pushBody: already pushed, skip");
+		return ;
+	}
+	if (!_cgiResponseBody.empty())
+	{
+		DEBUG(_logger, "pushBody: appending " + common::core::utils::toString(_cgiResponseBody.size()) + " bytes to response");
+		responseHandler.appendToBufferResponse(_cgiResponseBody);
+	}
+	_cgiResponseBody.clear();
+	_pushed = true;
 }
 
 /**
