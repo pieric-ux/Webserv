@@ -72,3 +72,6 @@ astABNF.pdf
 # Claude
 CLAUDE.md
 .claude/
+
+test/
+test/*
