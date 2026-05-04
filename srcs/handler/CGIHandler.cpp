@@ -356,15 +356,13 @@ void CGIHandler::spawn(const client::Request &request,
 	DEBUG(_logger, "spawn: interpreter resolved -> " + interpreter);
 
 	errno = 0;
-	if (::access(scriptPath.c_str(), F_OK) == -1)
-	{
-		INFO(_logger, "spawn: 404 script not found: " + scriptPath);
-		throw client::HTTPError(404);
-	}
-	DEBUG(_logger, "spawn: F_OK passed");
-	errno = 0;
 	if (::access(scriptPath.c_str(), X_OK) == -1)
 	{
+		if (errno == ENOENT)
+		{
+			INFO(_logger, "spawn: 404 script not found: " + scriptPath);
+			throw client::HTTPError(404);
+		}
 		if (errno == EACCES)
 		{
 			INFO(_logger, "spawn: 403 script not executable: " + scriptPath);

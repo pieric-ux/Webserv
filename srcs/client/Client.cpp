@@ -413,7 +413,7 @@ void Client::processHTTPCycle()
 	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED &&
 			!(_requestHandler.getParser().getFlags() & parser::E_PARS_EXPECT) &&
 			!isCgiRoute() &&
-			!(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE))
+			!(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)) // TODO: check if no prolem with 100 continue
 		try{
 			_executionHandler.execute(_requestHandler, _responseHandler, _requestHandler.getRequest().getLocationConfig());
 		} catch (const HTTPError &e) {
