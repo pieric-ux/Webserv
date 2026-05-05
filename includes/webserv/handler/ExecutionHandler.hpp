@@ -31,10 +31,10 @@ namespace handler
 
 enum e_ExecutionHandlerFlags
 {
-	E_EXEC_FILE_OPENED = 1 << 0,
-	E_EXEC_COMPLETE = 1 << 1,
-	E_EXEC_CREATED = 1 << 2,
-	E_EXEC_NOCONTENT = 1 << 3,
+	E_EXEC_FILE_OPENED		= 1 << 0,
+	E_EXEC_COMPLETE			= 1 << 1,
+	E_EXEC_CREATED			= 1 << 2,
+	E_EXEC_NOCONTENT		= 1 << 3,
 	E_EXEC_CGI_SPAWNED		= 1 << 4,
 	E_EXEC_CGI_BODY_SENT	= 1 << 5,
 	E_EXEC_CGI_EOF			= 1 << 6,
@@ -45,7 +45,7 @@ enum e_ExecutionHandlerFlags
 class ExecutionHandler
 {
 	public:
-		ExecutionHandler(const t_ioMultiplexer &ioMultiplexer, const client::Client &client);
+		ExecutionHandler(const t_ioMultiplexer &ioMultiplexer, sockaddr_storage clientAddr);
 		~ExecutionHandler();
 
 		ExecutionHandler(const ExecutionHandler &rhs);

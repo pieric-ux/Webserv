@@ -6,9 +6,9 @@
  */
 
 #include <webserv/handler/CGIHandler.hpp>
+#include <webserv/handler/ExecutionHandler.hpp>
 #include <webserv/handler/RequestHandler.hpp>
 #include <webserv/handler/ResponseHandler.hpp>
-#include <webserv/client/Client.hpp>
 #include <webserv/client/HTTPError.hpp>
 #include <webserv/config/DefaultConfig.hpp>
 #include <webserv/config/method.hpp>
@@ -36,9 +36,9 @@ namespace handler
 /**
  * @brief [TODO:description]
  */
-CGIHandler::CGIHandler(const t_ioMultiplexer &ioMultiplexer, const client::Client &client)
+CGIHandler::CGIHandler(const t_ioMultiplexer &ioMultiplexer, sockaddr_storage clientAddr)
 	:	_ioMultiplexer(ioMultiplexer),
-		_client(client),
+		_clientAddr(clientAddr),
 		_pid(-1),
 		_stdinFd(-1),
 		_stdoutFd(-1),
@@ -480,9 +480,9 @@ t_ioMultiplexer CGIHandler::getIoMultiplexer() const
  *
  * @return [TODO:return]
  */
-const client::Client	&CGIHandler::getClient() const
+sockaddr_storage	CGIHandler::getClientAddr() const
 {
-	return _client;
+	return _clientAddr;
 }
 
 /**
@@ -650,7 +650,7 @@ void CGIHandler::buildEnv(const client::Request &request,
 	std::string remoteAddr;
 	std::string remotePort;
 	try {
-		t_AddrPortPair addr = common::core::net::getNameInfo(_client.getSockaddrStorage());
+		t_AddrPortPair addr = common::core::net::getNameInfo(_clientAddr);
 		remoteAddr = addr.first;
 		remotePort = addr.second;
 	}

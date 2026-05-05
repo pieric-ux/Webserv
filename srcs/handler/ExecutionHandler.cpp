@@ -15,12 +15,12 @@ namespace handler
 /**
  * @brief [TODO:description]
  */
-ExecutionHandler::ExecutionHandler(const t_ioMultiplexer &ioMultiplexer, const client::Client &client)
+ExecutionHandler::ExecutionHandler(const t_ioMultiplexer &ioMultiplexer, sockaddr_storage clientAddr)
 	:	_fd(-1),
 		_bodyReceived(0),
 		_flags(static_cast<e_ExecutionHandlerFlags>(0)),
 		_autoindexBuffer(),
-		_cgiHandler(ioMultiplexer, client)
+		_cgiHandler(ioMultiplexer, clientAddr)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.executionhandler");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -43,10 +43,9 @@ ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
 		_bodyReceived(rhs._bodyReceived),
 		_flags(rhs._flags),
 		_autoindexBuffer(rhs._autoindexBuffer),
-		_cgiHandler(rhs._cgiHandler.getIoMultiplexer(), rhs._cgiHandler.getClient())
+		_cgiHandler(rhs._cgiHandler.getIoMultiplexer(), rhs._cgiHandler.getClientAddr())
 {
-	DEBUG(_logger, "ExecutionHandler copy ctor: rhs.client_ptr=" + common::core::utils::toString(reinterpret_cast<long>(&rhs._cgiHandler.getClient()))
-		+ " rhs.stdinFd=" + common::core::utils::toString(rhs._cgiHandler.getStdinFd())
+	DEBUG(_logger, "ExecutionHandler copy ctor: rhs.stdinFd=" + common::core::utils::toString(rhs._cgiHandler.getStdinFd())
 		+ " rhs.stdoutFd=" + common::core::utils::toString(rhs._cgiHandler.getStdoutFd()));
 }
 

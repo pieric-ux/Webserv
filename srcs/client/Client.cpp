@@ -19,16 +19,16 @@ namespace client
 Client::Client(const t_ioMultiplexer &ioMultiplexer)
 	:	_id(-1),
 		_socket(),
+		_sockaddr_storage(),
 		_status(E_CLI_REQUEST),
 		_serverConfig(),
-		_executionHandler(ioMultiplexer, *this),
+		_executionHandler(ioMultiplexer, _sockaddr_storage),
 		_requestHandler(_serverConfig),
 		_responseHandler(),
 		_HTTPError(),
 		_lastActivityTime(0),
 		_effectiveKeepaliveTimeout(0)
 {
-	std::memset(&_sockaddr_storage, 0, sizeof(_sockaddr_storage));
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
 	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "Client instance created with default constructor");
@@ -46,7 +46,7 @@ Client::Client(const t_SocketPairClient &client, const config::ServerConfig &ser
 		_sockaddr_storage(client.second),
 		_status(E_CLI_REQUEST),
 		_serverConfig(serverConfig),
-		_executionHandler(ioMultiplexer, *this),
+		_executionHandler(ioMultiplexer, _sockaddr_storage),
 		_requestHandler(_serverConfig),
 		_responseHandler(),
 		_HTTPError(),

@@ -29,8 +29,8 @@ webserv::t_MimeTypes initTypes()
 webserv::t_CgiExtensions initCgiExtensions()
 {
 	webserv::t_CgiExtensions cgiExtensions;
-	cgiExtensions[".py"] = "/usr/bin/python3";
-	cgiExtensions[".sh"] = "/usr/bin/bash";
+	cgiExtensions[".py"] = "/bin/python3";
+	cgiExtensions[".sh"] = "/bin/bash";
 	return cgiExtensions;
 }
 

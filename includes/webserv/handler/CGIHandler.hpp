@@ -11,6 +11,7 @@
 #include <ctime>
 #include <vector>
 #include <string>
+#include <sys/socket.h>
 
 #include <log42/Log42.hpp>
 #include <common/common.hpp>
@@ -22,9 +23,6 @@
 
 namespace webserv
 {
-
-namespace client { class Client; }
-
 namespace handler
 {
 
@@ -34,7 +32,7 @@ class ResponseHandler;
 class CGIHandler
 {
 	public:
-		CGIHandler(const t_ioMultiplexer &ioMultiplexer,  const client::Client &client);
+		CGIHandler(const t_ioMultiplexer &ioMultiplexer, sockaddr_storage clientAddr);
 		~CGIHandler();
 
 		static t_Logger								getLogger();
@@ -47,7 +45,7 @@ class CGIHandler
 		void										reset();
 
 		t_ioMultiplexer								getIoMultiplexer() const;
-		const client::Client						&getClient() const;
+		sockaddr_storage							getClientAddr() const;
 		bool										hasFds() const;
 		int											getStdinFd() const;
 		int											getStdoutFd() const;
@@ -59,7 +57,7 @@ class CGIHandler
 	private:
 		t_Logger									_logger;
 		t_ioMultiplexer								_ioMultiplexer;
-		const client::Client						&_client;
+		sockaddr_storage							_clientAddr;
 		pid_t										_pid;
 		common::core::raii::UniqueFd				_stdinFd;
 		common::core::raii::UniqueFd				_stdoutFd;
