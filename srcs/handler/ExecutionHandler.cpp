@@ -162,18 +162,6 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
 			+ (redirect.url.empty() ? "" : " -> " + redirect.url));
 		throw client::HTTPError(redirect.statusCode.getCode(), redirect.url);
 	}
-
-	if (locationConfig.isEnableCGI())
-	{
-		std::string ext = getFileExtension(requestHandler.getRequest().getAbsolutePath());
-		const t_CgiExtensions &cgiExts = locationConfig.getCgiExtensions();
-
-		if (cgiExts.find(ext) != cgiExts.end())
-		{
-			executeCGI(requestHandler, responseHandler, locationConfig);
-			return ;
-		}
-	}
 	executeRequest(requestHandler, responseHandler, locationConfig);
 }
 
@@ -185,9 +173,24 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
  */
 void ExecutionHandler::executeCGI(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
-	(void)requestHandler;
-	(void)responseHandler;
-	(void)locationConfig;
+	if (!_cgiHandler.isSpawned())
+	{
+		DEBUG(_logger, "executeCGI: not spawned yet, spawning");
+		_cgiHandler.spawn(requestHandler.getRequest(), locationConfig);
+		setFlags(getFlags() | E_EXEC_CGI_SPAWNED);
+		return ;
+	}
+
+	_cgiHandler.driveIO(requestHandler, getFlags());
+
+	if (_cgiHandler.isReaped() && !_cgiHandler.isParsed())
+	{
+		DEBUG(_logger, "executeCGI: child reaped, parsing response");
+		_cgiHandler.parse(responseHandler.getResponse());
+		setFlags(getFlags() | E_EXEC_COMPLETE);
+		DEBUG(_logger, "executeCGI: E_EXEC_COMPLETE set");
+		return ;
+	}
 }
 
 /**
