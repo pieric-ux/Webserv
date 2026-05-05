@@ -36,8 +36,8 @@ enum e_ClientStatus
 class Client
 {
 	public:
-		Client();
-		Client(const t_SocketPairClient &client, const config::ServerConfig &serverConfig);
+		Client(const t_ioMultiplexer &ioMultiplexer);
+		Client(const t_SocketPairClient &client, const config::ServerConfig &serverConfig, const t_ioMultiplexer &ioMultiplexer);
 		~Client();
 
 		Client(const Client &rhs);
@@ -65,6 +65,8 @@ class Client
 		void								receiveData();
 		void								sendData();
 		void								processHTTPCycle();
+		void								driveCgiIO();
+		bool								isCgiRoute() const;
 		void								buildErrorResponse();
 		void								resetAll();
 

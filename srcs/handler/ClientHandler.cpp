@@ -90,7 +90,7 @@ void	ClientHandler::addClient(const t_SocketPairClient &client, const config::Se
 	} catch (const std::exception &e) {
 		WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
 	}
-	_clients.insert(std::make_pair(client.first.getFd(), client::Client(client, serverConfig)));
+	_clients.insert(std::make_pair(client.first.getFd(), client::Client(client, serverConfig, _ioMultiplexer)));
 }
 
 /**
@@ -169,9 +169,17 @@ void	ClientHandler::processClients()
 				it = removeClient(client);
 				continue;
 			}
-			if ((client.getRequestHandler().getBufferRequest().size() > 0
-					|| (client.getRequestHandler().getRequest().getFlags() & client::E_REQ_HEADERS_VALIDATED))
-				&& !(client.getExecutionHandler().getFlags() & E_EXEC_COMPLETE))
+
+			if (client.isCgiRoute())
+			{
+				DEBUG(_logger, "Driving CGI IO for " + clientAddr);
+				client.driveCgiIO();
+			}
+			bool hasReqData = client.getRequestHandler().getBufferRequest().size() > 0
+				|| (client.getRequestHandler().getRequest().getFlags() & client::E_REQ_HEADERS_VALIDATED);
+			bool respFullySent = (client.getExecutionHandler().getFlags() & E_EXEC_COMPLETE)
+				&& (client.getResponseHandler().getResponse().getFlags() & client::E_RESP_HEADERS_SENT);
+			if (hasReqData && !respFullySent)
 			{
 				DEBUG(_logger, "Processing HTTPCycle for " + clientAddr);
 				client.processHTTPCycle();
@@ -185,8 +193,12 @@ void	ClientHandler::processClients()
 		if (events & common::core::io::IEventIO::E_OUT)
 			client.sendData();
 
-		if (client.getExecutionHandler().getFlags() & handler::E_EXEC_COMPLETE || client.getRequestHandler().getParser().getFlags() & parser::E_PARS_EXPECT)
-			client.resetAll(); 
+		
+		bool execComplete = client.getExecutionHandler().getFlags() & handler::E_EXEC_COMPLETE;
+		bool bufferDrained = client.getResponseHandler().getBufferResponse().empty();
+		bool expectPending = client.getRequestHandler().getParser().getFlags() & parser::E_PARS_EXPECT;
+		if ((execComplete && bufferDrained) || expectPending)
+			client.resetAll();
 
 		++it;
 	}

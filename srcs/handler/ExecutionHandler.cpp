@@ -15,10 +15,12 @@ namespace handler
 /**
  * @brief [TODO:description]
  */
-ExecutionHandler::ExecutionHandler()
+ExecutionHandler::ExecutionHandler(const t_ioMultiplexer &ioMultiplexer, const client::Client &client)
 	:	_fd(-1),
 		_bodyReceived(0),
-		_flags(static_cast<e_ExecutionHandlerFlags>(0))
+		_flags(static_cast<e_ExecutionHandlerFlags>(0)),
+		_autoindexBuffer(),
+		_cgiHandler(ioMultiplexer, client)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.executionhandler");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -37,10 +39,11 @@ ExecutionHandler::~ExecutionHandler() {}
  */
 ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
 	:	_logger(rhs._logger),
-		_fd(rhs._fd.get()),
+		_fd(-1),
 		_bodyReceived(rhs._bodyReceived),
 		_flags(rhs._flags),
-		_autoindexBuffer(rhs._autoindexBuffer)
+		_autoindexBuffer(rhs._autoindexBuffer),
+		_cgiHandler(rhs._cgiHandler.getIoMultiplexer(), rhs._cgiHandler.getClient())
 {}
 
 /**
@@ -54,6 +57,7 @@ ExecutionHandler &ExecutionHandler::operator=(const ExecutionHandler &rhs)
 	if (this != &rhs)
 	{
 		_logger = rhs._logger;
+		_fd.reset(-1);
 		_bodyReceived = rhs._bodyReceived;
 		_flags = rhs._flags;
 		_autoindexBuffer = rhs._autoindexBuffer;
@@ -166,7 +170,7 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
 
 		if (cgiExts.find(ext) != cgiExts.end())
 		{
-			executeCGI(requestHandler, locationConfig);
+			executeCGI(requestHandler, responseHandler, locationConfig);
 			return ;
 		}
 	}
@@ -179,10 +183,21 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
  * @param request [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-void ExecutionHandler::executeCGI(RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeCGI(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
 	(void)requestHandler;
+	(void)responseHandler;
 	(void)locationConfig;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+CGIHandler &ExecutionHandler::getCgi()
+{
+	return _cgiHandler;
 }
 
 /**

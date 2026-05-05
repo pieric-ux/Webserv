@@ -16,13 +16,12 @@ namespace client
 /**
  * @brief [TODO:description]
  */
-Client::Client()
+Client::Client(const t_ioMultiplexer &ioMultiplexer)
 	:	_id(-1),
 		_socket(),
 		_status(E_CLI_REQUEST),
 		_serverConfig(),
-
-		_executionHandler(),
+		_executionHandler(ioMultiplexer, *this),
 		_requestHandler(_serverConfig),
 		_responseHandler(),
 		_HTTPError(),
@@ -41,13 +40,13 @@ Client::Client()
  * @param socket [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-Client::Client(const t_SocketPairClient &client, const config::ServerConfig &serverConfig)
+Client::Client(const t_SocketPairClient &client, const config::ServerConfig &serverConfig, const t_ioMultiplexer &ioMultiplexer)
 	:	_id(-1),
 		_socket(client.first),
 		_sockaddr_storage(client.second),
 		_status(E_CLI_REQUEST),
 		_serverConfig(serverConfig),
-		_executionHandler(),
+		_executionHandler(ioMultiplexer, *this),
 		_requestHandler(_serverConfig),
 		_responseHandler(),
 		_HTTPError(),
@@ -419,6 +418,54 @@ void Client::buildErrorResponse()
 	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
 	_executionHandler.setFlags(_executionHandler.getFlags() | handler::E_EXEC_COMPLETE);
 	DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after building error response");
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+bool Client::isCgiRoute() const
+{
+	if (!(_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED))
+		return false;
+	const config::LocationConfig &loc = _requestHandler.getRequest().getLocationConfig();
+	if (!loc.isEnableCGI())
+		return false;
+	std::string ext = "." + handler::ExecutionHandler::getFileExtension(_requestHandler.getRequest().getAbsolutePath());
+	return loc.getCgiExtensions().find(ext) != loc.getCgiExtensions().end();
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void Client::driveCgiIO()
+{
+	if (!isCgiRoute())
+		return ;
+
+	try
+	{
+		if (!(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE))
+		{
+			_executionHandler.executeCGI(_requestHandler, _responseHandler,
+				_requestHandler.getRequest().getLocationConfig());
+		}
+
+		if ((_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
+				&& (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT)
+				&& !_executionHandler.getCgi().isPushed())
+		{
+			DEBUG(_logger, "driveCgiIO: pushing CGI body to response buffer");
+			_executionHandler.getCgi().pushBody(_responseHandler);
+		}
+	}
+	catch (const HTTPError &e)
+	{
+		ERROR(_logger, "driveCgiIO: " + std::string(e.what()));
+		setHTTPError(e);
+		setStatus(E_CLI_ERR_PARSING);
+	}
 }
 
 /**

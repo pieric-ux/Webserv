@@ -22,6 +22,10 @@
 # define SESSION_TTL_S 604800
 #endif
 
+#ifndef CGI_TIMEOUT_S
+# define CGI_TIMEOUT_S 30
+#endif
+
 #ifndef DEFAULT_CONFIG_PATH
 # define DEFAULT_CONFIG_PATH "configs/default.conf"
 #endif
