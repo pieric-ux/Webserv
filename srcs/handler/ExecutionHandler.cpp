@@ -39,12 +39,16 @@ ExecutionHandler::~ExecutionHandler() {}
  */
 ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
 	:	_logger(rhs._logger),
-		_fd(-1),
+		_fd(rhs._fd.get()),
 		_bodyReceived(rhs._bodyReceived),
 		_flags(rhs._flags),
 		_autoindexBuffer(rhs._autoindexBuffer),
 		_cgiHandler(rhs._cgiHandler.getIoMultiplexer(), rhs._cgiHandler.getClient())
-{}
+{
+	DEBUG(_logger, "ExecutionHandler copy ctor: rhs.client_ptr=" + common::core::utils::toString(reinterpret_cast<long>(&rhs._cgiHandler.getClient()))
+		+ " rhs.stdinFd=" + common::core::utils::toString(rhs._cgiHandler.getStdinFd())
+		+ " rhs.stdoutFd=" + common::core::utils::toString(rhs._cgiHandler.getStdoutFd()));
+}
 
 /**
  * @brief [TODO:description]
@@ -161,6 +165,15 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
 		INFO(_logger, "return directive " + common::core::utils::toString(redirect.statusCode.getCode())
 			+ (redirect.url.empty() ? "" : " -> " + redirect.url));
 		throw client::HTTPError(redirect.statusCode.getCode(), redirect.url);
+	}
+
+	if (locationConfig.isEnableCGI())
+	{
+		std::string ext = "." + getFileExtension(requestHandler.getRequest().getAbsolutePath());
+		const t_CgiExtensions &cgiExts = locationConfig.getCgiExtensions();
+
+		if (cgiExts.find(ext) != cgiExts.end())
+			return ;
 	}
 	executeRequest(requestHandler, responseHandler, locationConfig);
 }

@@ -90,7 +90,12 @@ void	ClientHandler::addClient(const t_SocketPairClient &client, const config::Se
 	} catch (const std::exception &e) {
 		WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
 	}
+	int fd_before = client.first.getFd();
+	DEBUG(_logger, "addClient: fd before insert=" + common::core::utils::toString(fd_before));
 	_clients.insert(std::make_pair(client.first.getFd(), client::Client(client, serverConfig, _ioMultiplexer)));
+	DEBUG(_logger, "addClient: fd after  insert=" + common::core::utils::toString(fd_before)
+		+ " map_key=" + common::core::utils::toString(_clients.rbegin()->first)
+		+ " socket_in_map=" + common::core::utils::toString(_clients.rbegin()->second.getSocket().getFd()));
 }
 
 /**
