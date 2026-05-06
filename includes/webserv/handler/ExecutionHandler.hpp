@@ -18,6 +18,7 @@
 #include <webserv/client/Response.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
+#include <webserv/handler/CGIHandler.hpp>
 #include <webserv/handler/RequestHandler.hpp>
 #include <webserv/handler/ResponseHandler.hpp>
 #include <webserv/status/StatusCodeRegistry.hpp>
@@ -30,16 +31,21 @@ namespace handler
 
 enum e_ExecutionHandlerFlags
 {
-	E_EXEC_FILE_OPENED = 1 << 0,
-	E_EXEC_COMPLETE = 1 << 1,
-	E_EXEC_CREATED = 1 << 2,
-	E_EXEC_NOCONTENT = 1 << 3
+	E_EXEC_FILE_OPENED		= 1 << 0,
+	E_EXEC_COMPLETE			= 1 << 1,
+	E_EXEC_CREATED			= 1 << 2,
+	E_EXEC_NOCONTENT		= 1 << 3,
+	E_EXEC_CGI_SPAWNED		= 1 << 4,
+	E_EXEC_CGI_BODY_SENT	= 1 << 5,
+	E_EXEC_CGI_EOF			= 1 << 6,
+	E_EXEC_CGI_REAPED		= 1 << 7,
+	E_EXEC_CGI_PUSHED		= 1 << 8
 };
 
 class ExecutionHandler
 {
 	public:
-		ExecutionHandler();
+		ExecutionHandler(const t_ioMultiplexer &ioMultiplexer, sockaddr_storage clientAddr);
 		~ExecutionHandler();
 
 		ExecutionHandler(const ExecutionHandler &rhs);
@@ -56,8 +62,14 @@ class ExecutionHandler
 		void							setAutoindexBuffer(const t_raw &buffer);
 
 		void							execute(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
-		void							executeCGI(RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							executeCGI(RequestHandler &requestHandler,
+											ResponseHandler &responseHandler,
+											const config::LocationConfig &locationConfig);
 		void							executeRequest(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+
+		CGIHandler						&getCgi();
+
+		static std::string				getFileExtension(const std::string &path);
 
 	private:
 		t_Logger						_logger;
@@ -65,6 +77,7 @@ class ExecutionHandler
 		ssize_t							_bodyReceived;
 		e_ExecutionHandlerFlags			_flags;
 		t_raw							_autoindexBuffer;
+		CGIHandler						_cgiHandler;
 
 		void							executeHEADorGET(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
 		void							executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
@@ -75,7 +88,6 @@ class ExecutionHandler
 		void							readChunk(ResponseHandler &responseHandler);
 		void							writeChunk(RequestHandler &requestHandler);
 		int								getFileSize(const std::string &path);
-		std::string						getFileExtension(const std::string &path);
 		bool							isFile(const std::string& path);
 		bool							isExisting(const std::string& path);
 		void							deleteFile(const std::string& filePath);

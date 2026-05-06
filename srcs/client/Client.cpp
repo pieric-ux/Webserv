@@ -16,20 +16,19 @@ namespace client
 /**
  * @brief [TODO:description]
  */
-Client::Client()
+Client::Client(const t_ioMultiplexer &ioMultiplexer)
 	:	_id(-1),
 		_socket(),
+		_sockaddr_storage(),
 		_status(E_CLI_REQUEST),
 		_serverConfig(),
-
-		_executionHandler(),
+		_executionHandler(ioMultiplexer, _sockaddr_storage),
 		_requestHandler(_serverConfig),
 		_responseHandler(),
 		_HTTPError(),
 		_lastActivityTime(0),
 		_effectiveKeepaliveTimeout(0)
 {
-	std::memset(&_sockaddr_storage, 0, sizeof(_sockaddr_storage));
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
 	_logger->setLevel(log42::logRecord::DEBUG);
 	INFO(_logger, "Client instance created with default constructor");
@@ -41,13 +40,13 @@ Client::Client()
  * @param socket [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-Client::Client(const t_SocketPairClient &client, const config::ServerConfig &serverConfig)
+Client::Client(const t_SocketPairClient &client, const config::ServerConfig &serverConfig, const t_ioMultiplexer &ioMultiplexer)
 	:	_id(-1),
 		_socket(client.first),
 		_sockaddr_storage(client.second),
 		_status(E_CLI_REQUEST),
 		_serverConfig(serverConfig),
-		_executionHandler(),
+		_executionHandler(ioMultiplexer, _sockaddr_storage),
 		_requestHandler(_serverConfig),
 		_responseHandler(),
 		_HTTPError(),
@@ -56,7 +55,8 @@ Client::Client(const t_SocketPairClient &client, const config::ServerConfig &ser
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.client");
 	_logger->setLevel(log42::logRecord::DEBUG);
-	INFO(_logger, "Client instance created with socket and server configuration");
+	DEBUG(_logger, "Client(socket) ctor: this=" + common::core::utils::toString(reinterpret_cast<long>(this))
+		+ " socket_fd=" + common::core::utils::toString(_socket.getFd()));
 }
 
 /**
@@ -84,6 +84,10 @@ Client::Client(const Client &rhs)
 		_effectiveKeepaliveTimeout(rhs._effectiveKeepaliveTimeout)
 {
 	_requestHandler = rhs._requestHandler;
+	DEBUG(_logger, "Client copy ctor: rhs=" + common::core::utils::toString(reinterpret_cast<long>(&rhs))
+		+ " rhs.socket_fd=" + common::core::utils::toString(rhs._socket.getFd())
+		+ " this=" + common::core::utils::toString(reinterpret_cast<long>(this))
+		+ " this.socket_fd=" + common::core::utils::toString(_socket.getFd()));
 }
 
 /**
@@ -385,7 +389,9 @@ void Client::processHTTPCycle()
 			return ;
 		}
 	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED &&
-			!(_requestHandler.getParser().getFlags() & parser::E_PARS_EXPECT))
+			!(_requestHandler.getParser().getFlags() & parser::E_PARS_EXPECT) &&
+			!isCgiRoute() &&
+			!(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)) // TODO: check if no prolem with 100 continue
 		try{
 			_executionHandler.execute(_requestHandler, _responseHandler, _requestHandler.getRequest().getLocationConfig());
 		} catch (const HTTPError &e) {
@@ -395,12 +401,21 @@ void Client::processHTTPCycle()
 		}
 	method = _requestHandler.getRequest().getMethod();
 	int parserFlags = _requestHandler.getParser().getFlags();
+	bool cgiNotReady = isCgiRoute() && !(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE);
 	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED &&
 			!(_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT) &&
-			((_executionHandler.getFlags() & handler::E_EXEC_COMPLETE) || method == config::GET ||
-				method == config::HEAD || parserFlags & parser::E_PARS_EXPECT))
+			((_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
+				|| ((method == config::GET || method == config::HEAD) && !cgiNotReady)
+				|| (parserFlags & parser::E_PARS_EXPECT)))
 		try{
 			_responseHandler.buildHeadersResponse(_requestHandler.getRequest(), _executionHandler.getFlags(), _requestHandler.getParser().getFlags());
+			if (isCgiRoute()
+					&& (_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
+					&& !_executionHandler.getCgi().isPushed())
+			{
+				DEBUG(_logger, "processHTTPCycle: pushing CGI body after headers");
+				_executionHandler.getCgi().pushBody(_responseHandler);
+			}
 		} catch (const HTTPError &e) {
 			setHTTPError(e);
 			setStatus(E_CLI_ERR_PARSING);
@@ -419,6 +434,54 @@ void Client::buildErrorResponse()
 	_responseHandler.buildErrorResponse(_requestHandler.getRequest(), _HTTPError);
 	_executionHandler.setFlags(_executionHandler.getFlags() | handler::E_EXEC_COMPLETE);
 	DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after building error response");
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+bool Client::isCgiRoute() const
+{
+	if (!(_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED))
+		return false;
+	const config::LocationConfig &loc = _requestHandler.getRequest().getLocationConfig();
+	if (!loc.isEnableCGI())
+		return false;
+	std::string ext = "." + handler::ExecutionHandler::getFileExtension(_requestHandler.getRequest().getAbsolutePath());
+	return loc.getCgiExtensions().find(ext) != loc.getCgiExtensions().end();
+}
+
+/**
+ * @brief [TODO:description]
+ */
+void Client::driveCgiIO()
+{
+	if (!isCgiRoute())
+		return ;
+
+	try
+	{
+		if (!(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE))
+		{
+			_executionHandler.executeCGI(_requestHandler, _responseHandler,
+				_requestHandler.getRequest().getLocationConfig());
+		}
+
+		if ((_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)
+				&& (_responseHandler.getResponse().getFlags() & E_RESP_HEADERS_SENT)
+				&& !_executionHandler.getCgi().isPushed())
+		{
+			DEBUG(_logger, "driveCgiIO: pushing CGI body to response buffer");
+			_executionHandler.getCgi().pushBody(_responseHandler);
+		}
+	}
+	catch (const HTTPError &e)
+	{
+		ERROR(_logger, "driveCgiIO: " + std::string(e.what()));
+		setHTTPError(e);
+		setStatus(E_CLI_ERR_PARSING);
+	}
 }
 
 /**
@@ -453,6 +516,7 @@ void Client::resetAll()
 	_requestHandler.getParser().setFlags(0);
 	_requestHandler.getRequest().setFlags(0);
 	_responseHandler.getResponse().setFlags(0);
+	_executionHandler.getCgi().reset();
 	_executionHandler.setFlags(0);
 	this->setHTTPError(HTTPError());
 }

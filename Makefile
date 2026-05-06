@@ -47,7 +47,7 @@ SRCES =  main.cpp HTTPServer.cpp ServerFactory.cpp Server.cpp
 		 # Config
 SRCES += DefaultConfig.cpp ErrorPage.cpp HTTPConfig.cpp Listen.cpp LocationConfig.cpp ServerConfig.cpp
 		 # Handler
-SRCES += ClientHandler.cpp ExecutionHandler.cpp RequestHandler.cpp ResponseHandler.cpp
+SRCES += ClientHandler.cpp ExecutionHandler.cpp RequestHandler.cpp ResponseHandler.cpp CGIHandler.cpp
 		 # Client
 SRCES += Client.cpp Request.cpp Response.cpp HTTPError.cpp
 		 # Headers

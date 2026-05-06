@@ -15,10 +15,12 @@ namespace handler
 /**
  * @brief [TODO:description]
  */
-ExecutionHandler::ExecutionHandler()
+ExecutionHandler::ExecutionHandler(const t_ioMultiplexer &ioMultiplexer, sockaddr_storage clientAddr)
 	:	_fd(-1),
 		_bodyReceived(0),
-		_flags(static_cast<e_ExecutionHandlerFlags>(0))
+		_flags(static_cast<e_ExecutionHandlerFlags>(0)),
+		_autoindexBuffer(),
+		_cgiHandler(ioMultiplexer, clientAddr)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.executionhandler");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -40,8 +42,12 @@ ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
 		_fd(rhs._fd.get()),
 		_bodyReceived(rhs._bodyReceived),
 		_flags(rhs._flags),
-		_autoindexBuffer(rhs._autoindexBuffer)
-{}
+		_autoindexBuffer(rhs._autoindexBuffer),
+		_cgiHandler(rhs._cgiHandler.getIoMultiplexer(), rhs._cgiHandler.getClientAddr())
+{
+	DEBUG(_logger, "ExecutionHandler copy ctor: rhs.stdinFd=" + common::core::utils::toString(rhs._cgiHandler.getStdinFd())
+		+ " rhs.stdoutFd=" + common::core::utils::toString(rhs._cgiHandler.getStdoutFd()));
+}
 
 /**
  * @brief [TODO:description]
@@ -54,6 +60,7 @@ ExecutionHandler &ExecutionHandler::operator=(const ExecutionHandler &rhs)
 	if (this != &rhs)
 	{
 		_logger = rhs._logger;
+		_fd.reset(-1);
 		_bodyReceived = rhs._bodyReceived;
 		_flags = rhs._flags;
 		_autoindexBuffer = rhs._autoindexBuffer;
@@ -161,14 +168,11 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
 
 	if (locationConfig.isEnableCGI())
 	{
-		std::string ext = getFileExtension(requestHandler.getRequest().getAbsolutePath());
+		std::string ext = "." + getFileExtension(requestHandler.getRequest().getAbsolutePath());
 		const t_CgiExtensions &cgiExts = locationConfig.getCgiExtensions();
 
 		if (cgiExts.find(ext) != cgiExts.end())
-		{
-			executeCGI(requestHandler, locationConfig);
 			return ;
-		}
 	}
 	executeRequest(requestHandler, responseHandler, locationConfig);
 }
@@ -179,10 +183,36 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
  * @param request [TODO:parameter]
  * @param serverConfig [TODO:parameter]
  */
-void ExecutionHandler::executeCGI(RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
+void ExecutionHandler::executeCGI(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
-	(void)requestHandler;
-	(void)locationConfig;
+	if (!_cgiHandler.isSpawned())
+	{
+		DEBUG(_logger, "executeCGI: not spawned yet, spawning");
+		_cgiHandler.spawn(requestHandler.getRequest(), locationConfig);
+		setFlags(getFlags() | E_EXEC_CGI_SPAWNED);
+		return ;
+	}
+
+	_cgiHandler.driveIO(requestHandler, getFlags());
+
+	if (_cgiHandler.isReaped() && !_cgiHandler.isParsed())
+	{
+		DEBUG(_logger, "executeCGI: child reaped, parsing response");
+		_cgiHandler.parse(responseHandler.getResponse());
+		setFlags(getFlags() | E_EXEC_COMPLETE);
+		DEBUG(_logger, "executeCGI: E_EXEC_COMPLETE set");
+		return ;
+	}
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+CGIHandler &ExecutionHandler::getCgi()
+{
+	return _cgiHandler;
 }
 
 /**
