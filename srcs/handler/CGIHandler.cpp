@@ -288,6 +288,13 @@ void CGIHandler::driveIO(handler::RequestHandler &requestHandler, int execFlags)
 		}
 	}
 
+	if (!_reaped && !_eof)
+	{
+		tryReap();
+		if (_reaped)
+			_eof = true;
+	}
+
 	if (_eof && !_reaped)
 	{
 		DEBUG(_logger, "driveIO: eof reached -> tryReap");
