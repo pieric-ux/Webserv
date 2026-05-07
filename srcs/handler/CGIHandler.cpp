@@ -579,7 +579,10 @@ std::string CGIHandler::headerToCgiName(const std::string &name)
  */
 void CGIHandler::setNonblock(int fd)
 {
-	if (::fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
+	int flag = ::fcntl(fd, F_GETFL);
+	if (flag == -1)
+		throw client::HTTPError(500);
+	if (::fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1)
 		throw client::HTTPError(500);
 }
 
