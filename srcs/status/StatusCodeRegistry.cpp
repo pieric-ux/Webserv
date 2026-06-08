@@ -1,8 +1,18 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   StatusCodeRegistry.cpp                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
 * @file StatusCodeRegistry.cpp
-* @brief [TODO:description]
+* @brief Implements the StatusCodeRegistry singleton, populating the registry with every supported HTTP status code, reason phrase and description, and exposing lookups by numeric code.
 */
 
 #include <webserv/status/StatusCodeRegistry.hpp>
@@ -13,7 +23,7 @@ namespace status
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs the registry, initializing its logger and filling the status code map with every known HTTP status code together with its reason phrase and description.
  */
 StatusCodeRegistry::StatusCodeRegistry() 
 {
@@ -98,14 +108,14 @@ StatusCodeRegistry::StatusCodeRegistry()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the registry; the status code map is cleaned up automatically.
  */
 StatusCodeRegistry::~StatusCodeRegistry() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the singleton instance of the registry, constructing it on first use.
  *
- * @return [TODO:return]
+ * @return Reference to the unique StatusCodeRegistry instance.
  */
 StatusCodeRegistry &StatusCodeRegistry::getInstance()
 {
@@ -114,10 +124,10 @@ StatusCodeRegistry &StatusCodeRegistry::getInstance()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Looks up the registry entry for the given HTTP status code.
  *
- * @param code [TODO:parameter]
- * @return [TODO:return]
+ * @param code The numeric HTTP status code to look up.
+ * @return The matching StatusCode entry, or a StatusCode carrying the code with empty reason phrase and description if the code is not registered.
  */
 StatusCode StatusCodeRegistry::getStatusCode(const unsigned short code) const
 {
@@ -128,9 +138,9 @@ StatusCode StatusCodeRegistry::getStatusCode(const unsigned short code) const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Provides access to the logger used by the registry.
  *
- * @return [TODO:return]
+ * @return The logger associated with this registry.
  */
 t_Logger	StatusCodeRegistry::getLogger() const
 {

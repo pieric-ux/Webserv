@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPConfig.hpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_CONFIG_HTTPCONFIG_HPP
 #define WEBSERV_CONFIG_HTTPCONFIG_HPP
 
 /**
  * @file HTTPConfig.hpp
- * @brief [TODO:description]
+ * @brief Singleton holding the global HTTP-level configuration shared by all servers (I/O multiplexer, default root and MIME types, error pages, timeouts, DAV, CGI, and the list of server blocks).
  */
 
 #include <string>

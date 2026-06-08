@@ -1,4 +1,14 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.cpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include <abnf/Abnf.hpp>
 #include <log42/Log42.hpp>
@@ -55,7 +65,9 @@ int main(int ac, char **av)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Configures the logging subsystem: sets the root logger level, attaches
+ *        a console stream handler, and registers a per-module file handler for
+ *        each named logger in the webserv hierarchy.
  */
 static void	initLogging()
 {
@@ -116,7 +128,8 @@ static void	initLogging()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Configures and initializes the ABNF singleton, loading the grammar
+ *        rules from the configured directory with the given logging settings.
  */
 static void	initAbnf()
 {

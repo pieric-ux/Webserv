@@ -1,8 +1,20 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Cookie.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file Cookie.cpp
- * @brief [TODO:description]
+ * @brief Implements webserv::session::Cookie, an HTTP cookie storing a
+ *        name/value pair plus its attributes (Expires, Path, Domain, Secure,
+ *        HttpOnly) and serializing them into a Set-Cookie header value.
  */
 
 #include <webserv/session/Cookie.hpp>
@@ -13,10 +25,12 @@ namespace session
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a cookie from a name/value pair with default attributes
+ *        (no expiry, Path "/", no domain, not Secure, HttpOnly set) and
+ *        acquires the session cookie logger.
  *
- * @param name [TODO:parameter]
- * @param value [TODO:parameter]
+ * @param name Name of the cookie.
+ * @param value Value associated with the cookie name.
  */
 Cookie::Cookie(const std::string &name, const std::string &value)
 	:	_name(name),
@@ -33,14 +47,15 @@ Cookie::Cookie(const std::string &name, const std::string &value)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the cookie; holds no owned resources to release.
  */
 Cookie::~Cookie() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a cookie, duplicating the logger handle and all
+ *        name, value and attribute fields.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs Cookie to copy.
  */
 Cookie::Cookie(const Cookie &rhs)
 	:	_logger(rhs._logger),
@@ -54,10 +69,11 @@ Cookie::Cookie(const Cookie &rhs)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns another cookie, copying the logger handle and all
+ *        name, value and attribute fields while guarding against self-assignment.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs Cookie to copy from.
+ * @return Reference to this cookie after assignment.
  */
 Cookie &Cookie::operator=(const Cookie &rhs)
 {
@@ -76,9 +92,9 @@ Cookie &Cookie::operator=(const Cookie &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger for the session cookie category.
  *
- * @return [TODO:return]
+ * @return Logger handle for "webserv.session.cookie".
  */
 t_Logger Cookie::getLogger()
 {
@@ -86,9 +102,9 @@ t_Logger Cookie::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the cookie name.
  *
- * @return [TODO:return]
+ * @return Const reference to the cookie's name.
  */
 const std::string &Cookie::getName() const
 {
@@ -96,9 +112,9 @@ const std::string &Cookie::getName() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the cookie value.
  *
- * @return [TODO:return]
+ * @return Const reference to the cookie's value.
  */
 const std::string &Cookie::getValue() const
 {
@@ -106,9 +122,9 @@ const std::string &Cookie::getValue() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the cookie value.
  *
- * @param value [TODO:parameter]
+ * @param value New value to store for the cookie.
  */
 void Cookie::setValue(const std::string &value)
 {
@@ -116,9 +132,9 @@ void Cookie::setValue(const std::string &value)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the cookie expiry time.
  *
- * @return [TODO:return]
+ * @return Expiry as a time_t; 0 means the cookie never expires.
  */
 std::time_t Cookie::getExpires() const
 {
@@ -126,9 +142,9 @@ std::time_t Cookie::getExpires() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the cookie expiry time.
  *
- * @param expires [TODO:parameter]
+ * @param expires Expiry as a time_t; 0 means the cookie never expires.
  */
 void Cookie::setExpires(std::time_t expires)
 {
@@ -136,9 +152,9 @@ void Cookie::setExpires(std::time_t expires)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the cookie Path attribute.
  *
- * @return [TODO:return]
+ * @return Const reference to the cookie's Path.
  */
 const std::string &Cookie::getPath() const
 {
@@ -146,9 +162,9 @@ const std::string &Cookie::getPath() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the cookie Path attribute.
  *
- * @param path [TODO:parameter]
+ * @param path New Path scope for the cookie.
  */
 void Cookie::setPath(const std::string &path)
 {
@@ -156,9 +172,9 @@ void Cookie::setPath(const std::string &path)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the cookie Domain attribute.
  *
- * @return [TODO:return]
+ * @return Const reference to the cookie's Domain.
  */
 const std::string &Cookie::getDomain() const
 {
@@ -166,9 +182,9 @@ const std::string &Cookie::getDomain() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the cookie Domain attribute.
  *
- * @param domain [TODO:parameter]
+ * @param domain New Domain scope for the cookie.
  */
 void Cookie::setDomain(const std::string &domain)
 {
@@ -176,9 +192,9 @@ void Cookie::setDomain(const std::string &domain)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether the cookie carries the Secure attribute.
  *
- * @return [TODO:return]
+ * @return true if the cookie is marked Secure, false otherwise.
  */
 bool Cookie::isSecure() const
 {
@@ -186,9 +202,9 @@ bool Cookie::isSecure() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the cookie Secure attribute.
  *
- * @param secure [TODO:parameter]
+ * @param secure true to mark the cookie Secure, false to clear it.
  */
 void Cookie::setSecure(bool secure)
 {
@@ -196,9 +212,9 @@ void Cookie::setSecure(bool secure)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether the cookie carries the HttpOnly attribute.
  *
- * @return [TODO:return]
+ * @return true if the cookie is marked HttpOnly, false otherwise.
  */
 bool Cookie::isHttpOnly() const
 {
@@ -206,9 +222,9 @@ bool Cookie::isHttpOnly() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the cookie HttpOnly attribute.
  *
- * @param httpOnly [TODO:parameter]
+ * @param httpOnly true to mark the cookie HttpOnly, false to clear it.
  */
 void Cookie::setHttpOnly(bool httpOnly)
 {
@@ -216,9 +232,10 @@ void Cookie::setHttpOnly(bool httpOnly)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Determines whether the cookie has expired relative to the current time.
  *
- * @return [TODO:return]
+ * @return false if no expiry is set (expires == 0), otherwise true when the
+ *         current time is past the expiry instant.
  */
 bool Cookie::isExpired() const
 {
@@ -228,9 +245,11 @@ bool Cookie::isExpired() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Serializes the cookie into a Set-Cookie header value, emitting the
+ *        name=value pair followed by any set attributes (Path, Domain, an
+ *        Expires date formatted in GMT, Secure, HttpOnly).
  *
- * @return [TODO:return]
+ * @return The assembled Set-Cookie value string.
  */
 std::string Cookie::serializeCookie() const
 {

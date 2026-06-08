@@ -1,8 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Client.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file Client.cpp
- * @brief [TODO:description]
+ * @brief Implements the Client class, which owns a connected client's TCP
+ *        socket and drives the per-request HTTP lifecycle: receiving data,
+ *        parsing headers and body, executing the request (including CGI I/O),
+ *        building responses, sending them, and resetting state for keep-alive.
  */
 
 #include "webserv/parser/Parser.hpp"
@@ -14,7 +27,12 @@ namespace client
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a Client with default state and no associated connection,
+ *        initializing its handlers from the given I/O multiplexer and acquiring
+ *        the client logger.
+ *
+ * @param ioMultiplexer Shared event-I/O multiplexer used to register and drive
+ *        the client's execution (notably CGI) file descriptors.
  */
 Client::Client(const t_ioMultiplexer &ioMultiplexer)
 	:	_id(-1),
@@ -35,10 +53,16 @@ Client::Client(const t_ioMultiplexer &ioMultiplexer)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a Client bound to an accepted connection, seeding its socket
+ *        and peer address, selecting server configuration, and initializing the
+ *        activity timestamp and effective keep-alive timeout.
  *
- * @param socket [TODO:parameter]
- * @param serverConfig [TODO:parameter]
+ * @param client Accepted socket/address pair: its TCP socket and the peer's
+ *        sockaddr_storage.
+ * @param serverConfig Server configuration governing this client's request
+ *        handling and keep-alive timeout.
+ * @param ioMultiplexer Shared event-I/O multiplexer used to register and drive
+ *        the client's execution (notably CGI) file descriptors.
  */
 Client::Client(const t_SocketPairClient &client, const config::ServerConfig &serverConfig, const t_ioMultiplexer &ioMultiplexer)
 	:	_id(-1),
@@ -60,14 +84,16 @@ Client::Client(const t_SocketPairClient &client, const config::ServerConfig &ser
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the Client; owned resources are released by their RAII members.
  */
 Client::~Client() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a Client, duplicating its socket, address, status,
+ *        handlers, error state and timing, while rebinding the request handler
+ *        to this instance's own server configuration.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs Client to copy from.
  */
 Client::Client(const Client &rhs)
 	:	_logger(rhs._logger),
@@ -91,10 +117,12 @@ Client::Client(const Client &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns this Client from another, replacing its socket, address,
+ *        status, handlers, server configuration, error state and timing
+ *        (self-assignment is a no-op).
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs Client to copy from.
+ * @return Reference to this Client.
  */
 Client &Client::operator=(const Client &rhs)
 {
@@ -117,9 +145,9 @@ Client &Client::operator=(const Client &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger for the client module.
  *
- * @return [TODO:return]
+ * @return Logger registered under "webserv.client.client".
  */
 t_Logger	Client::getLogger()
 {
@@ -127,9 +155,9 @@ t_Logger	Client::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the client's TCP socket.
  *
- * @return [TODO:return]
+ * @return Const reference to the underlying connected socket.
  */
 const common::core::net::TcpClient &Client::getSocket() const
 {
@@ -137,9 +165,9 @@ const common::core::net::TcpClient &Client::getSocket() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the client's TCP socket.
  *
- * @param socket [TODO:parameter]
+ * @param socket Connected socket to associate with this client.
  */
 void Client::setSocket(const common::core::net::TcpClient &socket)
 {
@@ -147,9 +175,9 @@ void Client::setSocket(const common::core::net::TcpClient &socket)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the peer's socket address.
  *
- * @return [TODO:return]
+ * @return Copy of the client's sockaddr_storage.
  */
 sockaddr_storage Client::getSockaddrStorage() const
 {
@@ -157,9 +185,9 @@ sockaddr_storage Client::getSockaddrStorage() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the peer's socket address.
  *
- * @param sockaddr_storage [TODO:parameter]
+ * @param sockaddr_storage Client address to store.
  */
 void Client::setSockaddrStorage(const sockaddr_storage &sockaddr_storage)
 {
@@ -167,9 +195,9 @@ void Client::setSockaddrStorage(const sockaddr_storage &sockaddr_storage)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the client's current lifecycle status.
  *
- * @return [TODO:return]
+ * @return Current status (request, parsing error, or disconnected).
  */
 e_ClientStatus Client::getStatus() const
 {
@@ -177,9 +205,9 @@ e_ClientStatus Client::getStatus() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the client's lifecycle status.
  *
- * @param status [TODO:parameter]
+ * @param status New status to assign.
  */
 void Client::setStatus(const e_ClientStatus status)
 {
@@ -187,9 +215,9 @@ void Client::setStatus(const e_ClientStatus status)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the client's execution handler.
  *
- * @return [TODO:return]
+ * @return Reference to the handler performing filesystem and CGI work.
  */
 handler::ExecutionHandler &Client::getExecutionHandler()
 {
@@ -197,9 +225,9 @@ handler::ExecutionHandler &Client::getExecutionHandler()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the client's request handler.
  *
- * @return [TODO:return]
+ * @return Reference to the handler buffering and parsing the request.
  */
 handler::RequestHandler &Client::getRequestHandler()
 {
@@ -207,9 +235,9 @@ handler::RequestHandler &Client::getRequestHandler()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the client's response handler.
  *
- * @return [TODO:return]
+ * @return Reference to the handler building and buffering the response.
  */
 handler::ResponseHandler &Client::getResponseHandler()
 {
@@ -217,9 +245,9 @@ handler::ResponseHandler &Client::getResponseHandler()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the server configuration governing this client.
  *
- * @return [TODO:return]
+ * @return Reference to the client's server configuration.
  */
 config::ServerConfig &Client::getServerConfig()
 {
@@ -227,9 +255,9 @@ config::ServerConfig &Client::getServerConfig()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the currently stored HTTP error.
  *
- * @return [TODO:return]
+ * @return Reference to the last HTTPError recorded for this client.
  */
 HTTPError &Client::getHTTPError()
 {
@@ -237,9 +265,9 @@ HTTPError &Client::getHTTPError()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Stores an HTTP error to drive a later error response.
  *
- * @param error [TODO:parameter]
+ * @param error HTTPError describing the status code and target.
  */
 void Client::setHTTPError(const HTTPError &error)
 {
@@ -247,9 +275,9 @@ void Client::setHTTPError(const HTTPError &error)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the timestamp of the client's last activity.
  *
- * @return [TODO:return]
+ * @return Last-activity time as a std::time_t, used for timeout tracking.
  */
 std::time_t Client::getLastActivityTime() const
 {
@@ -257,9 +285,9 @@ std::time_t Client::getLastActivityTime() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the timestamp of the client's last activity.
  *
- * @param time [TODO:parameter]
+ * @param time New last-activity time, typically the current time.
  */
 void Client::setLastActivityTime(const std::time_t time)
 {
@@ -267,9 +295,9 @@ void Client::setLastActivityTime(const std::time_t time)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the effective keep-alive timeout for this client.
  *
- * @return [TODO:return]
+ * @return Keep-alive timeout in seconds applied to the current connection.
  */
 std::time_t Client::getEffectiveKeepaliveTimeout() const
 {
@@ -277,9 +305,9 @@ std::time_t Client::getEffectiveKeepaliveTimeout() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the effective keep-alive timeout for this client.
  *
- * @param timeout [TODO:parameter]
+ * @param timeout Keep-alive timeout in seconds to apply.
  */
 void Client::setEffectiveKeepaliveTimeout(const std::time_t timeout)
 {
@@ -287,9 +315,11 @@ void Client::setEffectiveKeepaliveTimeout(const std::time_t timeout)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reads available bytes from the socket into the request handler's buffer.
  *
- * @return [TODO:return]
+ * On a recv error or an orderly peer shutdown (zero bytes read) the client is
+ * marked disconnected; otherwise the received bytes are appended to the pending
+ * request buffer.
  */
 void	Client::receiveData()
 {
@@ -328,7 +358,12 @@ void	Client::receiveData()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sends as much of the pending response buffer as the socket accepts.
+ *
+ * Returns immediately when there is nothing to send; on a send error the client
+ * is marked disconnected. The bytes actually written are removed from the front
+ * of the response buffer, and the response's headers-sent flag is set on the
+ * first successful send.
  */
 void Client::sendData()
 {
@@ -365,7 +400,13 @@ void Client::sendData()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Advances the HTTP request through one processing step on buffered data.
+ *
+ * Parses headers if not yet validated, parses the body for methods that carry one
+ * (unless an Expect: 100-continue is pending), runs non-CGI execution once headers
+ * are ready, and builds the response headers when appropriate (including an interim
+ * 100 Continue, or pushing a completed CGI body after its headers). Any HTTPError
+ * raised along the way is stored and switches the client to the parsing-error state.
  */
 void Client::processHTTPCycle()
 {
@@ -391,7 +432,7 @@ void Client::processHTTPCycle()
 	if (_requestHandler.getRequest().getFlags() & E_REQ_HEADERS_VALIDATED &&
 			!(_requestHandler.getParser().getFlags() & parser::E_PARS_EXPECT) &&
 			!isCgiRoute() &&
-			!(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)) // TODO: check if no prolem with 100 continue
+			!(_executionHandler.getFlags() & handler::E_EXEC_COMPLETE)) // skipping execution once complete does not affect 100-continue: the E_PARS_EXPECT guard above already defers execution until the interim 100 Continue has been sent and the flag cleared
 		try{
 			_executionHandler.execute(_requestHandler, _responseHandler, _requestHandler.getRequest().getLocationConfig());
 		} catch (const HTTPError &e) {
@@ -425,6 +466,9 @@ void Client::processHTTPCycle()
 
 /**
  * @brief Builds the HTTP error response from the stored HTTPError.
+ *
+ * Does nothing if the response headers have already been sent; otherwise builds
+ * the error response and marks execution complete so no further work is attempted.
  */
 void Client::buildErrorResponse()
 {
@@ -437,9 +481,11 @@ void Client::buildErrorResponse()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Determines whether the current request resolves to a CGI route.
  *
- * @return [TODO:return]
+ * @return true if the request's headers are validated, its matched location has
+ *         CGI enabled, and the resolved target's file extension is among that
+ *         location's configured CGI extensions; false otherwise.
  */
 bool Client::isCgiRoute() const
 {
@@ -453,7 +499,12 @@ bool Client::isCgiRoute() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Advances CGI execution I/O for the current request when it is a CGI route.
+ *
+ * Returns immediately for non-CGI routes; otherwise steps CGI execution until it
+ * completes, and once the CGI is complete and the response headers have been sent,
+ * pushes the CGI body into the response buffer. An HTTPError is stored and moves
+ * the client to the parsing-error state.
  */
 void Client::driveCgiIO()
 {
@@ -485,7 +536,15 @@ void Client::driveCgiIO()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Resets per-request state in preparation for the next request on a
+ *        keep-alive connection.
+ *
+ * For a pending Expect: 100-continue, only clears the expect and headers-sent
+ * flags so the actual request can proceed. Otherwise clears the request and
+ * response buffers (the request buffer only on a parsing error), decides whether
+ * to close or keep the connection alive, refreshes the effective keep-alive
+ * timeout from the matched location, and resets status code, headers, parser,
+ * request, response, execution and CGI state along with the stored HTTP error.
  */
 void Client::resetAll()
 {

@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   SessionStore.hpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_SESSION_SESSIONSTORE_HPP
 #define WEBSERV_SESSION_SESSIONSTORE_HPP
 
 /**
  * @file SessionStore.hpp
- * @brief [TODO:description]
+ * @brief Singleton store managing the lifecycle of HTTP sessions, providing creation, lookup, deletion and expiry purging keyed by UUID.
  */
 
 #include <string>

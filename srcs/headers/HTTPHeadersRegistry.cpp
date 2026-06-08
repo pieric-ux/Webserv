@@ -1,8 +1,19 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPHeadersRegistry.cpp                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
 * @file HTTPHeadersRegistry.cpp
-* @brief [TODO:description]
+* @brief Implements the singleton registry that populates and exposes the
+*        canonical IANA HTTP header field descriptors.
 */
 
 #include <algorithm>
@@ -15,7 +26,8 @@ namespace HTTPheaders
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs the registry, acquiring its logger and populating the map
+ *        with every known HTTP header field and its human-readable description.
  * @link https://www.iana.org/assignments/http-fields/http-fields.xhtml
  */
 HTTPHeadersRegistry::HTTPHeadersRegistry()
@@ -361,12 +373,12 @@ HTTPHeadersRegistry::HTTPHeadersRegistry()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the registry; no manually managed resources to release.
  */
 HTTPHeadersRegistry::~HTTPHeadersRegistry() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the lazily-initialized singleton instance of the registry.
  */
 HTTPHeadersRegistry &HTTPHeadersRegistry::getInstance()
 {
@@ -375,9 +387,9 @@ HTTPHeadersRegistry &HTTPHeadersRegistry::getInstance()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Accessor for the registry's logger.
  *
- * @return [TODO:return]
+ * @return The logger used by this registry.
  */
 t_Logger	HTTPHeadersRegistry::getLogger() const
 {
@@ -385,9 +397,9 @@ t_Logger	HTTPHeadersRegistry::getLogger() const
 }
 
 /**
- * @brief [TODO:description]
- * @param name [TODO:description]
- * @return [TODO:description]
+ * @brief Looks up a header descriptor by name, case-insensitively.
+ * @param name The header field name to search for; matched without regard to case.
+ * @return The matching HTTPHeader, or a default-constructed HTTPHeader if the name is unknown.
  */
 HTTPHeader HTTPHeadersRegistry::getHeader(const std::string name) const
 {

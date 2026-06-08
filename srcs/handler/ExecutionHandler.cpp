@@ -1,8 +1,20 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ExecutionHandler.cpp                               :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file ExecutionHandler.cpp
- * @brief [TODO:description]
+ * @brief Implements ExecutionHandler, which carries out the filesystem and CGI
+ * work for a resolved request (GET/HEAD, POST, PUT, DELETE): streaming file
+ * content in chunks, generating autoindex listings, and driving CGI execution.
  */
 
 #include <webserv/handler/ExecutionHandler.hpp>
@@ -13,7 +25,9 @@ namespace handler
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs an ExecutionHandler with no open fd, zeroed flags and an
+ *        embedded CGIHandler bound to the given I/O multiplexer and client
+ *        address; initializes and configures the instance logger.
  */
 ExecutionHandler::ExecutionHandler(const t_ioMultiplexer &ioMultiplexer, sockaddr_storage clientAddr)
 	:	_fd(-1),
@@ -28,14 +42,17 @@ ExecutionHandler::ExecutionHandler(const t_ioMultiplexer &ioMultiplexer, sockadd
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the ExecutionHandler; the owned file descriptor is released
+ *        automatically by the RAII UniqueFd member.
  */
 ExecutionHandler::~ExecutionHandler() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs an ExecutionHandler, duplicating the logger, fd value,
+ *        body counter, flags and autoindex buffer, and rebuilding the embedded
+ *        CGIHandler from the source's multiplexer and client address.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs Source ExecutionHandler to copy from.
  */
 ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
 	:	_logger(rhs._logger),
@@ -50,10 +67,12 @@ ExecutionHandler::ExecutionHandler(const ExecutionHandler &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns from another ExecutionHandler, copying the logger, body
+ *        counter, flags and autoindex buffer and resetting the owned fd; the
+ *        embedded CGIHandler is left unchanged.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs Source ExecutionHandler to copy from.
+ * @return Reference to this ExecutionHandler.
  */
 ExecutionHandler &ExecutionHandler::operator=(const ExecutionHandler &rhs)
 {
@@ -69,9 +88,10 @@ ExecutionHandler &ExecutionHandler::operator=(const ExecutionHandler &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger for this class, retrieved from the logging
+ *        manager under the "webserv.handler.executionhandler" channel.
  *
- * @return [TODO:return]
+ * @return The ExecutionHandler logger.
  */
 t_Logger	ExecutionHandler::getLogger()
 {
@@ -79,9 +99,9 @@ t_Logger	ExecutionHandler::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the currently owned file descriptor.
  *
- * @return [TODO:return]
+ * @return The open file descriptor, or -1 if none is open.
  */
 int ExecutionHandler::getFd() const
 {
@@ -89,9 +109,10 @@ int ExecutionHandler::getFd() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns how many request body bytes have been written to the target
+ *        so far (used to track PUT upload progress).
  *
- * @return [TODO:return]
+ * @return The number of body bytes already received and written.
  */
 std::size_t ExecutionHandler::getBodyReceived() const
 {
@@ -99,9 +120,9 @@ std::size_t ExecutionHandler::getBodyReceived() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the count of request body bytes already received and written.
  *
- * @param bodyReceived [TODO:parameter]
+ * @param bodyReceived New value for the received body byte counter.
  */
 void ExecutionHandler::setBodyReceived(const std::size_t bodyReceived)
 {
@@ -109,9 +130,9 @@ void ExecutionHandler::setBodyReceived(const std::size_t bodyReceived)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the current execution state flags as a bitmask.
  *
- * @return [TODO:return]
+ * @return The combined e_ExecutionHandlerFlags bits.
  */
 int ExecutionHandler::getFlags() const
 {
@@ -119,9 +140,9 @@ int ExecutionHandler::getFlags() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Overwrites the execution state flags with the given bitmask.
  *
- * @param flags [TODO:parameter]
+ * @param flags New bitmask of e_ExecutionHandlerFlags bits to store.
  */
 void ExecutionHandler::setFlags(const int flags)
 {
@@ -129,10 +150,11 @@ void ExecutionHandler::setFlags(const int flags)
 }
 
 /**
- * @brief [TODO:description]
- * 
- * @param buffer [TODO:parameter]
- * @return t_raw 
+ * @brief Returns the buffered autoindex HTML and also copies it into the
+ *        provided output parameter.
+ *
+ * @param buffer Output parameter filled with a copy of the autoindex buffer.
+ * @return A copy of the stored autoindex buffer.
  */
  t_raw ExecutionHandler::getAutoindexBuffer(t_raw &buffer) const
 {
@@ -140,9 +162,9 @@ void ExecutionHandler::setFlags(const int flags)
 	return _autoindexBuffer;
 }
 /**
- * @brief [TODO:description]
+ * @brief Stores the given bytes as the pending autoindex HTML buffer.
  *
- * @param buffer [TODO:parameter]
+ * @param buffer Raw bytes of the generated autoindex page to buffer.
  */
 void ExecutionHandler::setAutoindexBuffer(const t_raw &buffer)
 {
@@ -150,11 +172,14 @@ void ExecutionHandler::setAutoindexBuffer(const t_raw &buffer)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Entry point for handling a resolved request: applies any configured
+ *        redirect (throwing an HTTPError), skips to the CGI path when the
+ *        target extension is a configured CGI extension, otherwise dispatches
+ *        to the static-resource handling in executeRequest.
  *
- * @param requestHandler [TODO:parameter]
- * @param responseHandler [TODO:parameter]
- * @param locationConfig [TODO:parameter]
+ * @param requestHandler Request handler providing the parsed request.
+ * @param responseHandler Response handler whose response is populated.
+ * @param locationConfig Matched location configuration governing the request.
  */
 void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
@@ -178,10 +203,14 @@ void ExecutionHandler::execute(RequestHandler &requestHandler, ResponseHandler &
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Advances CGI execution by one step: spawns the CGI child on first
+ *        call, otherwise drives the child's I/O and, once it has been reaped
+ *        and not yet parsed, parses its output into the response and marks the
+ *        execution complete.
  *
- * @param request [TODO:parameter]
- * @param serverConfig [TODO:parameter]
+ * @param requestHandler Request handler providing the request and body bytes.
+ * @param responseHandler Response handler whose response receives the CGI output.
+ * @param locationConfig Matched location configuration used to spawn the CGI.
  */
 void ExecutionHandler::executeCGI(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
@@ -206,9 +235,9 @@ void ExecutionHandler::executeCGI(RequestHandler &requestHandler, ResponseHandle
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns a reference to the embedded CGI handler.
  *
- * @return [TODO:return]
+ * @return Reference to the owned CGIHandler.
  */
 CGIHandler &ExecutionHandler::getCgi()
 {
@@ -216,11 +245,13 @@ CGIHandler &ExecutionHandler::getCgi()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Dispatches the request to the method-specific handler based on its
+ *        HTTP method (GET/HEAD, POST, PUT, DELETE); throws HTTPError(405) for
+ *        any other method.
  *
- * @param requestHandler [TODO:parameter]
- * @param responseHandler [TODO:parameter]
- * @param locationConfig [TODO:parameter]
+ * @param requestHandler Request handler providing the parsed request.
+ * @param responseHandler Response handler whose response is populated.
+ * @param locationConfig Matched location configuration governing the request.
  */
 void ExecutionHandler::executeRequest(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
@@ -252,11 +283,15 @@ void ExecutionHandler::executeRequest(RequestHandler &requestHandler, ResponseHa
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Serves a GET or HEAD request for a static target. For a directory it
+ *        enforces a trailing-slash redirect (301), tries the configured index
+ *        files, falls back to autoindex generation, or returns 403; for a file
+ *        it opens it, sets Content-Length and Content-Type, and streams the body
+ *        in chunks for GET. Throws HTTPError on errors (e.g. 404 when missing).
  *
- * @param request [TODO:parameter]
- * @param response [TODO:parameter]
- * @param locationConfig [TODO:parameter]
+ * @param requestHandler Request handler providing the request and target path.
+ * @param responseHandler Response handler whose response and body are filled.
+ * @param locationConfig Matched location configuration (index, autoindex, types).
  */
 void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig)
 {
@@ -392,11 +427,13 @@ void ExecutionHandler::executeHEADorGET(RequestHandler &requestHandler, Response
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Handles a POST request to a static target, which is never accepted:
+ *        depending on the target it throws 403 (root or directory with an index
+ *        file), 301 (directory missing a trailing slash), 405 (directory
+ *        without index, or existing file), or 404 (non-existing file).
  *
- * @param requestHandler [TODO:parameter]
- * @param responseHandler [TODO:parameter]
- * @param locationConfig [TODO:parameter]
+ * @param requestHandler Request handler providing the request and target path.
+ * @param locationConfig Matched location configuration (root, index files).
  */
 void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
@@ -445,11 +482,12 @@ void ExecutionHandler::executePOST(const RequestHandler &requestHandler, const c
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Handles a PUT upload: rejects it with 405 unless PUT is enabled in the
+ *        location's dav_methods, rejects directory targets with 409, then opens
+ *        the target file on first call and flushes one body chunk to it.
  *
- * @param requestHandler [TODO:parameter]
- * @param responseHandler [TODO:parameter]
- * @param locationConfig [TODO:parameter]
+ * @param requestHandler Request handler providing the request and body bytes.
+ * @param locationConfig Matched location configuration (dav_methods, dav_access).
  */
 void ExecutionHandler::executePUT(RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
@@ -477,11 +515,14 @@ void ExecutionHandler::executePUT(RequestHandler &requestHandler, const config::
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Handles a DELETE request: rejects it with 405 unless DELETE is enabled
+ *        in the location's dav_methods, then removes the target. A trailing
+ *        slash deletes a directory recursively (404 if missing, 409 if not a
+ *        directory); a bare directory path is refused with 409; otherwise the
+ *        file is unlinked. Sets the NOCONTENT and COMPLETE flags on success.
  *
- * @param request [TODO:parameter]
- * @param response [TODO:parameter]
- * @param locationConfig [TODO:parameter]
+ * @param requestHandler Request handler providing the request and target path.
+ * @param locationConfig Matched location configuration (dav_methods).
  */
 void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
 {
@@ -522,31 +563,26 @@ void ExecutionHandler::executeDELETE(const RequestHandler &requestHandler, const
 }
 
 /**
- * @brief Opens the file targeted by @p request and stores the resulting fd
- *        in the owned _fd (UniqueFd). Sets E_EXEC_FILE_OPENED on success.
+ * @brief Opens the file at the request's absolute path and stores the resulting
+ *        fd in the owned _fd (UniqueFd), setting E_EXEC_FILE_OPENED on success.
  *
- *        The flow is "check before open" so we never touch open() unless we
- *        already know the operation is allowed both by the webserv config
- *        and by the underlying filesystem:
+ *        Behavior depends on the request method:
  *
- *        1. Check the location's `dav_access` bits (config-level rule).
- *           Only the 'all' triplet (least significant 3 bits) is consulted
- *           because HTTP has no authenticated user concept here.
- *           - GET / HEAD require the read bit  (0004) -> else 403
- *           - PUT        requires the write bit (0002) -> else 403
+ *        - GET / HEAD : opens read-only (O_RDONLY). On failure the errno is
+ *          mapped to an HTTPError (ENOENT -> 404, EACCES -> 403, else 500).
  *
- *        2. Probe the filesystem with access():
- *           - GET / HEAD : access(R_OK) -> ENOENT=404, EACCES=403, else=500
- *           - PUT        : access(F_OK) to distinguish create vs overwrite,
- *                          then access(W_OK) on overwrite.
+ *        - PUT : opens for writing (O_WRONLY | O_CREAT | O_TRUNC) using the
+ *          location's `dav_access` value as the creation mode. A prior
+ *          access(F_OK) probe decides whether the file is being created
+ *          (sets E_EXEC_CREATED) or overwritten (sets E_EXEC_NOCONTENT); an
+ *          open failure other than ENOENT raises HTTPError(500).
  *
- *        3. Only then call open() with the appropriate flags. mode for
- *           PUT is derived from `dav_access` directly (mode_t-compatible).
+ *        - Any other method raises HTTPError(500).
  *
- * @param request        Request providing method and absolute path.
- * @param locationConfig Location whose `dav_access` drives both the
- *                       allow check and the create mode.
- * @return The opened file descriptor (also stored in _fd).
+ * @param requestHandler Request handler providing the request's method and
+ *                       absolute path.
+ * @param locationConfig Location whose `dav_access` value is used as the
+ *                       creation mode for PUT.
  * @throws client::HTTPError on failure.
  */
 void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, const config::LocationConfig &locationConfig)
@@ -613,11 +649,12 @@ void ExecutionHandler::openFile(const handler::RequestHandler &requestHandler, c
 }
 
 /**
- * @brief Reads at most one EXECUTION_CHUNK_SIZE chunk from the owned _fd and
- *        appends it to the response body. Sets E_EXEC_COMPLETE on EOF, throws
- *        HTTPError(500) on read error or if _fd is not open.
+ * @brief Reads at most one BUFFER_SIZE chunk from the owned _fd and appends it
+ *        to the response body. Sets E_EXEC_COMPLETE and releases _fd on EOF,
+ *        throws HTTPError(500) on read error or if _fd is not open.
  *
- * @param response Response whose body buffer is appended to.
+ * @param responseHandler Response handler whose response body buffer is
+ *                        appended to.
  */
 void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 {
@@ -650,12 +687,15 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 }
 
 /**
- * @brief Writes at most one BUFFER_SIZE chunk from the request body
- *        (starting at offset _bodyReceived) to the owned _fd. Updates
- *        _bodyReceived on success, throws HTTPError(500) on error or if _fd
- *        is not open.
+ * @brief Writes at most one BUFFER_SIZE chunk of the buffered request body to
+ *        the owned _fd, capped by the remaining Content-Length. Consumes the
+ *        written bytes from the request buffer and updates _bodyReceived; on
+ *        completion sets E_EXEC_COMPLETE and releases _fd. Throws HTTPError(411)
+ *        if Content-Length is missing and HTTPError(500) on write error or if
+ *        _fd is not open.
  *
- * @param request Request whose body provides the bytes to flush.
+ * @param requestHandler Request handler whose request body buffer provides the
+ *                       bytes to flush.
  */
 void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 {
@@ -878,10 +918,13 @@ bool	ExecutionHandler::isDirectory(const std::string &path)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Builds an HTML directory listing for the given path, with one linked
+ *        list entry per directory entry (skipping "."), appending a trailing
+ *        slash to subdirectory links. Throws HTTPError(500) if the directory
+ *        cannot be read.
  *
- * @param dirPath [TODO:parameter]
- * @return [TODO:return]
+ * @param dirPath Filesystem path of the directory to list.
+ * @return The generated autoindex HTML page as a string.
  */
 std::string ExecutionHandler::generateAutoindexHTML(const std::string &dirPath)
 {

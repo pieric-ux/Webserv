@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   LocationConfig.hpp                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_CONFIG_LOCATIONCONFIG_HPP
 #define WEBSERV_CONFIG_LOCATIONCONFIG_HPP
 
 /**
  * @file LocationConfig.hpp
- * @brief [TODO:description]
+ * @brief Declares the LocationConfig class, a per-location (nginx-style) configuration block storing URI matching info and request-handling directives (root, index, autoindex, allowed methods, error pages, redirect, CGI, DAV and limit settings) with their accessors.
  */
 
 #include <string>

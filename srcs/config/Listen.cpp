@@ -1,4 +1,14 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Listen.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include <webserv/config/Listen.hpp>
 #include <webserv/config/DefaultConfig.hpp>
@@ -9,7 +19,7 @@ namespace config
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a Listen directive with every member initialized to its DefaultConfig value.
  */
 Listen::Listen()
 	:	address(DefaultConfig::address),

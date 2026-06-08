@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPHeadersRegistry.hpp                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_HEADERS_HTTPHEADERSREGISTRY_HPP
 #define WEBSERV_HEADERS_HTTPHEADERSREGISTRY_HPP
 
 /**
 * @file HTTPHeadersRegistry.hpp
-* @brief [TODO:description]
+* @brief Declares the singleton registry of known HTTP header fields.
 */
 
 #include <string>
@@ -18,7 +28,9 @@ namespace HTTPheaders
 
 /**
  * @class HTTPHeadersRegistry
- * @brief [TODO:description]
+ * @brief Singleton registry mapping canonical HTTP header names to their
+ *        HTTPHeader descriptors, enabling case-insensitive lookup of standard
+ *        fields from the IANA HTTP field name registry.
  *
  * @link https://www.iana.org/assignments/http-fields/http-fields.xhtml
  */

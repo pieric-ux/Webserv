@@ -1,8 +1,20 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   RequestHandler.cpp                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file RequestHandler.cpp
- * @brief [TODO:description]
+ * @brief Implements RequestHandler: accumulates raw request bytes, parses and
+ * validates the request line and headers, enforces method/size/content rules,
+ * and resolves the request target to a safe absolute filesystem path.
  */
 
 #include <webserv/handler/RequestHandler.hpp>
@@ -14,7 +26,8 @@ namespace handler
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a RequestHandler bound to the given server configuration,
+ * with empty request and buffer state, and initializes its logger.
  */
 RequestHandler::RequestHandler(config::ServerConfig &config)
 	:	_request(),
@@ -28,14 +41,15 @@ RequestHandler::RequestHandler(config::ServerConfig &config)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the RequestHandler; holds no owned resources to release.
  */
 RequestHandler::~RequestHandler() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a RequestHandler, duplicating the logger, request,
+ * buffer, and parser state and sharing the same server configuration reference.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The RequestHandler to copy from.
  */
 RequestHandler::RequestHandler(const RequestHandler &rhs)
 	:	_logger(rhs._logger),
@@ -48,10 +62,11 @@ RequestHandler::RequestHandler(const RequestHandler &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns from another RequestHandler, replacing the logger,
+ * request, buffer, and parser state while leaving the configuration reference.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The RequestHandler to assign from.
+ * @return Reference to this RequestHandler.
  */
 RequestHandler &RequestHandler::operator=(const RequestHandler &rhs)
 {
@@ -67,9 +82,9 @@ RequestHandler &RequestHandler::operator=(const RequestHandler &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger for the RequestHandler component.
  *
- * @return [TODO:return]
+ * @return The logger registered under "webserv.handler.requesthandler".
  */
 t_Logger	RequestHandler::getLogger()
 {
@@ -77,7 +92,11 @@ t_Logger	RequestHandler::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses the buffered request line and header block up to the
+ * terminating CRLFCRLF, throwing 414 when the URI is too long and 400 when the
+ * header terminator is absent. Once the blank line is reached, validates the
+ * headers, removes the consumed header bytes from the buffer, builds the
+ * absolute path, and marks the headers as validated.
  */
 void RequestHandler::parseHeaders()
 {
@@ -140,7 +159,9 @@ void RequestHandler::parseHeaders()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reads the Content-Length header, rejects the request with 413 when it
+ * exceeds the location's client_max_body_size, and marks the request body as
+ * started.
  */
 void RequestHandler::parseBody()
 {
@@ -164,9 +185,9 @@ void RequestHandler::parseBody()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Provides mutable access to the request being handled.
  *
- * @return [TODO:return]
+ * @return Reference to the internal Request.
  */
 client::Request &RequestHandler::getRequest()
 {
@@ -174,9 +195,9 @@ client::Request &RequestHandler::getRequest()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Provides read-only access to the request being handled.
  *
- * @return [TODO:return]
+ * @return Const reference to the internal Request.
  */
 const client::Request &RequestHandler::getRequest() const
 {
@@ -184,9 +205,9 @@ const client::Request &RequestHandler::getRequest() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Replaces the internal request with the given one.
  *
- * @param request [TODO:parameter]
+ * @param request The Request to copy into this handler.
  */
 void RequestHandler::setRequest(const client::Request &request)
 {
@@ -194,9 +215,9 @@ void RequestHandler::setRequest(const client::Request &request)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Provides read-only access to the accumulated raw request bytes.
  *
- * @return [TODO:return]
+ * @return Const reference to the internal request buffer.
  */
 const t_raw &RequestHandler::getBufferRequest() const
 {
@@ -204,9 +225,9 @@ const t_raw &RequestHandler::getBufferRequest() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Appends newly received bytes to the end of the raw request buffer.
  *
- * @param buffer [TODO:parameter]
+ * @param buffer The chunk of raw bytes read from the client to append.
  */
 void RequestHandler::appendToBufferRequest(const t_raw &buffer)
 {
@@ -214,10 +235,11 @@ void RequestHandler::appendToBufferRequest(const t_raw &buffer)
 	DEBUG(_logger, "Buffer request: +" + common::core::utils::toString(buffer.size()) + " bytes (total=" + common::core::utils::toString(_bufferRequest.size()) + "), buffer content: " + std::string(buffer.begin(), buffer.end()));
 }
 /**
- * @brief [TODO:description]
+ * @brief Removes the first n bytes from the front of the raw request buffer,
+ * clearing it entirely when n reaches or exceeds its current size.
  *
- * @param n [TODO:parameter]
- */	
+ * @param n Number of leading bytes to discard.
+ */
 void RequestHandler::eraseBufferRequestFront(std::size_t n)
 {
 	if (n >= _bufferRequest.size())
@@ -227,7 +249,7 @@ void RequestHandler::eraseBufferRequestFront(std::size_t n)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Empties the raw request buffer.
  */
 void RequestHandler::clearBufferRequest()
 {
@@ -235,9 +257,9 @@ void RequestHandler::clearBufferRequest()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Provides mutable access to the parser tracking request parsing state.
  *
- * @return [TODO:return]
+ * @return Reference to the internal Parser.
  */
 parser::Parser &RequestHandler::getParser()
 {
@@ -245,9 +267,12 @@ parser::Parser &RequestHandler::getParser()
 }
 
 /**
- * @brief [TODO:description]
- *
- * @param serverConfig [TODO:parameter]
+ * @brief Resolves and stores the matching location for the request path, then
+ * enforces request semantics: rejects disallowed methods (405) and missing Host
+ * (400); for POST/PUT requires Content-Length (411), validates Content-Type
+ * against allowed MIME types or CGI for multipart/form-data (415), defaults a
+ * missing Content-Type to application/octet-stream, and rejects chunked
+ * Content-Encoding (415).
  */
 void RequestHandler::validateHeaders()
 {
@@ -340,7 +365,10 @@ void RequestHandler::validateHeaders()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Builds the request's absolute filesystem path by joining the location
+ * root (or the DAV put path for PUT/DELETE) with the normalized request path,
+ * throwing 403 if the result escapes the root via path traversal, and stores it
+ * on the request.
  */
 void RequestHandler::buildAbsolutPath()
 {
@@ -371,10 +399,12 @@ void RequestHandler::buildAbsolutPath()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Normalizes a slash-separated path by removing empty and "." segments
+ * and resolving ".." against preceding segments, preserving a trailing slash
+ * when the input ended with one.
  *
- * @param path [TODO:parameter]
- * @return [TODO:return]
+ * @param path The path to normalize.
+ * @return The canonicalized absolute-style path, "/" when it resolves to empty.
  */
 std::string RequestHandler::normalizePath(const std::string &path)
 {

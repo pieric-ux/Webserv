@@ -1,11 +1,23 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerConfig.hpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_CONFIG_SERVERCONFIG_HPP
 #define WEBSERV_CONFIG_SERVERCONFIG_HPP
 
 /**
  * @file ServerConfig.hpp
- * @brief [TODO:description]
+ * @brief Declares ServerConfig, holding the settings of a single server block
+ *        (listen, server names, root, error pages, MIME types, CGI, WebDAV and
+ *        its location blocks) and resolving a request target to a LocationConfig.
  */
 
 #include <string>

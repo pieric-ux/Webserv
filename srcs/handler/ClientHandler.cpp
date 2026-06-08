@@ -1,8 +1,18 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ClientHandler.cpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file ClientHandler.cpp
- * @brief [TODO:description]
+ * @brief Implements ClientHandler, which tracks connected clients and drives their HTTP processing through the I/O multiplexer.
  */
 
 #include <webserv/handler/ClientHandler.hpp>
@@ -13,7 +23,7 @@ namespace handler
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs an empty ClientHandler and initializes its logger.
  */
 ClientHandler::ClientHandler() : _clients(), _ioMultiplexer()
 {
@@ -23,22 +33,22 @@ ClientHandler::ClientHandler() : _clients(), _ioMultiplexer()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the ClientHandler.
  */
 ClientHandler::~ClientHandler() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a ClientHandler from another instance.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The ClientHandler whose logger and client map are copied.
  */
 ClientHandler::ClientHandler(const ClientHandler &rhs) : _logger(rhs._logger), _clients(rhs._clients) {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns the client map and logger from another ClientHandler.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The ClientHandler to copy from.
+ * @return Reference to this instance.
  */
 ClientHandler &ClientHandler::operator=(const ClientHandler &rhs)
 {
@@ -51,9 +61,9 @@ ClientHandler &ClientHandler::operator=(const ClientHandler &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the logger associated with this class.
  *
- * @return [TODO:return]
+ * @return The "webserv.handler.clienthandler" logger from the log42 manager.
  */
 t_Logger	ClientHandler::getLogger()
 {
@@ -61,9 +71,9 @@ t_Logger	ClientHandler::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the I/O multiplexer used to register and monitor client sockets.
  *
-* @param ioMultiplexer [TODO:parameter]
+* @param ioMultiplexer The shared event-based I/O multiplexer to use.
  */
 void	ClientHandler::setIoMultiplexer(const t_ioMultiplexer &ioMultiplexer)
 {
@@ -71,9 +81,10 @@ void	ClientHandler::setIoMultiplexer(const t_ioMultiplexer &ioMultiplexer)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Registers a newly accepted client: adds its socket to the I/O multiplexer for read/write events and inserts a Client into the map.
  *
- * @param client [TODO:parameter]
+ * @param client The accepted socket paired with its peer address storage.
+ * @param serverConfig The server configuration that governs this client.
  */
 void	ClientHandler::addClient(const t_SocketPairClient &client, const config::ServerConfig &serverConfig)
 {
@@ -99,9 +110,10 @@ void	ClientHandler::addClient(const t_SocketPairClient &client, const config::Se
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Removes a client: unregisters its socket from the I/O multiplexer and erases it from the map, returning the next iterator.
  *
- * @param client [TODO:parameter]
+ * @param client The client to remove.
+ * @return Iterator to the element following the erased one, or end() if the client was not found in the map.
  */
 t_Clients::iterator	ClientHandler::removeClient(client::Client &client)
 {
@@ -133,9 +145,7 @@ t_Clients::iterator	ClientHandler::removeClient(client::Client &client)
 }
 
 /**
- * @brief [TODO:description]
- *
- * @param ioMultiplexer [TODO:parameter]
+ * @brief Iterates over all connected clients, expiring timed-out ones, reading and sending data, driving the HTTP/CGI cycle and resetting completed connections.
  */
 void	ClientHandler::processClients()
 {

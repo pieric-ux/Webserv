@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPHeader.hpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_HEADERS_HTTPHEADERS_HPP
 #define WEBSERV_HEADERS_HTTPHEADERS_HPP
 
 /**
 * @file HTTPHeaders.hpp
-* @brief [TODO:description]
+* @brief Declares the HTTPHeader class, representing a single HTTP header field with its name, value, and human-readable description.
 */
 
 #include <string>

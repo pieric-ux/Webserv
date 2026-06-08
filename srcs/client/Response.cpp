@@ -1,8 +1,20 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Response.cpp                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file Response.cpp
- * @brief [TODO:description]
+ * @brief Implements the client::Response HTTP response model, providing accessors
+ *        for the protocol version, status code, headers, flags, and the
+ *        connection-close indicator.
  */
 
 #include <webserv/client/Response.hpp>
@@ -13,7 +25,8 @@ namespace client
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs an empty response with zero-initialized version, status code,
+ *        headers, and flags, and acquires the response logger.
  */
 Response::Response()
 	:	_httpVersion(),
@@ -27,14 +40,15 @@ Response::Response()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the response; no manual resource cleanup is required.
  */
 Response::~Response() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a response by copying the version, status code, headers,
+ *        and flags from another instance.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The response to copy from.
  */
 Response::Response(const Response &rhs)
 	:	_httpVersion(rhs._httpVersion),
@@ -44,10 +58,11 @@ Response::Response(const Response &rhs)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns the version, status code, headers, and flags from another
+ *        response, guarding against self-assignment.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The response to copy from.
+ * @return Reference to this response.
  */
 Response &Response::operator=(const Response &rhs)
 {
@@ -62,9 +77,9 @@ Response &Response::operator=(const Response &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger used by the response module.
  *
- * @return [TODO:return]
+ * @return The "webserv.client.response" logger instance.
  */
 t_Logger	Response::getLogger()
 {
@@ -72,9 +87,9 @@ t_Logger	Response::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the HTTP protocol version of the response.
  *
- * @return [TODO:return]
+ * @return The response's HTTP version string.
  */
 std::string Response::getHttpVersion() const
 {
@@ -82,9 +97,9 @@ std::string Response::getHttpVersion() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the HTTP protocol version of the response.
  *
- * @param httpVersion [TODO:parameter]
+ * @param httpVersion The HTTP version string to assign.
  */
 void Response::setHttpVersion(const std::string &httpVersion)
 {
@@ -92,9 +107,9 @@ void Response::setHttpVersion(const std::string &httpVersion)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the HTTP status code of the response.
  *
- * @return [TODO:return]
+ * @return The response's status code.
  */
 status::StatusCode Response::getStatusCode() const
 {
@@ -102,9 +117,9 @@ status::StatusCode Response::getStatusCode() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the HTTP status code of the response.
  *
- * @param statusCode [TODO:parameter]
+ * @param statusCode The status code to assign.
  */
 void Response::setStatusCode(const status::StatusCode &statusCode)
 {
@@ -112,9 +127,9 @@ void Response::setStatusCode(const status::StatusCode &statusCode)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the response's header collection for read-only access.
  *
- * @return [TODO:return]
+ * @return Const reference to the map of lowercased header names to their values.
  */
 const t_Headers &Response::getHeaders() const
 {
@@ -126,9 +141,9 @@ t_Headers &Response::getHeaders()
 	return _headers;
 }
 /**
- * @brief [TODO:description]
+ * @brief Replaces the response's header collection.
  *
- * @param headers [TODO:parameter]
+ * @param headers The header map to assign.
  */
 void Response::setHeaders(const t_Headers &headers)
 {
@@ -136,11 +151,13 @@ void Response::setHeaders(const t_Headers &headers)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Looks up a header by name (case-insensitive) and exact value among its
+ *        stored entries.
  *
- * @param headerName [TODO:parameter]
- * @param headerValue [TODO:parameter]
- * @return [TODO:return]
+ * @param headerName The header field name to search for.
+ * @param headerValue The exact value to match within that header's entries.
+ * @return Reference to the matching header, or a static empty header if no match
+ *         is found.
  */
 const HTTPheaders::HTTPHeader &Response::findHeader(const std::string &headerName, const std::string &headerValue) const
 {
@@ -161,10 +178,11 @@ const HTTPheaders::HTTPHeader &Response::findHeader(const std::string &headerNam
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Adds a header by resolving its definition from the headers registry,
+ *        setting the given value, and appending it under the lowercased name.
  *
- * @param headerName [TODO:parameter]
- * @param headerValue [TODO:parameter]
+ * @param headerName The header field name to add.
+ * @param headerValue The value to assign to the new header entry.
  */
 void	Response::addHeader(const std::string &headerName, const std::string &headerValue)
 {
@@ -175,9 +193,9 @@ void	Response::addHeader(const std::string &headerName, const std::string &heade
 
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the response's processing flags.
  *
- * @return [TODO:return]
+ * @return The current flags as an integer bitmask (see e_ResponseFlags).
  */
 int	Response::getFlags() const
 {
@@ -185,9 +203,9 @@ int	Response::getFlags() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the response's processing flags from an integer bitmask.
  *
- * @param flags [TODO:parameter]
+ * @param flags The flag bitmask to assign (see e_ResponseFlags).
  */
 void	Response::setFlags(const int flags)
 {
@@ -195,9 +213,9 @@ void	Response::setFlags(const int flags)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Indicates whether the connection should be closed after this response.
  *
- * @return [TODO:return]
+ * @return True if the connection should be closed, false otherwise.
  */
 bool Response::shouldCloseConnection() const
 {
@@ -205,9 +223,10 @@ bool Response::shouldCloseConnection() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets whether the connection should be closed after this response.
  *
- * @param shouldClose [TODO:parameter]
+ * @param shouldClose True to close the connection after sending, false to keep it
+ *        alive.
  */
 void Response::setShouldCloseConnection(bool shouldClose)
 {

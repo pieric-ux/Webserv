@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   dump_config.cpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 // Temporary test: dump all parsed config to verify extraction
 // Build: make && c++ -std=c++98 -I includes -I libs/parser/includes -I libs/logger/includes -I libs/common/includes test/parser_tests/dump_config.cpp -L. -L libs/parser -L libs/logger -L libs/common -labnf -llog42 -lcommon objs/*.o -o test_dump -Wl,-force_load,objs/main.o 2>/dev/null || true
 // Alternatively, just link against webserv objects minus main

@@ -1,8 +1,18 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ErrorPage.cpp                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file ErrorPage.cpp
- * @brief [TODO:description]
+ * @brief Implements config::ErrorPage, associating a set of HTTP status codes with a custom error page file path (nginx-style error_page directive).
  */
 
 #include <webserv/config/ErrorPage.hpp>
@@ -13,15 +23,15 @@ namespace config
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Builds a human-readable, comma-separated list of the numeric values of the given status codes, prefixed with an opening bracket, used for logging.
  *
- * @param codes [TODO:parameter]
+ * @param codes The collection of status codes whose numeric codes are formatted.
  */
 static std::string	formatStatusCodesInfo(const t_StatusCodes &codes);
 
 
 /**
- * @brief [TODO:description]
+ * @brief Default-constructs an ErrorPage with no status codes and an empty path, and initializes its logger.
  */
 ErrorPage::ErrorPage() : _codes(), _path()
 {
@@ -31,10 +41,10 @@ ErrorPage::ErrorPage() : _codes(), _path()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs an ErrorPage mapping the given status codes to the given error page path, and initializes its logger.
  *
- * @param codes [TODO:parameter]
- * @param path [TODO:parameter]
+ * @param codes The HTTP status codes served by this custom error page.
+ * @param path The filesystem path of the error page file to serve for those codes.
  */
 ErrorPage::ErrorPage(const t_StatusCodes &codes, const std::string &path) :	_codes(codes), _path(path)
 {
@@ -44,23 +54,23 @@ ErrorPage::ErrorPage(const t_StatusCodes &codes, const std::string &path) :	_cod
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the ErrorPage instance.
  */
  ErrorPage::~ErrorPage() {}
  
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs an ErrorPage by copying the logger, status codes, and path from another instance.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The ErrorPage instance to copy from.
  */
 ErrorPage::ErrorPage(const ErrorPage &rhs) : _logger(rhs._logger), _codes(rhs._codes), _path(rhs._path)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger for the config::ErrorPage class, retrieved from the logging manager.
  *
- * @return [TODO:return]
+ * @return The logger associated with the "webserv.config.ErrorPage" channel.
  */
 t_Logger	ErrorPage::getLogger()
 {
@@ -68,9 +78,9 @@ t_Logger	ErrorPage::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the HTTP status codes associated with this custom error page.
  *
- * @param codes [TODO:parameter]
+ * @return A const reference to the collection of status codes served by this error page.
  */
 const t_StatusCodes	&ErrorPage::getCodes() const
 {
@@ -78,9 +88,9 @@ const t_StatusCodes	&ErrorPage::getCodes() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the filesystem path of the custom error page file.
  *
- * @param codes [TODO:parameter]
+ * @return A const reference to the error page file path.
  */
 const std::string	&ErrorPage::getPath() const
 {
@@ -88,10 +98,10 @@ const std::string	&ErrorPage::getPath() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns this ErrorPage from another, copying the logger, status codes, and path while guarding against self-assignment.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The ErrorPage instance to copy from.
+ * @return A reference to this ErrorPage after assignment.
  */
 ErrorPage &ErrorPage::operator=(const ErrorPage &rhs)
 {

@@ -1,8 +1,20 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ResponseHandler.cpp                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file ResponseHandler.cpp
- * @brief [TODO:description]
+ * @brief Implements ResponseHandler, which builds HTTP responses by assembling
+ *        the status line, headers, cookies and error bodies into an outgoing
+ *        byte buffer.
  */
 
 #include <webserv/handler/ResponseHandler.hpp>
@@ -16,7 +28,8 @@ namespace handler
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a ResponseHandler with empty response and buffer, and
+ *        initializes its logger at DEBUG level.
  */
 ResponseHandler::ResponseHandler()
 	:	_response(),
@@ -28,14 +41,14 @@ ResponseHandler::ResponseHandler()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the ResponseHandler.
  */
 ResponseHandler::~ResponseHandler() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a ResponseHandler from another instance.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The ResponseHandler whose logger, response and buffer are copied.
  */
 ResponseHandler::ResponseHandler(const ResponseHandler &rhs)
 	:	_logger(rhs._logger),
@@ -44,10 +57,10 @@ ResponseHandler::ResponseHandler(const ResponseHandler &rhs)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns from another ResponseHandler.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The ResponseHandler whose logger, response and buffer are copied.
+ * @return Reference to this ResponseHandler.
  */
 ResponseHandler &ResponseHandler::operator=(const ResponseHandler &rhs)
 {
@@ -61,9 +74,9 @@ ResponseHandler &ResponseHandler::operator=(const ResponseHandler &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Retrieves the logger associated with this handler.
  *
- * @return [TODO:return]
+ * @return The "webserv.handler.responsehandler" logger instance.
  */
 t_Logger	ResponseHandler::getLogger()
 {
@@ -71,9 +84,9 @@ t_Logger	ResponseHandler::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Provides mutable access to the underlying response object.
  *
- * @return [TODO:return]
+ * @return Reference to the response being built.
  */
 client::Response &ResponseHandler::getResponse()
 {
@@ -81,9 +94,9 @@ client::Response &ResponseHandler::getResponse()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Provides read-only access to the underlying response object.
  *
- * @return [TODO:return]
+ * @return Const reference to the response being built.
  */
 const client::Response &ResponseHandler::getResponse() const
 {
@@ -91,9 +104,9 @@ const client::Response &ResponseHandler::getResponse() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Replaces the underlying response object.
  *
- * @param response [TODO:parameter]
+ * @param response The response to copy into this handler.
  */
 void ResponseHandler::setResponse(const client::Response &response)
 {
@@ -101,9 +114,9 @@ void ResponseHandler::setResponse(const client::Response &response)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Appends raw bytes to the end of the outgoing response buffer.
  *
- * @param buffer [TODO:parameter]
+ * @param buffer The bytes to append to the response buffer.
  */
 void ResponseHandler::appendToBufferResponse(const t_raw &buffer)
 {
@@ -111,7 +124,7 @@ void ResponseHandler::appendToBufferResponse(const t_raw &buffer)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Empties the outgoing response buffer.
  */
 void ResponseHandler::clearBufferResponse()
 {
@@ -140,9 +153,16 @@ void ResponseHandler::eraseBufferResponseFront(std::size_t n)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Builds a successful response: selects the status code from the
+ *        execution and parse flags, writes the status line, assembles the
+ *        headers and serializes them into the response buffer (skipping the
+ *        header block for 100-Continue responses).
  *
- * @param request [TODO:parameter]
+ * @param request The request being responded to, used for HTTP version and headers.
+ * @param execFlags Execution-result bitmask selecting the success status code
+ *        (E_EXEC_CREATED -> 201, E_EXEC_NOCONTENT -> 204).
+ * @param parseFlags Parser bitmask; E_PARS_EXPECT selects 100-Continue and
+ *        suppresses serialization of the header block.
  */
 void ResponseHandler::buildHeadersResponse(const client::Request &request, int execFlags, int parseFlags)
 {
@@ -189,10 +209,14 @@ void ResponseHandler::buildHeadersResponse(const client::Request &request, int e
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Builds an error response: sets the error status code, writes the
+ *        status line and status-specific headers (Allow, WWW-Authenticate,
+ *        Retry-After, Accept, Upgrade, Location), loads a configured custom
+ *        error page or generates a default HTML body, then serializes the
+ *        headers and body into the response buffer.
  *
- * @param request [TODO:parameter]
- * @param error [TODO:parameter]
+ * @param request The originating request, used for HTTP version and location config.
+ * @param error The HTTP error carrying the status code and optional Location target.
  */
 void ResponseHandler::buildErrorResponse(const client::Request &request, const client::HTTPError &error)
 {
@@ -350,11 +374,12 @@ void ResponseHandler::buildErrorResponse(const client::Request &request, const c
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Formats the HTTP status line "HTTP-version SP status-code SP
+ *        reason-phrase CRLF" and appends it to the response buffer.
  *
- * @param httpVersion [TODO:parameter]
- * @param statusCode [TODO:parameter]
- * @param reasonPhrase [TODO:parameter]
+ * @param httpVersion The HTTP version string (e.g. "HTTP/1.1").
+ * @param statusCode The status code object providing the numeric code.
+ * @param reasonPhrase The textual reason phrase for the status code.
  */
 void ResponseHandler::buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase)
 {
@@ -370,9 +395,13 @@ void ResponseHandler::buildStatusLine(const std::string &httpVersion, const stat
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Adds the standard response headers (Server, Date, Connection) and
+ *        manages the session: resolves the Connection header from the request,
+ *        and emits a Set-Cookie for an existing or newly created "sid" session.
  *
- * @param request [TODO:parameter]
+ * @param request The request providing headers, cookies and session TTL config.
+ * @param parsFlags Parser bitmask; when E_PARS_CONNECTION is set, the request's
+ *        Connection header is honored to decide keep-alive versus close.
  */
 void ResponseHandler::buildHeaders(const client::Request &request, int parsFlags)
 {

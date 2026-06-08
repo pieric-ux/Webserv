@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ClientHandler.hpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_HANDLER_CLIENTHANDLER_HPP
 #define WEBSERV_HANDLER_CLIENTHANDLER_HPP
 
 /**
  * @file ClientHandler.hpp
- * @brief [TODO:description]
+ * @brief Declares the ClientHandler, which tracks connected clients and drives their HTTP processing through the I/O multiplexer.
  */
 
 #include <ctime>

@@ -1,8 +1,19 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   SessionStore.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file SessionStore.cpp
- * @brief [TODO:description]
+ * @brief Implements the SessionStore singleton, which generates UUIDs and
+ *        creates, retrieves, deletes and purges in-memory HTTP sessions.
  */
 
 #include <cstdio>
@@ -15,7 +26,8 @@ namespace session
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs the SessionStore, acquiring its logger and setting it to
+ *        DEBUG level.
  */
 SessionStore::SessionStore()
 {
@@ -25,14 +37,15 @@ SessionStore::SessionStore()
 }
 
 /**
- * @brief 
+ * @brief Destroys the SessionStore; the session map releases its entries
+ *        automatically.
  */
 SessionStore::~SessionStore() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Accesses the unique SessionStore instance.
  *
- * @return [TODO:return]
+ * @return Reference to the lazily-initialized singleton SessionStore.
  */
 SessionStore &SessionStore::getInstance()
 {
@@ -41,9 +54,9 @@ SessionStore &SessionStore::getInstance()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Retrieves the logger associated with the session store module.
  *
- * @return [TODO:return]
+ * @return The "webserv.session.sessionstore" logger.
  */
 t_Logger SessionStore::getLogger()
 {
@@ -51,9 +64,9 @@ t_Logger SessionStore::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Generates a random RFC 4122 version 4 UUID using /dev/urandom.
  *
- * @return [TODO:return]
+ * @return The UUID as a 36-character hyphenated lowercase hexadecimal string.
  */
 t_uuid SessionStore::generateUUID()
 {
@@ -79,9 +92,10 @@ t_uuid SessionStore::generateUUID()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Creates a new session with a freshly generated UUID, applies the given
+ *        TTL to compute its expiry time, and stores it in the session map.
  *
- * @return [TODO:return]
+ * @return A copy of the newly created Session.
  */
 Session SessionStore::createSession(t_sessionTTL ttl)
 {
@@ -95,10 +109,11 @@ Session SessionStore::createSession(t_sessionTTL ttl)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Looks up a session by id, refreshing its expiry on access; throws if
+ *        the session is missing or has expired (purging it in the latter case).
  *
- * @param id [TODO:parameter]
- * @return [TODO:return]
+ * @param id The UUID of the session to retrieve.
+ * @return Reference to the live, non-expired Session.
  */
 Session &SessionStore::getSession(const t_uuid &id)
 {
@@ -119,9 +134,9 @@ Session &SessionStore::getSession(const t_uuid &id)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Removes the session with the given id from the store if it exists.
  *
- * @param id [TODO:parameter]
+ * @param id The UUID of the session to delete.
  */
 void SessionStore::deleteSession(const t_uuid &id)
 {
@@ -134,7 +149,7 @@ void SessionStore::deleteSession(const t_uuid &id)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Iterates over all stored sessions and removes those that have expired.
  */
 void SessionStore::purgeExpired()
 {

@@ -1,8 +1,20 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerConfig.cpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file ServerConfig.cpp
- * @brief [TODO:description]
+ * @brief Implements ServerConfig: the settings of a single server block
+ *        (listen, server names, root, error pages, MIME types, CGI, WebDAV and
+ *        its location blocks) with their accessors and request-target matching.
  */
 
 #include <webserv/config/ServerConfig.hpp>
@@ -13,7 +25,8 @@ namespace config
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a ServerConfig with every member initialized to its
+ *        DefaultConfig value and sets up the module logger at DEBUG level.
  */
 ServerConfig::ServerConfig()
 	:	_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
@@ -38,14 +51,14 @@ ServerConfig::ServerConfig()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the ServerConfig; members release their own resources.
  */
 ServerConfig::~ServerConfig() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a ServerConfig by duplicating every member of rhs.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The ServerConfig instance to copy from.
  */
 ServerConfig::ServerConfig(const ServerConfig &rhs)
 	:	_logger(rhs._logger),
@@ -67,10 +80,10 @@ ServerConfig::ServerConfig(const ServerConfig &rhs)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns every member from rhs, guarding against self-assignment.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The ServerConfig instance to copy from.
+ * @return Reference to this ServerConfig after assignment.
  */
 ServerConfig &ServerConfig::operator=(const ServerConfig &rhs)
 {
@@ -97,9 +110,9 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Retrieves the shared logger for the config.serverconfig module.
  *
- * @return [TODO:return]
+ * @return Shared pointer to the "webserv.config.serverconfig" logger.
  */
 t_Logger	ServerConfig::getLogger()
 {
@@ -107,9 +120,9 @@ t_Logger	ServerConfig::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the maximum allowed request body size for this server.
  *
- * @return [TODO:return]
+ * @return Reference to the configured client max body size, in bytes.
  */
 const t_clientMaxBodySize	&ServerConfig::getClientMaxBodySize() const
 {
@@ -117,9 +130,9 @@ const t_clientMaxBodySize	&ServerConfig::getClientMaxBodySize() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the maximum allowed request body size for this server.
  *
- * @param clientMaxBodySize [TODO:parameter]
+ * @param clientMaxBodySize The new client max body size, in bytes.
  */
 void ServerConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
 {
@@ -127,9 +140,9 @@ void ServerConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBody
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the filesystem path used for WebDAV PUT uploads.
  *
- * @return [TODO:return]
+ * @return Reference to the configured WebDAV PUT path.
  */
 const std::string &ServerConfig::getDavPutPath() const
 {
@@ -137,9 +150,9 @@ const std::string &ServerConfig::getDavPutPath() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the filesystem path used for WebDAV PUT uploads.
  *
- * @param davPutPath [TODO:parameter]
+ * @param davPutPath The new WebDAV PUT path.
  */
 void ServerConfig::setDavPutPath(const std::string &davPutPath)
 {
@@ -147,9 +160,9 @@ void ServerConfig::setDavPutPath(const std::string &davPutPath)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the WebDAV access permission bitmask for this server.
  *
- * @return [TODO:return]
+ * @return Reference to the configured WebDAV access permissions.
  */
 const t_Perms				&ServerConfig::getDavAccess() const
 {
@@ -157,9 +170,9 @@ const t_Perms				&ServerConfig::getDavAccess() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the WebDAV access permission bitmask for this server.
  *
- * @param davAccess [TODO:parameter]
+ * @param davAccess The new WebDAV access permissions.
  */
 void ServerConfig::setDavAccess(const t_Perms &davAccess)
 {
@@ -167,9 +180,9 @@ void ServerConfig::setDavAccess(const t_Perms &davAccess)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the set of WebDAV methods enabled for this server.
  *
- * @return [TODO:return]
+ * @return Reference to the set of allowed WebDAV methods.
  */
 const t_DavMethods	&ServerConfig::getDavMethods() const
 {
@@ -177,9 +190,9 @@ const t_DavMethods	&ServerConfig::getDavMethods() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the set of WebDAV methods enabled for this server.
  *
- * @param davMethods [TODO:parameter]
+ * @param davMethods The new set of allowed WebDAV methods.
  */
 void ServerConfig::setDavMethods(const t_DavMethods &davMethods)
 {
@@ -187,9 +200,9 @@ void ServerConfig::setDavMethods(const t_DavMethods &davMethods)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default MIME type used when no mapping matches.
  *
- * @return [TODO:return]
+ * @return Reference to the configured default content type.
  */
 const std::string &ServerConfig::getDefaultType() const
 {
@@ -197,9 +210,9 @@ const std::string &ServerConfig::getDefaultType() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default MIME type used when no mapping matches.
  *
- * @param defaultType [TODO:parameter]
+ * @param defaultType The new default content type.
  */
 void ServerConfig::setDefaultType(const std::string &defaultType)
 {
@@ -207,9 +220,9 @@ void ServerConfig::setDefaultType(const std::string &defaultType)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the custom error page mappings configured for this server.
  *
- * @return [TODO:return]
+ * @return Reference to the collection of configured error pages.
  */
 const t_ErrorPages	&ServerConfig::getErrorPage() const
 {
@@ -217,9 +230,9 @@ const t_ErrorPages	&ServerConfig::getErrorPage() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the custom error page mappings for this server.
  *
- * @param errorPage [TODO:parameter]
+ * @param errorPage The new collection of error pages.
  */
 void ServerConfig::setErrorPage(const t_ErrorPages &errorPage)
 {
@@ -227,9 +240,9 @@ void ServerConfig::setErrorPage(const t_ErrorPages &errorPage)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the keep-alive timeout for persistent connections.
  *
- * @return [TODO:return]
+ * @return Reference to the configured keep-alive timeout, in seconds.
  */
 const t_keepAliveTimeout	&ServerConfig::getKeepAliveTimeout() const
 {
@@ -237,9 +250,9 @@ const t_keepAliveTimeout	&ServerConfig::getKeepAliveTimeout() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the keep-alive timeout for persistent connections.
  *
- * @param keepAliveTimeout [TODO:parameter]
+ * @param keepAliveTimeout The new keep-alive timeout, in seconds.
  */
 void ServerConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout)
 {
@@ -247,9 +260,9 @@ void ServerConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeou
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the time-to-live applied to sessions for this server.
  *
- * @return [TODO:return]
+ * @return Reference to the configured session TTL, in seconds.
  */
 const t_sessionTTL &ServerConfig::getSessionTTL() const
 {
@@ -257,9 +270,9 @@ const t_sessionTTL &ServerConfig::getSessionTTL() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the time-to-live applied to sessions for this server.
  *
- * @param sessionTTL [TODO:parameter]
+ * @param sessionTTL The new session TTL, in seconds.
  */
 void ServerConfig::setSessionTTL(const t_sessionTTL &sessionTTL)
 {
@@ -267,9 +280,9 @@ void ServerConfig::setSessionTTL(const t_sessionTTL &sessionTTL)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the address/port endpoints this server listens on.
  *
- * @return [TODO:return]
+ * @return Reference to the collection of configured listen directives.
  */
 const t_Listen &ServerConfig::getListen() const
 {
@@ -277,9 +290,9 @@ const t_Listen &ServerConfig::getListen() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the address/port endpoints this server listens on.
  *
- * @param listen [TODO:parameter]
+ * @param listen The new collection of listen directives.
  */
 void ServerConfig::setListen(const t_Listen &listen)
 {
@@ -287,9 +300,9 @@ void ServerConfig::setListen(const t_Listen &listen)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the location blocks defined within this server block.
  *
- * @return [TODO:return]
+ * @return Reference to the collection of location configurations.
  */
 const t_LocationConfigs	&ServerConfig::getLocationConfigs() const
 {
@@ -297,9 +310,9 @@ const t_LocationConfigs	&ServerConfig::getLocationConfigs() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the location blocks defined within this server block.
  *
- * @param locationConfigs [TODO:parameter]
+ * @param locationConfigs The new collection of location configurations.
  */
 void ServerConfig::setLocationConfigs(const t_LocationConfigs &locationConfigs)
 {
@@ -307,9 +320,9 @@ void ServerConfig::setLocationConfigs(const t_LocationConfigs &locationConfigs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the document root directory for this server.
  *
- * @return [TODO:return]
+ * @return Reference to the configured root path.
  */
 const std::string &ServerConfig::getRoot() const
 {
@@ -317,9 +330,9 @@ const std::string &ServerConfig::getRoot() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the document root directory for this server.
  *
- * @param root [TODO:parameter]
+ * @param root The new root path.
  */
 void ServerConfig::setRoot(const std::string &root)
 {
@@ -327,9 +340,9 @@ void ServerConfig::setRoot(const std::string &root)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the server names (virtual hosts) handled by this server.
  *
- * @return [TODO:return]
+ * @return Reference to the collection of configured server names.
  */
 const t_Servernames	&ServerConfig::getServerNames() const
 {
@@ -337,9 +350,9 @@ const t_Servernames	&ServerConfig::getServerNames() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the server names (virtual hosts) handled by this server.
  *
- * @param serverName [TODO:parameter]
+ * @param serverName The new collection of server names.
  */
 void ServerConfig::setServerName(const t_Servernames &serverName)
 {
@@ -347,9 +360,9 @@ void ServerConfig::setServerName(const t_Servernames &serverName)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the MIME type mappings (extension to content type).
  *
- * @return [TODO:return]
+ * @return Reference to the configured MIME type map.
  */
 const t_MimeTypes	&ServerConfig::getTypes() const
 {
@@ -357,9 +370,9 @@ const t_MimeTypes	&ServerConfig::getTypes() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the MIME type mappings (extension to content type).
  *
- * @param types [TODO:parameter]
+ * @param types The new MIME type map.
  */
 void ServerConfig::setTypes(const t_MimeTypes &types)
 {
@@ -367,9 +380,9 @@ void ServerConfig::setTypes(const t_MimeTypes &types)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether CGI execution is enabled for this server.
  *
- * @return [TODO:return]
+ * @return True if CGI is enabled, false otherwise.
  */
 bool ServerConfig::isEnableCGI() const
 {
@@ -377,9 +390,9 @@ bool ServerConfig::isEnableCGI() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Enables or disables CGI execution for this server.
  *
- * @param enableCGI [TODO:parameter]
+ * @param enableCGI True to enable CGI, false to disable it.
  */
 void ServerConfig::setEnableCGI(const bool enableCGI)
 {
@@ -387,9 +400,9 @@ void ServerConfig::setEnableCGI(const bool enableCGI)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the CGI extension mappings (extension to interpreter).
  *
- * @return [TODO:return]
+ * @return Reference to the configured CGI extension map.
  */
 const t_CgiExtensions	&ServerConfig::getCgiExtensions() const
 {
@@ -397,9 +410,9 @@ const t_CgiExtensions	&ServerConfig::getCgiExtensions() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the CGI extension mappings (extension to interpreter).
  *
- * @param cgiExtensions [TODO:parameter]
+ * @param cgiExtensions The new CGI extension map.
  */
 void ServerConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
 {
@@ -407,10 +420,13 @@ void ServerConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Selects the location block matching a request target, preferring an
+ *        exact match and otherwise the longest matching prefix; falls back to
+ *        the first location when none matches.
  *
- * @param requestTarget [TODO:parameter]
- * @return [TODO:return]
+ * @param path The request target path to resolve against the locations.
+ * @return Reference to the best-matching LocationConfig, or the first location
+ *         block if no match is found.
  */
 const LocationConfig &ServerConfig::findLocationConfig(const std::string &path)
 {

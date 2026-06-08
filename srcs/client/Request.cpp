@@ -1,8 +1,18 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Request.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file Request.cpp
- * @brief [TODO:description]
+ * @brief Implements the client::Request class, providing accessors and mutators for a parsed HTTP/1.1 request: method, request line components, resolved URI parts, headers, cookies, parsing-state flags, and the matched location configuration.
  */
 
 #include <webserv/client/Request.hpp>
@@ -13,7 +23,7 @@ namespace client
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Default-constructs an empty request with method GET, cleared URI and header fields, no flags set, and an initialized logger at DEBUG level.
  */
 Request::Request()
 	:	_method(config::GET),
@@ -34,14 +44,14 @@ Request::Request()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the request; no owned resources require explicit release.
  */
 Request::~Request() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a request by duplicating all method, URI, header, cookie, flag, and location-configuration members of another request.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The request whose state is copied.
  */
 Request::Request(const Request &rhs)
 	:	_method(rhs._method),
@@ -58,10 +68,10 @@ Request::Request(const Request &rhs)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns the state of another request, with self-assignment protection.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The request whose state is copied.
+ * @return Reference to this request after assignment.
  */
 Request &Request::operator=(const Request &rhs)
 {
@@ -83,9 +93,9 @@ Request &Request::operator=(const Request &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Retrieves the shared logger registered for the request component.
  *
- * @return [TODO:return]
+ * @return Shared pointer to the "webserv.client.request" logger.
  */
 t_Logger	Request::getLogger()
 {
@@ -93,9 +103,9 @@ t_Logger	Request::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the HTTP method of the request.
  *
- * @return [TODO:return]
+ * @return The request method.
  */
 config::e_Method Request::getMethod() const
 {
@@ -103,9 +113,9 @@ config::e_Method Request::getMethod() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the HTTP method of the request.
  *
- * @param method [TODO:parameter]
+ * @param method The method to store.
  */
 void Request::setMethod(const config::e_Method method)
 {
@@ -113,9 +123,9 @@ void Request::setMethod(const config::e_Method method)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the raw request target from the request line.
  *
- * @return [TODO:return]
+ * @return The request target as received.
  */
 std::string Request::getRequestTarget() const
 {
@@ -123,9 +133,9 @@ std::string Request::getRequestTarget() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the raw request target of the request line.
  *
- * @param requestTarget [TODO:parameter]
+ * @param requestTarget The request target to store.
  */
 void Request::setRequestTarget(const std::string &requestTarget)
 {
@@ -133,9 +143,9 @@ void Request::setRequestTarget(const std::string &requestTarget)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the HTTP version string from the request line.
  *
- * @return [TODO:return]
+ * @return The HTTP version (e.g. "HTTP/1.1").
  */
 std::string Request::getHttpVersion() const
 {
@@ -143,9 +153,9 @@ std::string Request::getHttpVersion() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the HTTP version string of the request line.
  *
- * @param httpVersion [TODO:parameter]
+ * @param httpVersion The HTTP version to store.
  */
 void Request::setHttpVersion(const std::string &httpVersion)
 {
@@ -153,9 +163,9 @@ void Request::setHttpVersion(const std::string &httpVersion)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the resolved absolute filesystem path for the request target.
  *
- * @return [TODO:return]
+ * @return The absolute path.
  */
 std::string Request::getAbsolutePath() const
 {
@@ -163,9 +173,9 @@ std::string Request::getAbsolutePath() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the resolved absolute filesystem path for the request target.
  *
- * @param absolutePath [TODO:parameter]
+ * @param absolutePath The absolute path to store.
  */
 void Request::setAbsolutePath(const std::string &absolutePath)
 {
@@ -173,9 +183,9 @@ void Request::setAbsolutePath(const std::string &absolutePath)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the authority component (host and optional port) of the request URI.
  *
- * @return [TODO:return]
+ * @return The authority string.
  */
 std::string Request::getAuthority() const
 {
@@ -183,9 +193,9 @@ std::string Request::getAuthority() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the authority component (host and optional port) of the request URI.
  *
- * @param authority [TODO:parameter]
+ * @param authority The authority string to store.
  */
 void Request::setAuthority(const std::string &authority)
 {
@@ -193,9 +203,9 @@ void Request::setAuthority(const std::string &authority)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the path component of the request URI (without the query string).
  *
- * @return [TODO:return]
+ * @return The URI path.
  */
 std::string Request::getPath() const
 {
@@ -203,9 +213,9 @@ std::string Request::getPath() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the path component of the request URI.
  *
- * @param path [TODO:parameter]
+ * @param path The URI path to store.
  */
 void Request::setPath(const std::string &path)
 {
@@ -213,9 +223,9 @@ void Request::setPath(const std::string &path)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the query-string component of the request URI.
  *
- * @return [TODO:return]
+ * @return The query string (without the leading '?').
  */
 std::string Request::getQuery() const
 {
@@ -223,9 +233,9 @@ std::string Request::getQuery() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the query-string component of the request URI.
  *
- * @param query [TODO:parameter]
+ * @param query The query string to store.
  */
 void Request::setQuery(const std::string &query)
 {
@@ -233,9 +243,9 @@ void Request::setQuery(const std::string &query)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns a read-only reference to the request headers, keyed by lowercased name.
  *
- * @return [TODO:return]
+ * @return Const reference to the header map.
  */
 const t_Headers &Request::getHeaders() const
 {
@@ -247,9 +257,9 @@ t_Headers &Request::getHeaders()
 	return _headers;
 }
 /**
- * @brief [TODO:description]
+ * @brief Replaces the request headers with the provided header map.
  *
- * @param headers [TODO:parameter]
+ * @param headers The header map to store.
  */
 void Request::setHeaders(const t_Headers &headers)
 {
@@ -257,11 +267,11 @@ void Request::setHeaders(const t_Headers &headers)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Looks up a header by name (case-insensitive) and exact value among its possibly multiple entries.
  *
- * @param headerName [TODO:parameter]
- * @param headerValue [TODO:parameter]
- * @return [TODO:return]
+ * @param headerName The header field name to search for.
+ * @param headerValue The exact value the matched header must hold.
+ * @return Const reference to the matching header, or a reference to a static empty header if none matches.
  */
 const HTTPheaders::HTTPHeader &Request::findHeader(const std::string &headerName, const std::string &headerValue) const
 {
@@ -282,10 +292,10 @@ const HTTPheaders::HTTPHeader &Request::findHeader(const std::string &headerName
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Appends a header by resolving its definition from the headers registry, assigning the value, and storing it under the lowercased name.
  *
- * @param headerName [TODO:parameter]
- * @param headerValue [TODO:parameter]
+ * @param headerName The header field name.
+ * @param headerValue The value to assign to the header.
  */
 void Request::addHeader(const std::string &headerName, const std::string &headerValue)
 {
@@ -295,9 +305,9 @@ void Request::addHeader(const std::string &headerName, const std::string &header
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the current parsing-state flags as a bitmask of e_RequestFlags values.
  *
- * @return [TODO:return]
+ * @return The combined request flags.
  */
 int	Request::getFlags() const
 {
@@ -305,9 +315,9 @@ int	Request::getFlags() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the parsing-state flags from an integer bitmask of e_RequestFlags values.
  *
- * @param flags [TODO:parameter]
+ * @param flags The bitmask to store as the request flags.
  */
 void	Request::setFlags(const int flags)
 {
@@ -325,9 +335,9 @@ void Request::setLocationConfig(const config::LocationConfig &locationConfig)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns a read-only reference to the request cookies, keyed by cookie name.
  *
- * @return [TODO:return]
+ * @return Const reference to the cookie map.
  */
 const t_Cookies &Request::getCookies() const
 {
@@ -335,9 +345,9 @@ const t_Cookies &Request::getCookies() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Replaces the request cookies with the provided cookie map.
  *
- * @param cookies [TODO:parameter]
+ * @param cookies The cookie map to store.
  */
 void Request::setCookies(const t_Cookies &cookies)
 {

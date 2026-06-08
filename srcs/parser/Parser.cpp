@@ -1,8 +1,20 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Parser.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file Parser.cpp
- * @brief [TODO:description]
+ * @brief Implements parser::Parser, which validates and parses the server
+ *        configuration against the ABNF grammar and parses HTTP request-lines
+ *        and header blocks into config and client::Request objects.
  */
 #include <webserv/parser/Parser.hpp>
 
@@ -15,7 +27,7 @@ abnf::Abnf &Parser::_abnf = abnf::Abnf::getInstance();
 config::HTTPConfig &Parser::_config = config::HTTPConfig::getInstance();
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a Parser with cleared parsing flags and acquires its logger.
  */
 Parser::Parser() : _flags(static_cast<e_ParserFlags>(0))
 {
@@ -25,17 +37,22 @@ Parser::Parser() : _flags(static_cast<e_ParserFlags>(0))
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the Parser; holds no owned resources to release.
  */
 Parser::~Parser() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a Parser, copying the logger and parsing flags.
+ *
+ * @param rhs The Parser to copy from.
  */
 Parser::Parser(const Parser &rhs) : _logger(rhs._logger), _flags(rhs._flags) {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns a Parser, copying the parsing flags and logger.
+ *
+ * @param rhs The Parser to assign from.
+ * @return Reference to this Parser.
  */
 Parser &Parser::operator=(const Parser &rhs)
 {
@@ -48,7 +65,9 @@ Parser &Parser::operator=(const Parser &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger for the parser module.
+ *
+ * @return The "webserv.parser.parser" logger.
  */
 t_Logger	Parser::getLogger()
 {
@@ -58,7 +77,9 @@ t_Logger	Parser::getLogger()
 int Parser::getFlags() const{ return _flags; }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the parsing state flags from an e_ParserFlags bitmask.
+ *
+ * @param flags Bitmask of e_ParserFlags values to store.
  */
 void Parser::setFlags(const int flags) 
 { 
@@ -66,7 +87,11 @@ void Parser::setFlags(const int flags)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Validates the raw config against the ABNF grammar and parses it,
+ *        populating the global HTTPConfig with HTTP-level directives, the IO
+ *        multiplexer, and every server block (with its location blocks).
+ *
+ * @param buffer The raw configuration file contents.
  */
 void Parser::parseConfig(const t_raw &buffer)
 {
@@ -133,7 +158,14 @@ void Parser::parseConfig(const t_raw &buffer)
 }
 
 /**
- * @brief Parse the HTTP request-line into the given Request.
+ * @brief Validates and parses an HTTP request-line into the given Request,
+ *        extracting the method, request-target and version, decoding the path
+ *        and throwing client::HTTPError on malformed input (400), too-long URI
+ *        (414), unsupported version (505) or unimplemented method (501).
+ *
+ * @param line The raw request-line text (without the trailing CRLF).
+ * @param request The Request to populate with the parsed method, target,
+ *        authority, path, query and HTTP version.
  */
 void Parser::parseRequestLine(const std::string &line, client::Request &request)
 {
@@ -227,8 +259,13 @@ void Parser::parseRequestLine(const std::string &line, client::Request &request)
 }
 
 /**
- * @brief Parse the headers section (between request-line and CRLF CRLF).
+ * @brief Parses and validates the header field-lines of the request block,
+ *        normalising names/values, enforcing single-occurrence headers (Host,
+ *        Content-Length, Content-Type), rejecting unsupported Transfer-Encoding
+ *        and Range (501), and storing the headers and cookies on the Request.
  *
+ * @param headersBlock The raw header section, terminated by the empty CRLF line.
+ * @param request The Request to populate with the parsed headers and cookies.
  */
 void Parser::parseHeaders(const std::string &headersBlock, client::Request &request)
 {
@@ -451,7 +488,10 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Stores the raw config buffer and verifies it matches the "config" ABNF
+ *        rule, throwing std::runtime_error on failure.
+ *
+ * @param buffer The raw configuration file contents to validate.
  */
 void Parser::checkConfigABNF(const t_raw &buffer)
 {
@@ -467,7 +507,14 @@ void Parser::checkConfigABNF(const t_raw &buffer)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Extracts all occurrences of a directive sub-rule from a parent rule's
+ *        text, limited to the given nesting depth.
+ *
+ * @param parentRule Name of the enclosing ABNF rule to search within.
+ * @param input The text matched by the parent rule.
+ * @param directive Name of the directive sub-rule to extract.
+ * @param depth Maximum nesting depth to descend into when extracting.
+ * @return The matched substrings for each occurrence of the directive.
  */
 t_SubRules Parser::extractDirectives(const std::string &parentRule,
                                      const std::string &input,
@@ -481,7 +528,13 @@ t_SubRules Parser::extractDirectives(const std::string &parentRule,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Extracts the first occurrence of a sub-rule's matched text from within
+ *        a directive's text.
+ *
+ * @param directive Name of the enclosing ABNF rule to search within.
+ * @param subRule Name of the sub-rule whose value is extracted.
+ * @param input The text matched by the directive rule.
+ * @return The matched sub-rule text, or an empty string if not found.
  */
 std::string Parser::extractValue(const std::string &directive,
                                  const std::string &subRule,
@@ -493,7 +546,13 @@ std::string Parser::extractValue(const std::string &directive,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Extracts every occurrence of a sub-rule's matched text from within a
+ *        directive's text.
+ *
+ * @param directive Name of the enclosing ABNF rule to search within.
+ * @param subRule Name of the sub-rule whose values are extracted.
+ * @param input The text matched by the directive rule.
+ * @return The matched substrings for each occurrence of the sub-rule.
  */
 t_SubRules Parser::extractValues(const std::string &directive,
                                  const std::string &subRule,
@@ -505,7 +564,11 @@ t_SubRules Parser::extractValues(const std::string &directive,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Enforces that a directive appears at most once, throwing
+ *        std::runtime_error if more than one occurrence is present.
+ *
+ * @param dirs The collection of extracted directive occurrences.
+ * @param name Directive name used in the error message.
  */
 void Parser::ensureAtMostOne(const t_SubRules &dirs, const std::string &name) const
 {
@@ -517,7 +580,11 @@ void Parser::ensureAtMostOne(const t_SubRules &dirs, const std::string &name) co
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses the digits found in a keepalive-timeout string into a timeout
+ *        value, throwing std::runtime_error if it exceeds the type's maximum.
+ *
+ * @param str The directive text containing the timeout value.
+ * @return The parsed timeout, or 0 when no digits are present.
  */
 t_keepAliveTimeout Parser::parseTimeoutValue(const std::string &str)
 {
@@ -536,7 +603,11 @@ t_keepAliveTimeout Parser::parseTimeoutValue(const std::string &str)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses a session-TTL value with an optional time unit suffix (w, d, h,
+ *        m or s) into seconds, throwing std::runtime_error on overflow.
+ *
+ * @param str The directive text containing the TTL value and optional suffix.
+ * @return The TTL in seconds, or the configured default when no digits exist.
  */
 t_sessionTTL Parser::parseSessionTTLValue(const std::string &str)
 {
@@ -587,7 +658,11 @@ t_Perms Parser::parseDavAccessValue(const std::string &val) const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses a dav-methods value into the set of allowed WebDAV methods,
+ *        keeping only recognised HTTP method tokens.
+ *
+ * @param val The dav-methods-val text listing the method tokens.
+ * @return The set of parsed config::e_Method values.
  */
 t_DavMethods Parser::parseDavMethodsValue(const std::string &val) const
 {
@@ -603,7 +678,11 @@ t_DavMethods Parser::parseDavMethodsValue(const std::string &val) const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses error_page directives into ErrorPage entries, expanding any 'x'
+ *        wildcards in the target path with the corresponding status-code digits.
+ *
+ * @param dirs The collection of error-page-dir occurrences to parse.
+ * @return The list of ErrorPage mappings from status codes to resolved paths.
  */
 t_ErrorPages Parser::parseErrorPageDirs(const t_SubRules &dirs) const
 {
@@ -640,7 +719,11 @@ t_ErrorPages Parser::parseErrorPageDirs(const t_SubRules &dirs) const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses a types block into a map of file extension to MIME type,
+ *        associating each listed extension with its mapping's MIME type.
+ *
+ * @param str The types-block text to parse.
+ * @return The map from file extension to MIME type.
  */
 t_MimeTypes Parser::parseTypesBlockValue(const std::string &str) const
 {
@@ -657,7 +740,12 @@ t_MimeTypes Parser::parseTypesBlockValue(const std::string &str) const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Builds the CGI extension-to-interpreter map from both single
+ *        cgi-extension directives and the mappings of a cgi-extensions block.
+ *
+ * @param extDirs The cgi-extension-dir occurrences to parse.
+ * @param extBlocks The cgi-extensions-block occurrences whose mappings are added.
+ * @return The map from CGI file extension to interpreter file path.
  */
 t_CgiExtensions Parser::parseCgiExtensionDirs(const t_SubRules &extDirs,
                                                const t_SubRules &extBlocks) const
@@ -683,7 +771,13 @@ t_CgiExtensions Parser::parseCgiExtensionDirs(const t_SubRules &extDirs,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses every listen directive of a server block into Listen entries,
+ *        resolving the address (IPv4/IPv6/hostname) and port and applying the
+ *        recognised listen options (default_server, reuseport, ipv6only,
+ *        so_keepalive, backlog, rcvbuf, sndbuf).
+ *
+ * @param serverBlockStr The raw text of the server block.
+ * @param config The ServerConfig to populate with the parsed listen entries.
  */
 void Parser::parseListenDirectives(const std::string &serverBlockStr,
                                    config::ServerConfig &config)
@@ -774,7 +868,11 @@ void Parser::parseListenDirectives(const std::string &serverBlockStr,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses the server_name directives of a server block, collecting all
+ *        listed name tokens into the ServerConfig.
+ *
+ * @param serverBlockStr The raw text of the server block.
+ * @param config The ServerConfig to populate with the server names.
  */
 void Parser::parseServerNameDirectives(const std::string &serverBlockStr,
                                        config::ServerConfig &config)
@@ -799,7 +897,11 @@ void Parser::parseServerNameDirectives(const std::string &serverBlockStr,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses a location block's URI path and match modifier, mapping "=" to
+ *        EXACT, "^~" to PREFIX_PRIORITY and anything else to PREFIX.
+ *
+ * @param locationBlockStr The raw text of the location block.
+ * @param config The LocationConfig to set the URI and modifier on.
  */
 void Parser::parseLocationUri(const std::string &locationBlockStr,
                               config::LocationConfig &config)
@@ -829,7 +931,11 @@ void Parser::parseLocationUri(const std::string &locationBlockStr,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses the at-most-one autoindex directive of a location block, setting
+ *        autoindex on when its value is "on".
+ *
+ * @param locationBlockStr The raw text of the location block.
+ * @param config The LocationConfig to set the autoindex flag on.
  */
 void Parser::parseAutoindexDirective(const std::string &locationBlockStr,
                                      config::LocationConfig &config)
@@ -844,7 +950,11 @@ void Parser::parseAutoindexDirective(const std::string &locationBlockStr,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses the at-most-one index directive of a location block, collecting
+ *        its listed filenames into the LocationConfig's index list.
+ *
+ * @param locationBlockStr The raw text of the location block.
+ * @param config The LocationConfig to set the index files on.
  */
 void Parser::parseIndexDirective(const std::string &locationBlockStr,
                                  config::LocationConfig &config)
@@ -867,7 +977,11 @@ void Parser::parseIndexDirective(const std::string &locationBlockStr,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses the at-most-one allowed_methods directive of a location block
+ *        into the set of permitted HTTP methods, keeping only recognised tokens.
+ *
+ * @param locationBlockStr The raw text of the location block.
+ * @param config The LocationConfig to set the allowed methods on.
  */
 void Parser::parseAllowedMethodsDirective(const std::string &locationBlockStr,
                                           config::LocationConfig &config)
@@ -896,7 +1010,11 @@ void Parser::parseAllowedMethodsDirective(const std::string &locationBlockStr,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses the at-most-one return directive of a location block into a
+ *        redirect, capturing its status code and optional target URL.
+ *
+ * @param locationBlockStr The raw text of the location block.
+ * @param config The LocationConfig to set the redirect on.
  */
 void Parser::parseReturnDirective(const std::string &locationBlockStr,
                                   config::LocationConfig &config)

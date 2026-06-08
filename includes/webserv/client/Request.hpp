@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Request.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_CLIENT_REQUEST_HPP
 #define WEBSERV_CLIENT_REQUEST_HPP
 
 /**
  * @file Request.hpp
- * @brief [TODO:description]
+ * @brief Declares the client::Request class representing a parsed HTTP/1.1 request, holding the request line, resolved URI components, headers, cookies, parsing-state flags, and matched location configuration.
  */
 
 #include <string>

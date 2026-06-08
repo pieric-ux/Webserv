@@ -1,8 +1,19 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Session.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file Session.cpp
- * @brief [TODO:description]
+ * @brief Implements the Session class: an in-memory client session identified
+ *        by a UUID, storing string key/value data with an expiry time and TTL.
  */
 
 #include <webserv/session/Session.hpp>
@@ -13,9 +24,10 @@ namespace session
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a Session with the given identifier, empty data, and no
+ *        expiry or TTL, then acquires its logger.
  *
- * @param id [TODO:parameter]
+ * @param id The UUID uniquely identifying this session.
  */
 Session::Session(const t_uuid &id)
 	:	_id(id),
@@ -29,14 +41,15 @@ Session::Session(const t_uuid &id)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the session, releasing its held resources.
  */
 Session::~Session() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a session by duplicating the logger, id, data,
+ *        expiry, and TTL of another session.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The session to copy from.
  */
 Session::Session(const Session &rhs)
 	:	_logger(rhs._logger),
@@ -47,10 +60,11 @@ Session::Session(const Session &rhs)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns the logger, id, data, expiry, and TTL from another
+ *        session, guarding against self-assignment.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The session to assign from.
+ * @return Reference to this session after assignment.
  */
 Session &Session::operator=(const Session &rhs)
 {
@@ -66,9 +80,10 @@ Session &Session::operator=(const Session &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger for the session module, retrieved from the
+ *        logging manager by its registered name.
  *
- * @return [TODO:return]
+ * @return The logger associated with "webserv.session.session".
  */
 t_Logger Session::getLogger()
 {
@@ -76,9 +91,9 @@ t_Logger Session::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the unique identifier of this session.
  *
- * @return [TODO:return]
+ * @return Const reference to the session's UUID.
  */
 const t_uuid &Session::getId() const
 {
@@ -86,9 +101,9 @@ const t_uuid &Session::getId() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the full key/value store held by this session.
  *
- * @return [TODO:return]
+ * @return Const reference to the session's data map.
  */
 const t_SessionData &Session::getData() const
 {
@@ -96,9 +111,9 @@ const t_SessionData &Session::getData() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Replaces the session's key/value store with the given data.
  *
- * @param data [TODO:parameter]
+ * @param data The new data map to store in the session.
  */
 void Session::setData(const t_SessionData &data)
 {
@@ -106,9 +121,9 @@ void Session::setData(const t_SessionData &data)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the absolute expiry time of this session.
  *
- * @return [TODO:return]
+ * @return The expiry timestamp, or 0 if the session never expires.
  */
 std::time_t Session::getExpires() const
 {
@@ -116,9 +131,9 @@ std::time_t Session::getExpires() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the absolute expiry time of this session.
  *
- * @param expires [TODO:parameter]
+ * @param expires The expiry timestamp; 0 marks the session as non-expiring.
  */
 void Session::setExpires(std::time_t expires)
 {
@@ -136,9 +151,10 @@ void Session::setTtl(t_sessionTTL ttl)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether the session has passed its expiry time.
  *
- * @return [TODO:return]
+ * @return False if the expiry is unset (0), otherwise true when the current
+ *         time is past the stored expiry timestamp.
  */
 bool Session::isExpired() const
 {
@@ -148,10 +164,11 @@ bool Session::isExpired() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Looks up the value associated with a key in the session data.
  *
- * @param key [TODO:parameter]
- * @return [TODO:return]
+ * @param key The key to look up.
+ * @return Const reference to the stored value, or to a static empty string if
+ *         the key is absent.
  */
 const std::string &Session::get(const std::string &key) const
 {
@@ -163,10 +180,10 @@ const std::string &Session::get(const std::string &key) const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Stores or overwrites the value for a key in the session data.
  *
- * @param key [TODO:parameter]
- * @param value [TODO:parameter]
+ * @param key The key to assign.
+ * @param value The value to associate with the key.
  */
 void Session::set(const std::string &key, const std::string &value)
 {

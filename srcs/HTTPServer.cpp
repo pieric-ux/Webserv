@@ -1,8 +1,20 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPServer.cpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file HTTPServer.hpp
- * @brief [TODO:description]
+ * @brief Implements the HTTPServer singleton: loads the configuration, builds
+ *        the listening servers, registers their sockets with the I/O
+ *        multiplexer, and drives the accept and client-processing event loop.
  */
 
 #include <webserv/HTTPServer.hpp>
@@ -12,7 +24,9 @@ namespace webserv
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs the server with the default config path and shared
+ *        registry/config singletons, then initializes the "webserv" logger at
+ *        DEBUG level.
  */
 HTTPServer::HTTPServer() :	_defaultConfigPath(config::DefaultConfig::defaultConfigPath),
 							_parser(),
@@ -30,14 +44,15 @@ HTTPServer::HTTPServer() :	_defaultConfigPath(config::DefaultConfig::defaultConf
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the server instance; no explicit cleanup is required.
  */
 HTTPServer::~HTTPServer() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs the server by copying every member from another
+ *        instance, including the shared logger, config, and registry references.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The HTTPServer to copy from.
  */
 HTTPServer::HTTPServer(const HTTPServer &rhs)
 	:	_logger(rhs._logger),
@@ -53,10 +68,11 @@ HTTPServer::HTTPServer(const HTTPServer &rhs)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns the non-reference members from another instance, guarding
+ *        against self-assignment.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The HTTPServer to copy from.
+ * @return Reference to this instance.
  */
 HTTPServer &HTTPServer::operator=(const HTTPServer &rhs)
 {
@@ -74,9 +90,9 @@ HTTPServer &HTTPServer::operator=(const HTTPServer &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Accessor for the singleton instance, lazily constructed on first call.
  *
- * @return [TODO:return]
+ * @return Reference to the unique HTTPServer instance.
  */
 HTTPServer &HTTPServer::getInstance()
 {
@@ -85,9 +101,9 @@ HTTPServer &HTTPServer::getInstance()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Accessor for the server's logger.
  *
- * @return [TODO:return]
+ * @return The logger used by this HTTPServer.
  */
 t_Logger HTTPServer::getLogger() const
 {
@@ -95,7 +111,10 @@ t_Logger HTTPServer::getLogger() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Prepares the server for running: loads the configuration, creates the
+ *        listening servers, initializes the configured I/O multiplexer, and
+ *        registers every server socket for read events. Throws if no servers
+ *        could be created.
  */
 void	HTTPServer::setup()
 {
@@ -143,9 +162,10 @@ void	HTTPServer::setup()
 }
 
 /**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
+ * @brief Runs the main event loop until a termination signal is received:
+ *        waits on the I/O multiplexer, accepts new connections on ready
+ *        listening sockets, processes active clients, and periodically purges
+ *        expired sessions.
  */
 void	HTTPServer::run()
 {
@@ -200,9 +220,9 @@ void	HTTPServer::run()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Overrides the configuration file path used when loading the config.
  *
- * @param configPath [TODO:parameter]
+ * @param configPath Filesystem path to the configuration file to load.
  */
 void HTTPServer::setConfigPath(const std::string &configPath)
 {
@@ -210,9 +230,9 @@ void HTTPServer::setConfigPath(const std::string &configPath)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Accessor for the parsed HTTP configuration.
  *
- * @return [TODO:return]
+ * @return Reference to the shared HTTPConfig instance.
  */
 const config::HTTPConfig &HTTPServer::getHTTPConfig() const
 {
@@ -220,9 +240,10 @@ const config::HTTPConfig &HTTPServer::getHTTPConfig() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reads the configuration file into memory and hands its raw contents to
+ *        the parser. Throws std::runtime_error if the file cannot be opened.
  *
- * @return [TODO:return]
+ * @return Nothing.
  */
 void	HTTPServer::loadConfig()
 {
@@ -239,7 +260,9 @@ void	HTTPServer::loadConfig()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Accepts a pending connection on the given listening socket, logs the
+ *        peer address, and registers the new client with the client handler
+ *        using the associated server configuration. Rethrows on failure.
  */
 void HTTPServer::connectClient(const t_SocketPairServer &socket, const config::ServerConfig &serverConfig)
 {

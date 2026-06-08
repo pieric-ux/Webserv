@@ -1,8 +1,20 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file Server.cpp
- * @brief [TODO:description]
+ * @brief Implements webserv::Server, which owns a ServerConfig and resolves,
+ * creates, binds and listens on the TCP sockets described by its listen
+ * directives.
  */
 
 #include <webserv/Server.hpp>
@@ -11,7 +23,8 @@ namespace webserv
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Default-constructs a Server with an empty config and no sockets,
+ * acquiring the "webserv.server" logger and setting it to DEBUG level.
  */
 Server::Server()
 	:	_config(),
@@ -23,9 +36,11 @@ Server::Server()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a Server from the given configuration, acquiring the
+ * "webserv.server" logger and immediately creating its listening sockets.
  *
- * @param config [TODO:parameter]
+ * @param config The server configuration whose listen directives drive socket
+ * creation.
  */
 Server::Server(const config::ServerConfig &config)
 	:	_config(config)
@@ -38,14 +53,15 @@ Server::Server(const config::ServerConfig &config)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the Server; owned sockets are released by their RAII members.
  */
 Server::~Server() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a Server, copying the logger, configuration and the
+ * collection of listening sockets from another instance.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The Server to copy from.
  */
 Server::Server(const Server &rhs)
 	:	_logger(rhs._logger),
@@ -54,10 +70,11 @@ Server::Server(const Server &rhs)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns another Server, replacing the logger, configuration and
+ * listening sockets while guarding against self-assignment.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The Server to assign from.
+ * @return A reference to this Server.
  */
 Server &Server::operator=(const Server &rhs)
 {
@@ -71,9 +88,9 @@ Server &Server::operator=(const Server &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared "webserv.server" logger used by this class.
  *
- * @return [TODO:return]
+ * @return The logger registered under the "webserv.server" name.
  */
 t_Logger	Server::getLogger()
 {
@@ -81,9 +98,9 @@ t_Logger	Server::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Provides read-only access to the server's listening sockets.
  *
- * @return [TODO:return]
+ * @return A const reference to the collection of bound, listening sockets.
  */
 const t_ServerSockets	&Server::getSockets() const
 {
@@ -91,9 +108,9 @@ const t_ServerSockets	&Server::getSockets() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Provides read-only access to the server's configuration.
  *
- * @return [TODO:return]
+ * @return A const reference to the ServerConfig owned by this Server.
  */
 const config::ServerConfig	&Server::getConfig() const
 {
@@ -101,7 +118,15 @@ const config::ServerConfig	&Server::getConfig() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Creates the listening sockets for each listen directive in the config.
+ *
+ * For every listen entry it resolves candidate addresses (treating "*" as a
+ * wildcard), skips IPv4 results when ipv6only is set and any non-IP families,
+ * then for each usable address creates a TCP server socket, applies its socket
+ * options, binds it, and listens with the configured backlog (falling back to
+ * SOMAXCONN when the backlog is unset or exceeds it). Successful sockets are
+ * stored in _sockets; per-address and per-listen failures are logged and
+ * skipped rather than aborting the whole process.
  */
 void	Server::createSockets()
 {
@@ -180,10 +205,17 @@ void	Server::createSockets()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Applies the socket-level options requested by a listen directive.
  *
- * @param socket [TODO:parameter]
- * @param listen [TODO:parameter]
+ * Always sets SO_REUSEADDR, and conditionally sets SO_REUSEPORT, SO_KEEPALIVE,
+ * SO_RCVBUF and SO_SNDBUF based on the listen settings; for IPv6 sockets it
+ * also enables IPV6_V6ONLY. Each applied option is logged at DEBUG level.
+ *
+ * @param socket The TCP server socket to configure.
+ * @param listen The listen directive holding the requested option values.
+ * @param ai_family The socket's address family (e.g. AF_INET or AF_INET6),
+ * used to decide whether IPV6_V6ONLY is applied.
+ * @param addr The resolved address/port pair, used only for log messages.
  */
 void	Server::setSocketOption(common::core::net::TcpServer &socket, const config::Listen &listen, const int ai_family, const t_AddrPortPair &addr)
 {
