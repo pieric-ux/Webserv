@@ -8,8 +8,9 @@
  * @brief [TODO:description]
  */
 
-#include <common/core/net/sockets/Addrinfo.hpp>
-#include <common/core/net/sockets/TcpServer.hpp>
+#include <cstring>
+#include <webserv/types.hpp>
+#include <common/common.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/parser/Parser.hpp>
 
@@ -26,16 +27,18 @@ class Server
 		Server(const Server &rhs);
 		Server &operator=(const Server &rhs);
 
-		t_Logger	getLogger() const;
+		static t_Logger					getLogger();
+
+		const t_ServerSockets			&getSockets() const;
+		const config::ServerConfig		&getConfig() const;
 
 	private:
 		t_Logger						_logger;
-		common::core::net::TcpServer	_socket4;
-		common::core::net::TcpServer	_socket6;
-		common::core::net::Addrinfo		_addrinfo4;
-		common::core::net::Addrinfo		_addrinfo6;
 		config::ServerConfig			_config;
-		parser::Parser					_parser;
+		t_ServerSockets 				_sockets;
+
+		void							createSockets();
+		void							setSocketOption(common::core::net::TcpServer &socket, const config::Listen &listen, const int ai_family, const t_AddrPortPair &addr);
 };
 
 } // !webserv

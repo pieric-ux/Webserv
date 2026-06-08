@@ -21,7 +21,8 @@ namespace HTTPheaders
 HTTPHeadersRegistry::HTTPHeadersRegistry()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.headersregistry");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
+	INFO(_logger, "HTTPHeadersRegistry instance created.");
 	// A
 	_headers["a-im"] = HTTPHeader("A-IM", "Used with Response code to indicate partial instance manipulations.");
 	_headers["accept"] = HTTPHeader("Accept", "Informs the server about the types of data that can be sent back.");
@@ -375,6 +376,16 @@ HTTPHeadersRegistry &HTTPHeadersRegistry::getInstance()
 
 /**
  * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+t_Logger	HTTPHeadersRegistry::getLogger() const
+{
+	return _logger;
+}
+
+/**
+ * @brief [TODO:description]
  * @param name [TODO:description]
  * @return [TODO:description]
  */
@@ -387,16 +398,6 @@ HTTPHeader HTTPHeadersRegistry::getHeader(const std::string name) const
 	if (it == _headers.end())
 		return HTTPHeader();
 	return it->second;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-t_Logger	HTTPHeadersRegistry::getLogger() const
-{
-	return _logger;
 }
 
 } // !HTTPheaders

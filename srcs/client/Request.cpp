@@ -17,13 +17,21 @@ namespace client
  */
 Request::Request()
 	:	_method(config::GET),
+		_locationConfig(),
 		_requestTarget(),
 		_httpVersion(),
 		_absolutePath(),
+		_authority(),
+		_path(),
+		_query(),
 		_headers(),
-		_body(),
-		_flags(static_cast<e_RequestFlags>(0))
-{}
+		_flags(static_cast<e_RequestFlags>(0)),
+		_cookies()
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.request");
+	_logger->setLevel(log42::logRecord::DEBUG);
+	INFO(_logger, "Request instance created");
+}
 
 /**
  * @brief [TODO:description]
@@ -37,12 +45,16 @@ Request::~Request() {}
  */
 Request::Request(const Request &rhs)
 	:	_method(rhs._method),
+		_locationConfig(rhs._locationConfig),
 		_requestTarget(rhs._requestTarget),
 		_httpVersion(rhs._httpVersion),
 		_absolutePath(rhs._absolutePath),
+		_authority(rhs._authority),
+		_path(rhs._path),
+		_query(rhs._query),
 		_headers(rhs._headers),
-		_body(rhs._body),
-		_flags(rhs._flags)
+		_flags(rhs._flags),
+		_cookies(rhs._cookies)
 {}
 
 /**
@@ -59,9 +71,13 @@ Request &Request::operator=(const Request &rhs)
 		_requestTarget = rhs._requestTarget;
 		_httpVersion = rhs._httpVersion;
 		_absolutePath = rhs._absolutePath;
+		_authority = rhs._authority;
+		_path = rhs._path;
+		_query = rhs._query;
 		_headers = rhs._headers;
-		_body = rhs._body;
+		_locationConfig = rhs._locationConfig;
 		_flags = rhs._flags;
+		_cookies = rhs._cookies;
 	}
 	return (*this);
 }
@@ -71,9 +87,9 @@ Request &Request::operator=(const Request &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	Request::getLogger() const
+t_Logger	Request::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.client.request");
 }
 
 /**
@@ -161,11 +177,75 @@ void Request::setAbsolutePath(const std::string &absolutePath)
  *
  * @return [TODO:return]
  */
-t_Headers Request::getHeaders() const
+std::string Request::getAuthority() const
+{
+	return _authority;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param authority [TODO:parameter]
+ */
+void Request::setAuthority(const std::string &authority)
+{
+	_authority = authority;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::string Request::getPath() const
+{
+	return _path;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param path [TODO:parameter]
+ */
+void Request::setPath(const std::string &path)
+{
+	_path = path;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+std::string Request::getQuery() const
+{
+	return _query;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param query [TODO:parameter]
+ */
+void Request::setQuery(const std::string &query)
+{
+	_query = query;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const t_Headers &Request::getHeaders() const
 {
 	return _headers;
 }
 
+t_Headers &Request::getHeaders()
+{
+	return _headers;
+}
 /**
  * @brief [TODO:description]
  *
@@ -179,21 +259,39 @@ void Request::setHeaders(const t_Headers &headers)
 /**
  * @brief [TODO:description]
  *
+ * @param headerName [TODO:parameter]
+ * @param headerValue [TODO:parameter]
  * @return [TODO:return]
  */
-t_raw	Request::getBody() const
+const HTTPheaders::HTTPHeader &Request::findHeader(const std::string &headerName, const std::string &headerValue) const
 {
-	return _body;
+	static HTTPheaders::HTTPHeader emptyHeader;
+
+	t_Headers::const_iterator it = _headers.find(common::core::utils::toLower(headerName));
+	if (it == _headers.end())
+		return emptyHeader;
+
+	const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+	std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
+	for (;lit != headerList.end(); ++lit)
+	{
+		if (lit->getValue() == headerValue)
+			return *lit;
+	}
+	return emptyHeader;
 }
 
 /**
  * @brief [TODO:description]
  *
- * @param body [TODO:parameter]
+ * @param headerName [TODO:parameter]
+ * @param headerValue [TODO:parameter]
  */
-void Request::setBody(const t_raw &body)
+void Request::addHeader(const std::string &headerName, const std::string &headerValue)
 {
-	_body = body;
+	HTTPheaders::HTTPHeader header = HTTPheaders::HTTPHeadersRegistry::getInstance().getHeader(headerName);
+	header.setValue(headerValue);
+	_headers[common::core::utils::toLower(headerName)].push_back(header);
 }
 
 /**
@@ -201,7 +299,7 @@ void Request::setBody(const t_raw &body)
  *
  * @return [TODO:return]
  */
-e_RequestFlags Request::getFlags() const
+int	Request::getFlags() const
 {
 	return _flags;
 }
@@ -211,9 +309,39 @@ e_RequestFlags Request::getFlags() const
  *
  * @param flags [TODO:parameter]
  */
-void Request::setFlags(const e_RequestFlags flags)
+void	Request::setFlags(const int flags)
 {
-	_flags = flags;
+	_flags = static_cast<e_RequestFlags>(flags);
+}
+
+const config::LocationConfig &Request::getLocationConfig() const
+{
+	return _locationConfig;
+}
+
+void Request::setLocationConfig(const config::LocationConfig &locationConfig)
+{
+	_locationConfig = locationConfig;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const t_Cookies &Request::getCookies() const
+{
+	return _cookies;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param cookies [TODO:parameter]
+ */
+void Request::setCookies(const t_Cookies &cookies)
+{
+	_cookies = cookies;
 }
 
 } // !client

@@ -15,16 +15,36 @@ namespace client
 /**
  * @brief [TODO:description]
  */
-HTTPError::HTTPError() : _statusCode() {}
+HTTPError::HTTPError() : _statusCode() 
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
+	_logger->setLevel(log42::logRecord::DEBUG);
+	INFO(_logger, "HTTPError instance created with default constructor");
+}
 
 /**
  * @brief [TODO:description]
  *
  * @param statusCode [TODO:parameter]
  */
-HTTPError::HTTPError(const status::StatusCode &statusCode)
-	:	_statusCode(statusCode)
-{}
+HTTPError::HTTPError(unsigned short code)
+	:	_statusCode(status::StatusCodeRegistry::getInstance().getStatusCode(code)),
+		_what(common::core::utils::toString(code) + " " + _statusCode.getMessage() + ": " + _statusCode.getDescription())
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
+	_logger->setLevel(log42::logRecord::DEBUG);
+	INFO(_logger, "HTTPError instance created: " + _what);
+}
+
+HTTPError::HTTPError(unsigned short code, const std::string &location)
+	:	_statusCode(status::StatusCodeRegistry::getInstance().getStatusCode(code)),
+		_what(common::core::utils::toString(code) + " " + _statusCode.getMessage() + ": " + _statusCode.getDescription()),
+		_location(location)
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
+	_logger->setLevel(log42::logRecord::DEBUG);
+	INFO(_logger, "HTTPError instance created: " + _what + " -> " + _location);
+}
 
 /**
  * @brief [TODO:description]
@@ -38,7 +58,9 @@ HTTPError::~HTTPError() throw() {}
  */
 HTTPError::HTTPError(const HTTPError &rhs)
 	:	std::exception(rhs),
-		_statusCode(rhs._statusCode)
+		_statusCode(rhs._statusCode),
+		_what(rhs._what),
+		_location(rhs._location)
 {}
 
 /**
@@ -53,6 +75,8 @@ HTTPError &HTTPError::operator=(const HTTPError &rhs)
 	{
 		std::exception::operator=(rhs);
 		_statusCode = rhs._statusCode;
+		_what = rhs._what;
+		_location = rhs._location;
 	}
 	return (*this);
 }
@@ -62,9 +86,9 @@ HTTPError &HTTPError::operator=(const HTTPError &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	HTTPError::getLogger() const
+t_Logger	HTTPError::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.client.HTTPError");
 }
 
 /**
@@ -92,9 +116,19 @@ void HTTPError::setStatusCode(const status::StatusCode &statusCode)
  *
  * @return [TODO:return]
  */
+const std::string &HTTPError::getLocation() const
+{
+	return _location;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
 const char *HTTPError::what() const throw()
 {
-	return "";
+	return _what.c_str();
 }
 
 } // !client

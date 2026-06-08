@@ -15,15 +15,15 @@ namespace config
 /**
  * @brief [TODO:description]
  */
-ServerConfig::ServerConfig() 
+ServerConfig::ServerConfig()
 	:	_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
-		_createFullPutPath(DefaultConfig::createFullPutPath),
 		_davPutPath(DefaultConfig::davPutPath),
 		_davAccess(DefaultConfig::davAccess),
 		_davMethods(DefaultConfig::davMethods),
 		_defaultType(DefaultConfig::defaultType),
 		_errorPage(DefaultConfig::errorPage),
 		_keepAliveTimeout(DefaultConfig::keepAliveTimeout),
+		_sessionTTL(DefaultConfig::sessionTTL),
 		_listen(DefaultConfig::listen),
 		_locationConfigs(t_LocationConfigs()),
 		_root(DefaultConfig::root),
@@ -33,7 +33,8 @@ ServerConfig::ServerConfig()
 		_cgiExtensions(DefaultConfig::cgiExtensions)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.serverconfig");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
+	INFO(_logger, "ServerConfig created with default values");
 }
 
 /**
@@ -49,13 +50,13 @@ ServerConfig::~ServerConfig() {}
 ServerConfig::ServerConfig(const ServerConfig &rhs)
 	:	_logger(rhs._logger),
 		_clientMaxBodySize(rhs._clientMaxBodySize),
-		_createFullPutPath(rhs._createFullPutPath),
 		_davPutPath(rhs._davPutPath),
 		_davAccess(rhs._davAccess),
 		_davMethods(rhs._davMethods),
 		_defaultType(rhs._defaultType),
 		_errorPage(rhs._errorPage),
 		_keepAliveTimeout(rhs._keepAliveTimeout),
+		_sessionTTL(rhs._sessionTTL),
 		_listen(rhs._listen),
 		_locationConfigs(rhs._locationConfigs),
 		_root(rhs._root),
@@ -77,13 +78,13 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &rhs)
 	{
 		_logger = rhs._logger;
 		_clientMaxBodySize = rhs._clientMaxBodySize;
-		_createFullPutPath = rhs._createFullPutPath;
 		_davPutPath = rhs._davPutPath;
 		_davAccess = rhs._davAccess;
 		_davMethods = rhs._davMethods;
 		_defaultType = rhs._defaultType;
 		_errorPage = rhs._errorPage;
 		_keepAliveTimeout = rhs._keepAliveTimeout;
+		_sessionTTL = rhs._sessionTTL;
 		_listen = rhs._listen;
 		_locationConfigs = rhs._locationConfigs;
 		_root = rhs._root;
@@ -100,9 +101,9 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	ServerConfig::getLogger() const
+t_Logger	ServerConfig::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.config.serverconfig");
 }
 
 /**
@@ -110,7 +111,7 @@ t_Logger	ServerConfig::getLogger() const
  *
  * @return [TODO:return]
  */
-int ServerConfig::getClientMaxBodySize() const
+const t_clientMaxBodySize	&ServerConfig::getClientMaxBodySize() const
 {
 	return _clientMaxBodySize;
 }
@@ -118,11 +119,11 @@ int ServerConfig::getClientMaxBodySize() const
 /**
  * @brief [TODO:description]
  *
- * @return [TODO:return]
+ * @param clientMaxBodySize [TODO:parameter]
  */
-bool ServerConfig::getCreateFullPutPath() const
+void ServerConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
 {
-	return _createFullPutPath;
+	_clientMaxBodySize = clientMaxBodySize;
 }
 
 /**
@@ -130,7 +131,7 @@ bool ServerConfig::getCreateFullPutPath() const
  *
  * @return [TODO:return]
  */
-std::string ServerConfig::getDavPutPath() const
+const std::string &ServerConfig::getDavPutPath() const
 {
 	return _davPutPath;
 }
@@ -138,9 +139,19 @@ std::string ServerConfig::getDavPutPath() const
 /**
  * @brief [TODO:description]
  *
+ * @param davPutPath [TODO:parameter]
+ */
+void ServerConfig::setDavPutPath(const std::string &davPutPath)
+{
+	_davPutPath = davPutPath;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-std::string ServerConfig::getDavAccess() const
+const t_Perms				&ServerConfig::getDavAccess() const
 {
 	return _davAccess;
 }
@@ -148,9 +159,19 @@ std::string ServerConfig::getDavAccess() const
 /**
  * @brief [TODO:description]
  *
+ * @param davAccess [TODO:parameter]
+ */
+void ServerConfig::setDavAccess(const t_Perms &davAccess)
+{
+	_davAccess = davAccess;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-t_DavMethods	ServerConfig::getDavMethods() const
+const t_DavMethods	&ServerConfig::getDavMethods() const
 {
 	return _davMethods;
 }
@@ -158,9 +179,19 @@ t_DavMethods	ServerConfig::getDavMethods() const
 /**
  * @brief [TODO:description]
  *
+ * @param davMethods [TODO:parameter]
+ */
+void ServerConfig::setDavMethods(const t_DavMethods &davMethods)
+{
+	_davMethods = davMethods;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-std::string ServerConfig::getDefaultType() const
+const std::string &ServerConfig::getDefaultType() const
 {
 	return _defaultType;
 }
@@ -168,9 +199,19 @@ std::string ServerConfig::getDefaultType() const
 /**
  * @brief [TODO:description]
  *
+ * @param defaultType [TODO:parameter]
+ */
+void ServerConfig::setDefaultType(const std::string &defaultType)
+{
+	_defaultType = defaultType;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-t_ErrorPages	ServerConfig::getErrorPage() const
+const t_ErrorPages	&ServerConfig::getErrorPage() const
 {
 	return _errorPage;
 }
@@ -178,9 +219,19 @@ t_ErrorPages	ServerConfig::getErrorPage() const
 /**
  * @brief [TODO:description]
  *
+ * @param errorPage [TODO:parameter]
+ */
+void ServerConfig::setErrorPage(const t_ErrorPages &errorPage)
+{
+	_errorPage = errorPage;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-int ServerConfig::getKeepAliveTimeout() const
+const t_keepAliveTimeout	&ServerConfig::getKeepAliveTimeout() const
 {
 	return _keepAliveTimeout;
 }
@@ -188,9 +239,39 @@ int ServerConfig::getKeepAliveTimeout() const
 /**
  * @brief [TODO:description]
  *
+ * @param keepAliveTimeout [TODO:parameter]
+ */
+void ServerConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout)
+{
+	_keepAliveTimeout = keepAliveTimeout;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-t_Listen ServerConfig::getListen() const
+const t_sessionTTL &ServerConfig::getSessionTTL() const
+{
+	return _sessionTTL;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param sessionTTL [TODO:parameter]
+ */
+void ServerConfig::setSessionTTL(const t_sessionTTL &sessionTTL)
+{
+	_sessionTTL = sessionTTL;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const t_Listen &ServerConfig::getListen() const
 {
 	return _listen;
 }
@@ -198,9 +279,19 @@ t_Listen ServerConfig::getListen() const
 /**
  * @brief [TODO:description]
  *
+ * @param listen [TODO:parameter]
+ */
+void ServerConfig::setListen(const t_Listen &listen)
+{
+	_listen = listen;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-t_LocationConfigs	ServerConfig::getLocationConfigs() const
+const t_LocationConfigs	&ServerConfig::getLocationConfigs() const
 {
 	return _locationConfigs;
 }
@@ -208,9 +299,19 @@ t_LocationConfigs	ServerConfig::getLocationConfigs() const
 /**
  * @brief [TODO:description]
  *
+ * @param locationConfigs [TODO:parameter]
+ */
+void ServerConfig::setLocationConfigs(const t_LocationConfigs &locationConfigs)
+{
+	_locationConfigs = locationConfigs;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-std::string ServerConfig::getRoot() const
+const std::string &ServerConfig::getRoot() const
 {
 	return _root;
 }
@@ -218,9 +319,19 @@ std::string ServerConfig::getRoot() const
 /**
  * @brief [TODO:description]
  *
+ * @param root [TODO:parameter]
+ */
+void ServerConfig::setRoot(const std::string &root)
+{
+	_root = root;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-t_Servernames	ServerConfig::getServerName() const
+const t_Servernames	&ServerConfig::getServerNames() const
 {
 	return _serverName;
 }
@@ -228,9 +339,19 @@ t_Servernames	ServerConfig::getServerName() const
 /**
  * @brief [TODO:description]
  *
+ * @param serverName [TODO:parameter]
+ */
+void ServerConfig::setServerName(const t_Servernames &serverName)
+{
+	_serverName = serverName;
+}
+
+/**
+ * @brief [TODO:description]
+ *
  * @return [TODO:return]
  */
-t_MimeTypes	ServerConfig::getTypes() const
+const t_MimeTypes	&ServerConfig::getTypes() const
 {
 	return _types;
 }
@@ -238,11 +359,11 @@ t_MimeTypes	ServerConfig::getTypes() const
 /**
  * @brief [TODO:description]
  *
- * @return [TODO:return]
+ * @param types [TODO:parameter]
  */
-bool ServerConfig::getEnableCGI() const
+void ServerConfig::setTypes(const t_MimeTypes &types)
 {
-	return _enableCGI;
+	_types = types;
 }
 
 /**
@@ -250,9 +371,39 @@ bool ServerConfig::getEnableCGI() const
  *
  * @return [TODO:return]
  */
-t_CgiExtensions	ServerConfig::getCgiExtensions() const
+bool ServerConfig::isEnableCGI() const
+{
+	return _enableCGI;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param enableCGI [TODO:parameter]
+ */
+void ServerConfig::setEnableCGI(const bool enableCGI)
+{
+	_enableCGI = enableCGI;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const t_CgiExtensions	&ServerConfig::getCgiExtensions() const
 {
 	return _cgiExtensions;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param cgiExtensions [TODO:parameter]
+ */
+void ServerConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
+{
+	_cgiExtensions = cgiExtensions;
 }
 
 /**
@@ -261,10 +412,39 @@ t_CgiExtensions	ServerConfig::getCgiExtensions() const
  * @param requestTarget [TODO:parameter]
  * @return [TODO:return]
  */
-LocationConfig ServerConfig::findLocationConfig(const std::string &requestTarget)
+const LocationConfig &ServerConfig::findLocationConfig(const std::string &path)
 {
-	(void)requestTarget;
-	return LocationConfig();
+	t_LocationConfigs::iterator bestMatch = _locationConfigs.end();
+	std::size_t bestLen = 0;
+
+	t_LocationConfigs::iterator it = _locationConfigs.begin();
+	for (; it != _locationConfigs.end(); ++it)
+	{
+		const std::string &uri = it->getUri();
+		if (it->getModifier() == EXACT)
+		{
+			if (path == uri)
+			{
+				INFO(_logger, "Exact match found for location: " + uri);
+				return (*it);
+			}
+		}
+		else if (path.compare(0, uri.size(), uri) == 0 && uri.size() > bestLen)
+		{
+			bestLen = uri.size();
+			bestMatch = it;
+		}
+	}
+
+	if (bestMatch != _locationConfigs.end())
+	{
+		std::string matchType = (bestMatch->getModifier() == PREFIX_PRIORITY) ? "Prefix-priority" : "Prefix";
+		INFO(_logger, matchType + " match found for location: " + bestMatch->getUri());
+		return (*bestMatch);
+	}
+
+	INFO(_logger, "No match found for request target path: " + path);
+	return _locationConfigs.front();
 }
 
 } // !config

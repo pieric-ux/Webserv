@@ -8,7 +8,10 @@
  * @brief [TODO:description]
  */
 
+#include <ctime>
+#include <common/common.hpp>
 #include <webserv/client/Client.hpp>
+#include <webserv/client/Request.hpp>
 #include <webserv/types.hpp>
 
 namespace webserv
@@ -25,15 +28,18 @@ class ClientHandler
 		ClientHandler(const ClientHandler &rhs);
 		ClientHandler &operator=(const ClientHandler &rhs);
 
-		t_Logger	getLogger() const;
+		static t_Logger		getLogger();
 
-		void		addClient(client::Client &client);
-		void		removeClient(client::Client &client);
-		void		processClients(t_ioMultiplexer ioMultiplexer);
+		void				setIoMultiplexer(const t_ioMultiplexer &ioMultiplexer);
+
+		void				addClient(const t_SocketPairClient &client, const config::ServerConfig &serverConfig);
+		t_Clients::iterator	removeClient(client::Client &client);
+		void				processClients();
 
 	private:
-		t_Logger	_logger;
-		t_Clients	_clients;
+		t_Logger			_logger;
+		t_Clients			_clients;
+		t_ioMultiplexer		_ioMultiplexer;
 };
 
 } // !handler

@@ -8,7 +8,12 @@
  * @brief [TODO:description]
  */
 
+#include <algorithm>
+#include <sstream>
+#include <vector>
 #include <string>
+#include <common/common.hpp>
+#include <webserv/client/HTTPError.hpp>
 #include <webserv/client/Request.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
@@ -23,31 +28,36 @@ namespace handler
 class RequestHandler
 {
 	public:
-		RequestHandler();
+		RequestHandler(config::ServerConfig &serverConfig);
 		~RequestHandler();
 
 		RequestHandler(const RequestHandler &rhs);
 		RequestHandler &operator=(const RequestHandler &rhs);
 
-		t_Logger			getLogger() const;
+		static t_Logger			getLogger();
 
-		client::Request		&getRequest();
-		void				setRequest(const client::Request &request);
-		void				appendToBufferRequest(const t_raw &buffer);
-		void				clearBufferRequest();
-		parser::Parser		&getParser();
-		int					getBodyReceived() const;
+		void					parseHeaders();
+		void					parseBody();
+
+		client::Request			&getRequest();
+		const client::Request	&getRequest() const;
+		void					setRequest(const client::Request &request);
+		const t_raw				&getBufferRequest() const;
+		void					appendToBufferRequest(const t_raw &buffer);
+		void					eraseBufferRequestFront(std::size_t n);
+		void					clearBufferRequest();
+		parser::Parser			&getParser();
 
 	private:
-		t_Logger			_logger;
-		client::Request		_request;
-		t_raw				_bufferRequest;
-		parser::Parser		_parser;
+		t_Logger				_logger;
+		client::Request			_request;
+		t_raw					_bufferRequest;
+		parser::Parser			_parser;
+		config::ServerConfig	&_serverConfig;
 
-		void				parseHeadersFromBufferRequest();
-		void				validateHeaders(const config::ServerConfig &serverConfig);
-		void				parseBodyFromBuffer(const config::ServerConfig &serverConfig);
-		void				buildAbsolutPath(const std::string &requestTarget, const config::LocationConfig &locationConfig);
+		void					validateHeaders();
+		void					buildAbsolutPath();
+		std::string				normalizePath(const std::string &path);
 };
 
 } // !handler

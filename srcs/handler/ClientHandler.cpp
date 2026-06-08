@@ -15,10 +15,11 @@ namespace handler
 /**
  * @brief [TODO:description]
  */
-ClientHandler::ClientHandler() : _clients()
+ClientHandler::ClientHandler() : _clients(), _ioMultiplexer()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.handler.clienthandler");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
+	INFO(_logger, "ClientHandler instance created");
 }
 
 /**
@@ -54,9 +55,19 @@ ClientHandler &ClientHandler::operator=(const ClientHandler &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	ClientHandler::getLogger() const
+t_Logger	ClientHandler::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.handler.clienthandler");
+}
+
+/**
+ * @brief [TODO:description]
+ *
+* @param ioMultiplexer [TODO:parameter]
+ */
+void	ClientHandler::setIoMultiplexer(const t_ioMultiplexer &ioMultiplexer)
+{
+	_ioMultiplexer = ioMultiplexer;
 }
 
 /**
@@ -64,9 +75,27 @@ t_Logger	ClientHandler::getLogger() const
  *
  * @param client [TODO:parameter]
  */
-void ClientHandler::addClient(client::Client &client)
+void	ClientHandler::addClient(const t_SocketPairClient &client, const config::ServerConfig &serverConfig)
 {
-	(void)client;
+	try{
+		_ioMultiplexer->add(client.first.getFd(), static_cast<common::core::io::IEventIO::e_Event>(common::core::io::IEventIO::E_IN | common::core::io::IEventIO::E_OUT));
+	} catch (const std::exception &e) {
+		ERROR(_logger, "Failed to add client fd to io multiplexer: " + std::string(e.what()));
+		throw;
+	}
+
+	try{
+		t_AddrPortPair addr = common::core::net::getNameInfo(client.second);
+		INFO(_logger, "Added client " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(client.first.getFd()));
+	} catch (const std::exception &e) {
+		WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+	}
+	int fd_before = client.first.getFd();
+	DEBUG(_logger, "addClient: fd before insert=" + common::core::utils::toString(fd_before));
+	_clients.insert(std::make_pair(client.first.getFd(), client::Client(client, serverConfig, _ioMultiplexer)));
+	DEBUG(_logger, "addClient: fd after  insert=" + common::core::utils::toString(fd_before)
+		+ " map_key=" + common::core::utils::toString(_clients.rbegin()->first)
+		+ " socket_in_map=" + common::core::utils::toString(_clients.rbegin()->second.getSocket().getFd()));
 }
 
 /**
@@ -74,9 +103,33 @@ void ClientHandler::addClient(client::Client &client)
  *
  * @param client [TODO:parameter]
  */
-void ClientHandler::removeClient(client::Client &client)
+t_Clients::iterator	ClientHandler::removeClient(client::Client &client)
 {
-	(void)client;
+	try{
+		_ioMultiplexer->remove(client.getSocket().getFd());
+	} catch (const std::exception &e) {
+		ERROR(_logger, "Failed to remove client fd from io multiplexer: " + std::string(e.what()));
+	}
+
+	t_Clients::iterator it = _clients.find(client.getSocket().getFd());
+	if (it != _clients.end())
+	{
+		try{
+			t_AddrPortPair addr = common::core::net::getNameInfo(client.getSockaddrStorage());
+			INFO(_logger, "Removed client " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(client.getSocket().getFd()));
+		} catch (const std::exception &e) {
+			WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+		}
+		t_Clients::iterator nextIt = it;
+		++nextIt;
+		_clients.erase(it);
+		return nextIt;
+	}
+	else
+	{
+		WARNING(_logger, "Attempted to remove non-existent client fd=" + common::core::utils::toString(client.getSocket().getFd()));
+		return _clients.end();
+	}
 }
 
 /**
@@ -84,9 +137,76 @@ void ClientHandler::removeClient(client::Client &client)
  *
  * @param ioMultiplexer [TODO:parameter]
  */
-void ClientHandler::processClients(t_ioMultiplexer ioMultiplexer)
+void	ClientHandler::processClients()
 {
-	(void)ioMultiplexer;
+	std::time_t now = std::time(NULL);
+
+	t_Clients::iterator it = _clients.begin();
+	while (it != _clients.end())
+	{
+		client::Client &client = it->second;
+		std::string clientAddr;
+		try {
+			t_AddrPortPair addr = common::core::net::getNameInfo(client.getSockaddrStorage());
+			clientAddr = addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(it->first);
+		} catch (const std::exception &e) {
+			WARNING(_logger, "Failed to get socket address info: " + std::string(e.what()));
+		}
+
+		if (client.getEffectiveKeepaliveTimeout() > 0 &&
+			now - client.getLastActivityTime() > client.getEffectiveKeepaliveTimeout())
+		{
+			INFO(_logger, "Client " + clientAddr + " timed out");
+			it = removeClient(client);
+			continue;
+		}
+
+		int events = _ioMultiplexer->getEvents(client.getSocket().getFd());
+		if (client.getStatus() != client::E_CLI_ERR_PARSING)
+		{
+			if (events & common::core::io::IEventIO::E_IN)
+			{
+				client.setLastActivityTime(now);
+				client.receiveData();
+			}
+			if (client.getStatus() == client::E_CLI_DISCONNECTED)
+			{
+				it = removeClient(client);
+				continue;
+			}
+
+			if (client.isCgiRoute())
+			{
+				DEBUG(_logger, "Driving CGI IO for " + clientAddr);
+				client.driveCgiIO();
+			}
+			bool hasReqData = client.getRequestHandler().getBufferRequest().size() > 0
+				|| (client.getRequestHandler().getRequest().getFlags() & client::E_REQ_HEADERS_VALIDATED);
+			bool respFullySent = (client.getExecutionHandler().getFlags() & E_EXEC_COMPLETE)
+				&& (client.getResponseHandler().getResponse().getFlags() & client::E_RESP_HEADERS_SENT);
+			if (hasReqData && !respFullySent)
+			{
+				DEBUG(_logger, "Processing HTTPCycle for " + clientAddr);
+				client.processHTTPCycle();
+			}
+		}
+		else
+		{
+			DEBUG(_logger, "Client " + clientAddr + " in error state, building error response");
+			client.buildErrorResponse();
+		}
+		if (events & common::core::io::IEventIO::E_OUT)
+			client.sendData();
+
+		
+		bool execComplete = client.getExecutionHandler().getFlags() & handler::E_EXEC_COMPLETE;
+		bool bufferDrained = client.getResponseHandler().getBufferResponse().empty();
+		bool expectPending = client.getRequestHandler().getParser().getFlags() & parser::E_PARS_EXPECT;
+		if ((execComplete && bufferDrained) || expectPending)
+			client.resetAll();
+
+		++it;
+	}
 }
 
 } // !handler

@@ -19,9 +19,12 @@ Response::Response()
 	:	_httpVersion(),
 		_statusCode(),
 		_headers(),
-		_body(),
 		_flags(static_cast<e_ResponseFlags>(0))
-{}
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.response");
+	_logger->setLevel(log42::logRecord::DEBUG);
+	INFO(_logger, "Response instance created");
+}
 
 /**
  * @brief [TODO:description]
@@ -37,7 +40,6 @@ Response::Response(const Response &rhs)
 	:	_httpVersion(rhs._httpVersion),
 		_statusCode(rhs._statusCode),
 		_headers(rhs._headers),
-		_body(rhs._body),
 		_flags(rhs._flags)
 {}
 
@@ -54,7 +56,6 @@ Response &Response::operator=(const Response &rhs)
 		_httpVersion = rhs._httpVersion;
 		_statusCode = rhs._statusCode;
 		_headers = rhs._headers;
-		_body = rhs._body;
 		_flags = rhs._flags;
 	}
 	return (*this);
@@ -65,9 +66,9 @@ Response &Response::operator=(const Response &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	Response::getLogger() const
+t_Logger	Response::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.client.response");
 }
 
 /**
@@ -115,11 +116,15 @@ void Response::setStatusCode(const status::StatusCode &statusCode)
  *
  * @return [TODO:return]
  */
-t_Headers Response::getHeaders() const
+const t_Headers &Response::getHeaders() const
 {
 	return _headers;
 }
 
+t_Headers &Response::getHeaders()
+{
+	return _headers;
+}
 /**
  * @brief [TODO:description]
  *
@@ -133,29 +138,48 @@ void Response::setHeaders(const t_Headers &headers)
 /**
  * @brief [TODO:description]
  *
+ * @param headerName [TODO:parameter]
+ * @param headerValue [TODO:parameter]
  * @return [TODO:return]
  */
-t_raw	Response::getBody() const
+const HTTPheaders::HTTPHeader &Response::findHeader(const std::string &headerName, const std::string &headerValue) const
 {
-	return _body;
+	static HTTPheaders::HTTPHeader emptyHeader;
+
+	t_Headers::const_iterator it = _headers.find(common::core::utils::toLower(headerName));
+	if (it == _headers.end())
+		return emptyHeader;
+
+	const std::list<HTTPheaders::HTTPHeader> &headerList = it->second;
+	std::list<HTTPheaders::HTTPHeader>::const_iterator lit = headerList.begin();
+	for (;lit != headerList.end(); ++lit)
+	{
+		if (lit->getValue() == headerValue)
+			return *lit;
+	}
+	return emptyHeader;
 }
 
 /**
  * @brief [TODO:description]
  *
- * @param body [TODO:parameter]
+ * @param headerName [TODO:parameter]
+ * @param headerValue [TODO:parameter]
  */
-void Response::setBody(const t_raw &body)
+void	Response::addHeader(const std::string &headerName, const std::string &headerValue)
 {
-	_body = body;
+	HTTPheaders::HTTPHeader header = HTTPheaders::HTTPHeadersRegistry::getInstance().getHeader(headerName);
+	header.setValue(headerValue);
+	_headers[common::core::utils::toLower(headerName)].push_back(header);
 }
+
 
 /**
  * @brief [TODO:description]
  *
  * @return [TODO:return]
  */
-e_ResponseFlags Response::getFlags() const
+int	Response::getFlags() const
 {
 	return _flags;
 }
@@ -165,9 +189,29 @@ e_ResponseFlags Response::getFlags() const
  *
  * @param flags [TODO:parameter]
  */
-void Response::setFlags(const e_ResponseFlags flags)
+void	Response::setFlags(const int flags)
 {
-	_flags = flags;
+	_flags = static_cast<e_ResponseFlags>(flags);
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+bool Response::shouldCloseConnection() const
+{
+	return _shouldCloseConnection;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param shouldClose [TODO:parameter]
+ */
+void Response::setShouldCloseConnection(bool shouldClose)
+{
+	_shouldCloseConnection = shouldClose;
 }
 
 } // !client

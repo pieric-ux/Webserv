@@ -8,11 +8,16 @@
  * @brief [TODO:description]
  */
 
-#include <webserv/types.hpp>
+#include <sstream>
+#include <ctime>
 #include <string>
 #include <webserv/client/Response.hpp>
 #include <webserv/client/Request.hpp>
+#include <webserv/client/HTTPError.hpp>
+#include <webserv/parser/Parser.hpp>
 #include <webserv/status/StatusCode.hpp>
+#include <webserv/status/StatusCodeRegistry.hpp>
+#include <webserv/types.hpp>
 
 namespace webserv
 {
@@ -28,20 +33,25 @@ class ResponseHandler
 		ResponseHandler(const ResponseHandler &rhs);
 		ResponseHandler &operator=(const ResponseHandler &rhs);
 
-		t_Logger			getLogger() const;
+		static t_Logger			getLogger();
 
-		client::Response	&getResponse();
-		void				setResponse(const client::Response &response);
-		void				appendToBufferResponse(const t_raw &buffer);
-		void				clearBufferResponse();
+		client::Response		&getResponse();
+		const client::Response	&getResponse() const;
+		void					setResponse(const client::Response &response);
+		void					appendToBufferResponse(const t_raw &buffer);
+		void					clearBufferResponse();
+		const t_raw				&getBufferResponse() const;
+		void					eraseBufferResponseFront(std::size_t n);
+		void					buildHeadersResponse(const client::Request &request, int execFlags, int parseFlags);
+		void					buildErrorResponse(const client::Request &request, const client::HTTPError &error);
 
 	private:
-		t_Logger			_logger;
-		client::Response	_response;
-		t_raw				_bufferResponse;
+		t_Logger				_logger;
+		client::Response		_response;
+		t_raw					_bufferResponse;
 
-		void				buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase);
-		void				buildHeaders(const client::Request &request);
+		void					buildStatusLine(const std::string &httpVersion, const status::StatusCode &statusCode, const std::string &reasonPhrase);
+		void					buildHeaders(const client::Request &request, int parseFlags);
 };
 
 } // !handler

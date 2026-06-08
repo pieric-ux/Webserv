@@ -27,7 +27,10 @@ class ErrorPage
 		ErrorPage(const ErrorPage &rhs);
 		ErrorPage &operator=(const ErrorPage &rhs);
 
-		t_Logger			getLogger() const;
+		static t_Logger		getLogger();
+
+		const t_StatusCodes	&getCodes() const;
+		const std::string	&getPath() const;
 
 	private:
 		t_Logger 			_logger;

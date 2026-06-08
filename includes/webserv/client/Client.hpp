@@ -8,6 +8,8 @@
  * @brief [TODO:description]
  */
 
+#include <ctime>
+#include <cstring>
 #include <string>
 #include <common/common.hpp>
 #include <webserv/types.hpp>
@@ -24,64 +26,63 @@ namespace webserv
 namespace client
 {
 
-enum e_ClientFlags
+enum e_ClientStatus
 {
-	E_CLI_ERR_PARSING = 1 << 0,
-};
-
-enum e_ReceiveDataStatus
-{
-	E_CLI_DISCONNECTED,
 	E_CLI_REQUEST,
+	E_CLI_ERR_PARSING,
+	E_CLI_DISCONNECTED,
 };
 
 class Client
 {
 	public:
-		Client();
-		Client(const common::core::net::TcpClient socket, const config::ServerConfig &serverConfig);
+		Client(const t_ioMultiplexer &ioMultiplexer);
+		Client(const t_SocketPairClient &client, const config::ServerConfig &serverConfig, const t_ioMultiplexer &ioMultiplexer);
 		~Client();
 
 		Client(const Client &rhs);
 		Client &operator=(const Client &rhs);
 
-		t_Logger						getLogger() const;
+		static t_Logger						getLogger() ;
 
-		e_ClientFlags					getFlags() const;
-		void							setFlags(const e_ClientFlags flags);
-		e_ReceiveDataStatus				getStatus() const;
-		void							setStatus(const e_ReceiveDataStatus status);
-		handler::ExecutionHandler		&getExecutionHandler();
-		handler::RequestHandler			&getRequestHandler();
-		handler::ResponseHandler		&getResponseHandler();
-		config::ServerConfig			&getServerConfig();
-		HTTPError						&getHTTPError();
-		void							setHTTPError(const HTTPError &error);
-		int								getLastActivityTime() const;
-		void							setLastActivityTime(const int time);
+		const common::core::net::TcpClient	&getSocket() const;
+		void								setSocket(const common::core::net::TcpClient &socket);
+		sockaddr_storage					getSockaddrStorage() const;
+		void								setSockaddrStorage(const sockaddr_storage &sockaddr_storage);
+		e_ClientStatus						getStatus() const;
+		void								setStatus(const e_ClientStatus status);
+		handler::ExecutionHandler			&getExecutionHandler();
+		handler::RequestHandler				&getRequestHandler();
+		handler::ResponseHandler			&getResponseHandler();
+		config::ServerConfig				&getServerConfig();
+		HTTPError							&getHTTPError();
+		void								setHTTPError(const HTTPError &error);
+		std::time_t							getLastActivityTime() const;
+		void								setLastActivityTime(const std::time_t time);
+		std::time_t							getEffectiveKeepaliveTimeout() const;
+		void								setEffectiveKeepaliveTimeout(const std::time_t timeout);
 
-		e_ReceiveDataStatus				receiveData();
-		void							sendData();
+		void								receiveData();
+		void								sendData();
+		void								processHTTPCycle();
+		void								driveCgiIO();
+		bool								isCgiRoute() const;
+		void								buildErrorResponse();
+		void								resetAll();
 
 	private:
-		t_Logger						_logger;
-		int								_id;
-		common::core::net::TcpClient	_socket;
-		sockaddr_storage				_sockaddr_storage;
-		e_ClientFlags					_flags;
-		e_ReceiveDataStatus				_status;
-		handler::ExecutionHandler		_executionHandler;
-		handler::RequestHandler			_requestHandler;
-		handler::ResponseHandler		_responseHandler;
-		config::ServerConfig			_serverConfig;
-		HTTPError						_HTTPError;
-		int								_lastActivityTime;
-
-		void							prepareHeadersRequest(const t_raw &buffer);
-		void							prepareBodyRequest(const t_raw &buffer);
-		void							prepareExecution(handler::RequestHandler requestHandler, handler::ResponseHandler responseHandler, config::ServerConfig serverConfig);
-		void							prepareHeadersResponse();
-		void							prepareBodyResponse();
+		t_Logger							_logger;
+		int									_id;
+		common::core::net::TcpClient		_socket;
+		sockaddr_storage					_sockaddr_storage;
+		e_ClientStatus						_status;
+		config::ServerConfig				_serverConfig;
+		handler::ExecutionHandler			_executionHandler;
+		handler::RequestHandler				_requestHandler;
+		handler::ResponseHandler			_responseHandler;
+		HTTPError							_HTTPError;
+		std::time_t							_lastActivityTime;
+		std::time_t							_effectiveKeepaliveTimeout;
 };
 
 } // !client

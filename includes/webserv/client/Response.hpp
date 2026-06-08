@@ -11,6 +11,7 @@
 #include <string>
 #include <webserv/types.hpp>
 #include <webserv/headers/HTTPHeader.hpp>
+#include <webserv/headers/HTTPHeadersRegistry.hpp>
 #include <webserv/status/StatusCode.hpp>
 
 namespace webserv
@@ -32,26 +33,29 @@ class Response
 		Response(const Response &rhs);
 		Response &operator=(const Response &rhs);
 
-		t_Logger				getLogger() const;
+		static t_Logger					getLogger();
 
-		std::string				getHttpVersion() const;
-		void					setHttpVersion(const std::string &httpVersion);
-		status::StatusCode		getStatusCode() const;
-		void					setStatusCode(const status::StatusCode &statusCode);
-		t_Headers				getHeaders() const;
-		void					setHeaders(const t_Headers &headers);
-		t_raw					getBody() const;
-		void					setBody(const t_raw &body);
-		e_ResponseFlags			getFlags() const;
-		void					setFlags(const e_ResponseFlags flags);
+		std::string						getHttpVersion() const;
+		void							setHttpVersion(const std::string &httpVersion);
+		status::StatusCode				getStatusCode() const;
+		void							setStatusCode(const status::StatusCode &statusCode);
+		const t_Headers					&getHeaders() const;
+		t_Headers						&getHeaders();
+		void							setHeaders(const t_Headers &headers);
+		const HTTPheaders::HTTPHeader	&findHeader(const std::string &headerName, const std::string &headerValue) const;
+		void							addHeader(const std::string &headerName, const std::string &headerValue);
+		int								getFlags() const;
+		void							setFlags(const int flags);
+		bool							shouldCloseConnection() const;
+		void							setShouldCloseConnection(bool shouldClose);
 
 	private:
-		t_Logger				_logger;
-		std::string				_httpVersion;
-		status::StatusCode		_statusCode;
-		t_Headers				_headers;
-		t_raw					_body;
-		e_ResponseFlags			_flags;
+		t_Logger						_logger;
+		std::string						_httpVersion;
+		status::StatusCode				_statusCode;
+		t_Headers						_headers;
+		e_ResponseFlags					_flags;
+		bool							_shouldCloseConnection;
 };
 
 } // !client

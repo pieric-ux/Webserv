@@ -17,14 +17,15 @@ namespace config
  * @brief [TODO:description]
  */
 HTTPConfig::HTTPConfig()
-	:	_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
-		_createFullPutPath(DefaultConfig::createFullPutPath),
+	:	_ioMultiplexer(DefaultConfig::ioMultiplexer),
+		_clientMaxBodySize(DefaultConfig::clientMaxBodySize),
 		_davPutPath(DefaultConfig::davPutPath),
 		_davAccess(DefaultConfig::davAccess),
 		_davMethods(DefaultConfig::davMethods),
 		_defaultType(DefaultConfig::defaultType),
 		_errorPage(DefaultConfig::errorPage),
 		_keepAliveTimeout(DefaultConfig::keepAliveTimeout),
+		_sessionTTL(DefaultConfig::sessionTTL),
 		_root(DefaultConfig::root),
 		_serverConfigs(t_ServerConfigs()),
 		_types(DefaultConfig::types),
@@ -32,7 +33,8 @@ HTTPConfig::HTTPConfig()
 		_cgiExtensions(DefaultConfig::cgiExtensions)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.config.httpconfig");
-	_logger->setLevel(log42::logRecord::INFO);
+	_logger->setLevel(log42::logRecord::DEBUG);
+	INFO(_logger, "HTTPConfig instance created with default values");
 }
 
 /**
@@ -66,7 +68,27 @@ t_Logger	HTTPConfig::getLogger() const
  *
  * @return [TODO:return]
  */
-int	HTTPConfig::getClientMaxBodySize() const 
+std::string HTTPConfig::getIOMultiplexer() const
+{
+	return _ioMultiplexer;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param ioMultiplexer [TODO:parameter]
+ */
+void HTTPConfig::setIOMultiplexer(const std::string &ioMultiplexer)
+{
+	_ioMultiplexer = ioMultiplexer;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const t_clientMaxBodySize	&HTTPConfig::getClientMaxBodySize() const 
 {
 	return _clientMaxBodySize;
 }
@@ -76,7 +98,7 @@ int	HTTPConfig::getClientMaxBodySize() const
  *
  * @param clientMaxBodySize [TODO:parameter]
  */
-void	HTTPConfig::setClientMaxBodySize(const int clientMaxBodySize)
+void	HTTPConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
 {
 	_clientMaxBodySize = clientMaxBodySize;
 }
@@ -86,27 +108,7 @@ void	HTTPConfig::setClientMaxBodySize(const int clientMaxBodySize)
  *
  * @return [TODO:return]
  */
-bool HTTPConfig::getCreateFullPutPath() const
-{
-	return _createFullPutPath;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @param createFullPutPath [TODO:parameter]
- */
-void	HTTPConfig::setCreateFullPutPath(const bool createFullPutPath)
-{
-	_createFullPutPath = createFullPutPath;
-}
-
-/**
- * @brief [TODO:description]
- *
- * @return [TODO:return]
- */
-std::string HTTPConfig::getDavPutPath() const
+const std::string &HTTPConfig::getDavPutPath() const
 {
 	return _davPutPath;
 }
@@ -126,7 +128,7 @@ void	HTTPConfig::setDavPutPath(const std::string &davPutPath)
  *
  * @return [TODO:return]
  */
-std::string HTTPConfig::getDavAccess() const
+const t_Perms &HTTPConfig::getDavAccess() const
 {
 	return _davAccess;
 }
@@ -136,7 +138,7 @@ std::string HTTPConfig::getDavAccess() const
  *
  * @param davAccess [TODO:parameter]
  */
-void	HTTPConfig::setDavAccess(const std::string &davAccess)
+void	HTTPConfig::setDavAccess(const t_Perms &davAccess)
 {
 	_davAccess = davAccess;
 }
@@ -146,7 +148,7 @@ void	HTTPConfig::setDavAccess(const std::string &davAccess)
  *
  * @return [TODO:return]
  */
-std::vector<config::e_Method> HTTPConfig::getDavMethods() const
+const t_DavMethods &HTTPConfig::getDavMethods() const
 {
 	return _davMethods;
 }
@@ -156,7 +158,7 @@ std::vector<config::e_Method> HTTPConfig::getDavMethods() const
  *
  * @param davMethods [TODO:parameter]
  */
-void	HTTPConfig::setDavMethods(const	 std::vector<config::e_Method> &davMethods)
+void	HTTPConfig::setDavMethods(const	t_DavMethods &davMethods)
 {
 	_davMethods = davMethods;
 }
@@ -166,7 +168,7 @@ void	HTTPConfig::setDavMethods(const	 std::vector<config::e_Method> &davMethods)
  *
  * @return [TODO:return]
  */
-std::string HTTPConfig::getDefaultType() const
+const std::string &HTTPConfig::getDefaultType() const
 {
 	return _defaultType;
 }
@@ -186,7 +188,7 @@ void	HTTPConfig::setDefaultType(const std::string &defaultType)
  *
  * @return [TODO:return]
  */
-std::vector<ErrorPage> HTTPConfig::getErrorPage() const
+const std::vector<ErrorPage> &HTTPConfig::getErrorPage() const
 {
 	return _errorPage;
 }
@@ -206,7 +208,7 @@ void	HTTPConfig::setErrorPage(const std::vector<ErrorPage> &errorPage)
  *
  * @return [TODO:return]
  */
-int HTTPConfig::getKeepAliveTimeout() const
+t_keepAliveTimeout HTTPConfig::getKeepAliveTimeout() const
 {
 	return _keepAliveTimeout;
 }
@@ -216,7 +218,7 @@ int HTTPConfig::getKeepAliveTimeout() const
  *
  * @param keepAliveTimeout [TODO:parameter]
  */
-void	HTTPConfig::setKeepAliveTimeout(const int keepAliveTimeout)
+void	HTTPConfig::setKeepAliveTimeout(const t_keepAliveTimeout keepAliveTimeout)
 {
 	_keepAliveTimeout = keepAliveTimeout;
 }
@@ -226,7 +228,27 @@ void	HTTPConfig::setKeepAliveTimeout(const int keepAliveTimeout)
  *
  * @return [TODO:return]
  */
-std::string HTTPConfig::getRoot() const
+t_sessionTTL HTTPConfig::getSessionTTL() const
+{
+	return _sessionTTL;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @param sessionTTL [TODO:parameter]
+ */
+void HTTPConfig::setSessionTTL(const t_sessionTTL sessionTTL)
+{
+	_sessionTTL = sessionTTL;
+}
+
+/**
+ * @brief [TODO:description]
+ *
+ * @return [TODO:return]
+ */
+const std::string &HTTPConfig::getRoot() const
 {
 	return _root;
 }
@@ -246,7 +268,7 @@ void	HTTPConfig::setRoot(const std::string &root)
  *
  * @return [TODO:return]
  */
-std::vector<ServerConfig> HTTPConfig::getServerConfigs() const
+const std::vector<ServerConfig> &HTTPConfig::getServerConfigs() const
 {
 	return _serverConfigs;
 }
@@ -266,7 +288,7 @@ void	HTTPConfig::setServerConfigs(const std::vector<ServerConfig> &serverConfigs
  *
  * @return [TODO:return]
  */
-std::map<std::string, std::string> HTTPConfig::getTypes() const
+const t_MimeTypes &HTTPConfig::getTypes() const
 {
 	return _types;
 }
@@ -276,7 +298,7 @@ std::map<std::string, std::string> HTTPConfig::getTypes() const
  *
  * @param types [TODO:parameter]
  */
-void	HTTPConfig::setTypes(const std::map<std::string, std::string> &types)
+void	HTTPConfig::setTypes(const t_MimeTypes &types)
 {
 	_types = types;
 }
@@ -286,7 +308,7 @@ void	HTTPConfig::setTypes(const std::map<std::string, std::string> &types)
  *
  * @return [TODO:return]
  */
-bool HTTPConfig::getEnableCGI() const
+bool HTTPConfig::isEnableCGI() const
 {
 	return _enableCGI;
 }
@@ -306,7 +328,7 @@ void	HTTPConfig::setEnableCGI(const bool enableCGI)
  *
  * @return [TODO:return]
  */
-std::map<std::string, std::string> HTTPConfig::getCgiExtensions() const
+const t_CgiExtensions &HTTPConfig::getCgiExtensions() const
 {
 	return _cgiExtensions;
 }
@@ -316,7 +338,7 @@ std::map<std::string, std::string> HTTPConfig::getCgiExtensions() const
  *
  * @param cgiExtensions [TODO:parameter]
  */
-void	HTTPConfig::setCgiExtensions(const std::map<std::string, std::string> &cgiExtensions)
+void	HTTPConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
 {
 	_cgiExtensions = cgiExtensions;
 }

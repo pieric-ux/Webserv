@@ -8,11 +8,20 @@
  * @brief [TODO:description]
  */
 
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <string>
+#include <cstdlib>
+#include <common/common.hpp>
+#include <webserv/client/HTTPError.hpp>
 #include <webserv/client/Request.hpp>
 #include <webserv/client/Response.hpp>
 #include <webserv/config/ServerConfig.hpp>
 #include <webserv/config/LocationConfig.hpp>
+#include <webserv/handler/CGIHandler.hpp>
+#include <webserv/handler/RequestHandler.hpp>
+#include <webserv/handler/ResponseHandler.hpp>
+#include <webserv/status/StatusCodeRegistry.hpp>
 #include <webserv/types.hpp>
 
 namespace webserv
@@ -22,56 +31,69 @@ namespace handler
 
 enum e_ExecutionHandlerFlags
 {
-	E_EXEC_FILE_OPENED = 1 << 0,
-	E_EXEC_COMPLETE = 1 << 1,
-	E_EXEC_CREATED = 1 << 2,
-	E_EXEC_NOCONTENT = 1 << 3
+	E_EXEC_FILE_OPENED		= 1 << 0,
+	E_EXEC_COMPLETE			= 1 << 1,
+	E_EXEC_CREATED			= 1 << 2,
+	E_EXEC_NOCONTENT		= 1 << 3,
+	E_EXEC_CGI_SPAWNED		= 1 << 4,
+	E_EXEC_CGI_BODY_SENT	= 1 << 5,
+	E_EXEC_CGI_EOF			= 1 << 6,
+	E_EXEC_CGI_REAPED		= 1 << 7,
+	E_EXEC_CGI_PUSHED		= 1 << 8
 };
 
 class ExecutionHandler
 {
 	public:
-		ExecutionHandler();
+		ExecutionHandler(const t_ioMultiplexer &ioMultiplexer, sockaddr_storage clientAddr);
 		~ExecutionHandler();
 
 		ExecutionHandler(const ExecutionHandler &rhs);
 		ExecutionHandler &operator=(const ExecutionHandler &rhs);
 
-		t_Logger	getLogger() const;
+		static t_Logger					getLogger();
 
-		int			getFd() const;
-		void		setFd(const int fd);
-		int			getBodyReceived() const;
-		void		setFlags(const int flags);
-		void		setBodyReceived(const int bodyReceived);
-		int			getFlags() const;
+		int								getFd() const;
+		std::size_t						getBodyReceived() const;
+		void							setBodyReceived(const std::size_t bodyReceived);
+		void							setFlags(const int flags);
+		int								getFlags() const;
+		t_raw 							getAutoindexBuffer(t_raw &buffer) const;
+		void							setAutoindexBuffer(const t_raw &buffer);
 
-		void		execute(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
-		void		executeCGI(client::Request &request, const config::ServerConfig &serverConfig);
-		void		executeRequest(client::Request &request, client::Response &response, const config::ServerConfig &serverConfig);
+		void							execute(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executeCGI(RequestHandler &requestHandler,
+											ResponseHandler &responseHandler,
+											const config::LocationConfig &locationConfig);
+		void							executeRequest(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+
+		CGIHandler						&getCgi();
+
+		static std::string				getFileExtension(const std::string &path);
 
 	private:
-		t_Logger					_logger;
-		int							_fd;
-		int							_bodyReceived;
-		e_ExecutionHandlerFlags		_flags;
+		t_Logger						_logger;
+		common::core::raii::UniqueFd	_fd;
+		ssize_t							_bodyReceived;
+		e_ExecutionHandlerFlags			_flags;
+		t_raw							_autoindexBuffer;
+		CGIHandler						_cgiHandler;
 
-		void		executeHEADorGET(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
-		void		executePOST(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
-		void		executeDELETE(client::Request &request, client::Response &response, const config::LocationConfig &locationConfig);
+		void							executeHEADorGET(RequestHandler &requestHandler, ResponseHandler &responseHandler, const config::LocationConfig &locationConfig);
+		void							executePOST(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							executePUT(RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							executeDELETE(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 
-		int			openFile(const client::Request &request, const config::LocationConfig &locationConfig);
-		void		readChunk(const int fd, client::Response &response);
-		void		writeChunk(const int fd, client::Request &request);
-
-		int			getFileSize(const int fd);
-		std::string	getFileExtension(const std::string &requestTarget);
-		bool		isFile(const std::string& requestTarget);
-		bool		isFileExisting(const std::string& requestTarget);
-		void		deleteFile(const std::string& filePath);
-		void		deleteDirectory(const std::string& dirPath);
-
-		std::string	generateAutoindexHTML(const std::string &dirPath);
+		void							openFile(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
+		void							readChunk(ResponseHandler &responseHandler);
+		void							writeChunk(RequestHandler &requestHandler);
+		int								getFileSize(const std::string &path);
+		bool							isFile(const std::string& path);
+		bool							isExisting(const std::string& path);
+		void							deleteFile(const std::string& filePath);
+		void							deleteDirectory(const std::string& dirPath);
+		bool							isDirectory(const std::string &path);
+		std::string						generateAutoindexHTML(const std::string &dirPath);
 };
 
 } // !handler

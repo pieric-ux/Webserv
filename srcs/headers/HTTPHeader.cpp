@@ -21,6 +21,7 @@ HTTPHeader::HTTPHeader() : _name(), _value(), _description()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.httpheader");
 	_logger->setLevel(log42::logRecord::INFO);
+	DEBUG(_logger, "HTTPHeader instance created with default constructor");
 }
 
 /**
@@ -33,6 +34,7 @@ HTTPHeader::HTTPHeader(const std::string name, const std::string description) : 
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.httpheader");
 	_logger->setLevel(log42::logRecord::INFO);
+	DEBUG(_logger, "HTTPHeader instance created with name: " + name + " and description: " + description);
 }
 
 /**
@@ -46,6 +48,7 @@ HTTPHeader::HTTPHeader(const std::string name, const std::string value, const st
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.headers.httpheader");
 	_logger->setLevel(log42::logRecord::INFO);
+	DEBUG(_logger, "HTTPHeader instance created with name: " + name + ", value: " + value + " and description: " + description);
 }
 
 /**
@@ -58,7 +61,7 @@ HTTPHeader::~HTTPHeader () {}
  *
  * @param rhs [TODO:description]
  */
-HTTPHeader::HTTPHeader(const HTTPHeader &rhs) : _name(rhs._name), _value(rhs._value), _description(rhs._description) {}
+HTTPHeader::HTTPHeader(const HTTPHeader &rhs) : _logger(rhs._logger), _name(rhs._name), _value(rhs._value), _description(rhs._description) {}
 
 /**
  * @brief [TODO:description]
@@ -66,10 +69,11 @@ HTTPHeader::HTTPHeader(const HTTPHeader &rhs) : _name(rhs._name), _value(rhs._va
  * @param rhs [TODO:description]
  * @return [TODO:description]
  */
-HTTPHeader &HTTPHeader::operator=(const HTTPHeader &rhs)
+HTTPHeader	&HTTPHeader::operator=(const HTTPHeader &rhs)
 {
 	if (this != &rhs)
 	{
+		_logger = rhs._logger;
 		_name = rhs._name;
 		_value = rhs._value;
 		_description = rhs._description;
@@ -82,9 +86,9 @@ HTTPHeader &HTTPHeader::operator=(const HTTPHeader &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	HTTPHeader::getLogger() const
+t_Logger	HTTPHeader::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.headers.httpheader");
 }
 
 /**
@@ -92,7 +96,7 @@ t_Logger	HTTPHeader::getLogger() const
  *
  * @return [TODO:description]
  */
-std::string HTTPHeader::getName() const
+const std::string	&HTTPHeader::getName() const
 {
 	return (_name);
 }
@@ -102,7 +106,7 @@ std::string HTTPHeader::getName() const
  *
  * @return [TODO:description]
  */
-std::string HTTPHeader::getValue() const
+const std::string	&HTTPHeader::getValue() const
 {
 	return (_value);
 }
@@ -113,7 +117,7 @@ std::string HTTPHeader::getValue() const
  * @param value [TODO:description]
  * @return [TODO:description]
  */
-void HTTPHeader::setValue(const std::string value)
+void	HTTPHeader::setValue(const std::string value)
 {
 	_value = value;
 }
@@ -123,7 +127,7 @@ void HTTPHeader::setValue(const std::string value)
  *
  * @return [TODO:description]
  */
-std::string HTTPHeader::getDescription() const
+const std::string	&HTTPHeader::getDescription() const
 {
 	return _description;
 }

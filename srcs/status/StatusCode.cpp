@@ -19,6 +19,7 @@ StatusCode::StatusCode() : _code(0), _msg(), _description()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.status.statuscode");
 	_logger->setLevel(log42::logRecord::INFO);
+	DEBUG(_logger, "StatusCode instance created with default constructor");
 }
 
 /**
@@ -28,7 +29,12 @@ StatusCode::StatusCode() : _code(0), _msg(), _description()
  * @param msg [TODO:parameter]
  * @param description [TODO:parameter]
  */
-StatusCode::StatusCode(const unsigned short code, const std::string msg, const std::string description) : _code(code), _msg(msg), _description(description) {}
+StatusCode::StatusCode(const unsigned short code, const std::string msg, const std::string description) : _code(code), _msg(msg), _description(description)
+{
+	_logger = log42::manager::Manager::getInstance().getLogger("webserv.status.statuscode");
+	_logger->setLevel(log42::logRecord::INFO);
+	DEBUG(_logger, "StatusCode instance created with code: " + common::core::utils::toString(code) + ", message: " + msg);
+}
 
 /**
  * @brief [TODO:description]
@@ -64,9 +70,9 @@ StatusCode &StatusCode::operator=(const StatusCode &rhs)
  *
  * @return [TODO:return]
  */
-t_Logger	StatusCode::getLogger() const
+t_Logger	StatusCode::getLogger()
 {
-	return _logger;
+	return log42::manager::Manager::getInstance().getLogger("webserv.status.statuscode");
 }
 
 /**
@@ -84,7 +90,7 @@ int StatusCode::getCode() const
  *
  * @return [TODO:return]
  */
-std::string StatusCode::getMessage() const
+const std::string	&StatusCode::getMessage() const
 {
 	return (_msg);
 }
@@ -94,7 +100,7 @@ std::string StatusCode::getMessage() const
  *
  * @return [TODO:return]
  */
-std::string StatusCode::getDescription() const
+const std::string &StatusCode::getDescription() const
 {
 	return (_description);
 }

@@ -19,6 +19,7 @@ StatusCodeRegistry::StatusCodeRegistry()
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.status.statuscoderegistery");
 	_logger->setLevel(log42::logRecord::INFO);
+	INFO(_logger, "StatuscodeRegistry instance created");
 	// 1xx: Informational
 	_statusCodes[100] = StatusCode(100, "Continue", "This interim response indicates that the client should continue the request or ignore the response if the request is already finished.");
 	_statusCodes[101] = StatusCode(101, "Switching Protocols", "This code is sent in response to an Upgrade request header from the client, and indicates the protocol the server is switching to.");
@@ -122,7 +123,7 @@ StatusCode StatusCodeRegistry::getStatusCode(const unsigned short code) const
 {
 	std::map<unsigned short, StatusCode>::const_iterator it = _statusCodes.find(code);
 	if (it == _statusCodes.end())
-		return (StatusCode());
+		return (StatusCode(code, "", ""));
 	return (it->second);
 }
 

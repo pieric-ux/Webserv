@@ -9,6 +9,7 @@
  */
 
 #include <webserv/config/HTTPConfig.hpp>
+#include <webserv/Server.hpp>
 #include <webserv/types.hpp>
 
 namespace webserv
@@ -24,7 +25,9 @@ class ServerFactory
 		ServerFactory(const ServerFactory &rhs);
 		ServerFactory &operator=(const ServerFactory &rhs);
 
-		t_Logger	getLogger() const;
+		static t_Logger				getLogger();
+
+		t_Servers					createServers() const;
 
 	private:
 		t_Logger					_logger;

@@ -26,18 +26,18 @@ class HTTPHeader
 		HTTPHeader(const HTTPHeader &rhs);
 		HTTPHeader &operator=(const HTTPHeader &rhs);
 
-		t_Logger	getLogger() const;
+		static t_Logger			getLogger();
 
-		std::string getName() const;
-		std::string getValue() const;
-		void 		setValue(const std::string value);
-		std::string getDescription() const;
+		const std::string		&getName() const;
+		const std::string		&getValue() const;
+		void					setValue(const std::string value);
+		const std::string		&getDescription() const;
 
 	private:
-		t_Logger 	_logger;
-		std::string _name;
-		std::string _value;
-		std::string _description;
+		t_Logger				_logger;
+		std::string				_name;
+		std::string				_value;
+		std::string				_description;
 };
 
 } // !HTTPheaders

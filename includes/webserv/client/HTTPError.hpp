@@ -8,10 +8,10 @@
  * @brief [TODO:description]
  */
 
-#include <stdexcept>
 #include <string>
 #include <webserv/types.hpp>
 #include <webserv/status/StatusCode.hpp>
+#include <webserv/status/StatusCodeRegistry.hpp>
 
 namespace webserv
 {
@@ -22,21 +22,25 @@ class HTTPError : public std::exception
 {
 	public:
 		HTTPError();
-		explicit HTTPError(const status::StatusCode &statusCode);
+		explicit HTTPError(unsigned short code);
+		HTTPError(unsigned short code, const std::string &location);
 		virtual ~HTTPError() throw();
 
 		HTTPError(const HTTPError &rhs);
 		HTTPError &operator=(const HTTPError &rhs);
 
-		t_Logger				getLogger() const;
+		static t_Logger			getLogger();
 
 		status::StatusCode		getStatusCode() const;
 		void					setStatusCode(const status::StatusCode &statusCode);
+		const std::string		&getLocation() const;
 		const char				*what() const throw();
 
 	private:
 		t_Logger				_logger;
 		status::StatusCode		_statusCode;
+		std::string				_what;
+		std::string				_location;
 };
 
 } // !client

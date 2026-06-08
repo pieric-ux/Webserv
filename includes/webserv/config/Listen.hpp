@@ -9,6 +9,7 @@
  */
 
 #include <string>
+#include <webserv/types.hpp>
 
 namespace webserv
 {
@@ -18,12 +19,11 @@ namespace config
 struct Listen
 {
 	std::string	address;
-	int			port;
+	std::string	port;
 	bool		defaultServer;
 	int			backlog;
 	int			rcvbuf;
 	int			sndbuf;
-	bool		doBind;
 	bool		ipv6only;
 	bool		reuseport;
 	bool		so_keepalive;
