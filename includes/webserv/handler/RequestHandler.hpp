@@ -47,6 +47,8 @@ class RequestHandler
 		void					eraseBufferRequestFront(std::size_t n);
 		void					clearBufferRequest();
 		parser::Parser			&getParser();
+		std::size_t				getChunkedAvailable() const;
+		void					shrinkChunkedAvailable(std::size_t n);
 
 	private:
 		t_Logger				_logger;
@@ -54,10 +56,19 @@ class RequestHandler
 		t_raw					_bufferRequest;
 		parser::Parser			_parser;
 		config::ServerConfig	&_serverConfig;
+		std::size_t				_chunkedAvailable;
+		std::size_t				_chunkedTotalDecoded;
 
 		void					validateHeaders();
 		void					buildAbsolutPath();
 		std::string				normalizePath(const std::string &path);
+		void					decodeChunkedBody();
+		bool					readChunkSizeLine(const std::string &tail, std::size_t pos,
+										unsigned long &chunkSize, std::size_t &lineEnd) const;
+		bool					readChunkData(const std::string &tail, std::size_t dataStart,
+										unsigned long chunkSize, std::string &data) const;
+		bool					readTrailerSection(const std::string &tail, std::size_t pos,
+										std::size_t &newPos) const;
 };
 
 } // !handler

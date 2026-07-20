@@ -43,7 +43,8 @@ enum e_ParserFlags
 	E_PARS_CONTENT_ENCODING = 1 << 4,
 	E_PARS_EXPECT = 1 << 5,
 	E_PARS_CLRF = 1 << 6,
-	E_PARS_COOKIE = 1 << 7
+	E_PARS_COOKIE = 1 << 7,
+	E_PARS_TRANSFER_ENCODING = 1 << 8
 };
 
 class Parser

@@ -49,7 +49,15 @@ int main(int ac, char **av)
 		return (EXIT_FAILURE);
 	}
 
-	HTTPserver.run();
+	try {
+		HTTPserver.run();
+	} catch (const std::exception &e) {
+		ROOT_CRITICAL(std::string("HTTPServer::run() failed: ") + e.what());
+		return (EXIT_FAILURE);
+	} catch (...) {
+		ROOT_CRITICAL("HTTPServer::run() failed: unknown exception");
+		return (EXIT_FAILURE);
+	}
 
 	return (EXIT_SUCCESS);
 }
