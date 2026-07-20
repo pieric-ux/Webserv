@@ -405,13 +405,35 @@ start
 					if (`E_REQ_HEADERS_VALIDATED` is set and `method` is `POST` or `PUT` or `DELETE`) then (yes)
 						| __RequestHandler__ |
 						:Call `parseBody(serverConfig)`;
-						:Call `findLocationConfig(path)`;
-						if (`Content-Length` > `clientMaxBodySize`) then (yes)
-							:Throw HTTPError(413);
-							#red:(E)
-							detach
+						if (`E_PARS_TRANSFER_ENCODING` is set) then (yes)
+							:Call `decodeChunkedBody()`;
+							:Incrementally read chunk-size line, chunk-data\nand trailer-section past `_chunkedAvailable`;
+							if (chunk-size line, data or trailers not fully buffered yet) then (yes)
+								:Return, retry on next tick;
+							else (no)
+								if (cumulative decoded size > `clientMaxBodySize`) then (yes)
+									:Throw HTTPError(413);
+									#red:(E)
+									detach
+								else (no)
+								endif
+								:Splice decoded bytes into `bufferRequest`, advance `_chunkedAvailable`;
+								if (last-chunk and trailer-section fully consumed) then (yes)
+									:Synthesize `Content-Length` header with decoded size;
+									:Call `setFlags(E_PARS_CONTENT_LENGTH)`;
+									:Call `setFlags(E_REQ_BODY_STARTED)`;
+								else (no)
+								endif
+							endif
 						else (no)
-						:Call `setFlags(E_REQ_BODY_STARTED)`;
+							:Call `findLocationConfig(path)`;
+							if (`Content-Length` > `clientMaxBodySize`) then (yes)
+								:Throw HTTPError(413);
+								#red:(E)
+								detach
+							else (no)
+							:Call `setFlags(E_REQ_BODY_STARTED)`;
+							endif
 						endif
 					else (no)
 					endif
@@ -422,6 +444,7 @@ start
 						:Call `execute(requestHandler, responseHandler, locationConfig)`;
 						if (`enableCGI` is set in `LocationConfig` AND `cgiExtensions` contains `path` extension) then (yes)
 							:Call `executeCGI(requestHandler, LocationConfig)`;
+							note left: For Transfer-Encoding: chunked requests,\ndriveCgiIO() defers this call until\ndecodeChunkedBody() has fully decoded the\nbody and synthesized Content-Length\n(mirrors nginx's default CGI/FastCGI\nrequest buffering)
 							if (`method` is `POST` or 'PUT' or `DELETE`) then (yes)
 									:Send `bufferRequest` to CGI process stdin;
 							else (no)
@@ -705,17 +728,38 @@ start
 											:Call `setFlags(E_EXEC_FILE_OPENED)`;
 										else (yes)
 										endif
-										if (`bodyReceived` < `Content-Length`) then (yes)
-											:Call `writeChunk(fd, requestHandler)`;
-											if (wr > 0) then (yes)
-												:Update `bodyReceived`;
+										:Call `writeChunk(requestHandler)`;
+										if (`E_PARS_TRANSFER_ENCODING` is set) then (yes)
+											:Call `writeChunkChunked(requestHandler)`;
+											note right: writes min(chunkedAvailable, BUFFER_SIZE)\nfrom bufferRequest without ever needing\na total body size upfront
+											if (bytes available to write) then (yes)
+												if (wr > 0) then (yes)
+													:Erase written bytes from `bufferRequest`;
+													:Call `shrinkChunkedAvailable(wr)`;
+												else (no)
+													:Throw HTTPError(500);
+													#red:(E)
+													detach
+												endif
 											else (no)
-												:Throw HTTPError(500);
-												#red:(E)
-												detach
+												if (`E_REQ_BODY_STARTED` is set) then (yes)
+													:Call `setFlags(E_EXEC_COMPLETE)`;
+												else (no)
+												endif
 											endif
 										else (no)
-											:Call `setFlags(E_EXEC_COMPLETE)`;
+											:Call `writeChunkContentLength(requestHandler)`;
+											if (`bodyReceived` < `Content-Length`) then (yes)
+												if (wr > 0) then (yes)
+													:Update `bodyReceived`;
+												else (no)
+													:Throw HTTPError(500);
+													#red:(E)
+													detach
+												endif
+											else (no)
+												:Call `setFlags(E_EXEC_COMPLETE)`;
+											endif
 										endif
 									else (no)
 										:Throw HTTPError(405);

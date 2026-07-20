@@ -238,10 +238,16 @@ namespace webserv.handler {
 		- _bufferRequest : t_raw
 		- _parser : Parser
 		- _serverConfig : ServerConfig
+		- _chunkedAvailable : size_t
+		- _chunkedTotalDecoded : size_t
 		--
 		- validateHeaders() : void
 		- buildAbsolutPath() : void
 		- normalizePath(path : string) : string
+		- decodeChunkedBody() : void
+		- readChunkSizeLine(tail : string, pos : size_t, chunkSize : unsigned long, lineEnd : size_t) : bool
+		- readChunkData(tail : string, dataStart : size_t, chunkSize : unsigned long, data : string) : bool
+		- readTrailerSection(tail : string, pos : size_t, newPos : size_t) : bool
 		+ RequestHandler(serverConfig : ServerConfig)
 		+ {static} getLogger() : t_Logger
 		+ parseHeaders() : void
@@ -253,6 +259,8 @@ namespace webserv.handler {
 		+ eraseBufferRequestFront(n : size_t) : void
 		+ clearBufferRequest() : void
 		+ getParser() : Parser
+		+ getChunkedAvailable() : size_t
+		+ shrinkChunkedAvailable(n : size_t) : void
 	}
 
 	class "ResponseHandler" as ResponseHandler {
@@ -295,6 +303,8 @@ namespace webserv.handler {
 		- openFile(requestHandler : RequestHandler, locationConfig : LocationConfig) : void
 		- readChunk(responseHandler : ResponseHandler) : void
 		- writeChunk(requestHandler : RequestHandler) : void
+		- writeChunkContentLength(requestHandler : RequestHandler) : void
+		- writeChunkChunked(requestHandler : RequestHandler) : void
 		- getFileSize(path : string) : int
 		- getFileExtension(path : string) : string
 		- isFile(path : string) : bool
@@ -330,6 +340,7 @@ namespace webserv.parser {
 		E_PARS_EXPECT = 1 << 5
 		E_PARS_CLRF = 1 << 6
 		E_PARS_COOKIE = 1 << 7
+		E_PARS_TRANSFER_ENCODING = 1 << 8
 	}
 
 	class "Parser" as Parser {
