@@ -111,6 +111,9 @@ t_Clients::iterator	ClientHandler::removeClient(client::Client &client)
 		ERROR(_logger, "Failed to remove client fd from io multiplexer: " + std::string(e.what()));
 	}
 
+	if (client.isCgiRoute())
+		client.getExecutionHandler().getCgi().reset();
+
 	t_Clients::iterator it = _clients.find(client.getSocket().getFd());
 	if (it != _clients.end())
 	{
