@@ -866,10 +866,14 @@ void CGIHandler::readChunkFromCGI()
 	if (rd == 0)
 	{
 		_eof = true;
+		_ioMultiplexer->remove(_stdoutFd.get());
+		_stdoutFd.reset();
 		DEBUG(_logger, "readChunkFromCGI: EOF on stdout (total=" + common::core::utils::toString(_cgiBuffer.size()) + ")");
 		return ;
 	}
 	ERROR(_logger, "readChunkFromCGI: read failed");
+	_ioMultiplexer->remove(_stdoutFd.get());
+	_stdoutFd.reset();
 	throw client::HTTPError(502);
 }
 
