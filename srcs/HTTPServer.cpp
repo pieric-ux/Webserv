@@ -187,7 +187,13 @@ void	HTTPServer::run()
 				}
 			}
 		}
-		_clientHandler.processClients();
+		try {
+			_clientHandler.processClients();
+		} catch (const std::exception &e) {
+			ERROR(_logger, "processClients() failed: " + std::string(e.what()));
+		} catch (...) {
+			ERROR(_logger, "processClients() failed: unknown exception");
+		}
 
 		static std::time_t lastPurge = std::time(NULL);
 		std::time_t now = std::time(NULL);

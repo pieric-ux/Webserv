@@ -641,8 +641,8 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 	{
 		setFlags(getFlags() | E_EXEC_COMPLETE);
 		DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after EOF on file");
-		_fd.reset();
 		DEBUG(_logger, "EOF on fd=" + common::core::utils::toString(_fd.get()));
+		_fd.reset();
 		return ;
 	}
 	ERROR(_logger, "500: read() failed on fd=" + common::core::utils::toString(_fd.get()));
@@ -650,10 +650,10 @@ void ExecutionHandler::readChunk(handler::ResponseHandler &responseHandler)
 }
 
 /**
- * @brief Writes at most one BUFFER_SIZE chunk from the request body
- *        (starting at offset _bodyReceived) to the owned _fd. Updates
- *        _bodyReceived on success, throws HTTPError(500) on error or if _fd
- *        is not open.
+ * @brief Writes one BUFFER_SIZE-capped slice of the request body to the owned
+ *        _fd, dispatching to the Transfer-Encoding: chunked streaming writer
+ *        or the Content-Length-based writer depending on the request.
+ *        Throws HTTPError(500) if _fd is not open.
  *
  * @param request Request whose body provides the bytes to flush.
  */
@@ -665,6 +665,24 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 		throw client::HTTPError(500);
 	}
 
+	if (requestHandler.getParser().getFlags() & parser::E_PARS_TRANSFER_ENCODING)
+		writeChunkChunked(requestHandler);
+	else
+		writeChunkContentLength(requestHandler);
+}
+
+/**
+ * @brief Writes at most one BUFFER_SIZE chunk of the buffered request body to
+ *        the owned _fd, capped by the remaining Content-Length. Consumes the
+ *        written bytes from the request buffer and updates _bodyReceived; on
+ *        completion sets E_EXEC_COMPLETE and releases _fd. Throws HTTPError(411)
+ *        if Content-Length is missing and HTTPError(500) on write error.
+ *
+ * @param requestHandler Request handler whose request body buffer provides the
+ *                       bytes to flush.
+ */
+void ExecutionHandler::writeChunkContentLength(handler::RequestHandler &requestHandler)
+{
 	const t_raw		&buf = requestHandler.getBufferRequest();
 
 	const t_Headers	&headers = requestHandler.getRequest().getHeaders();
@@ -711,6 +729,45 @@ void ExecutionHandler::writeChunk(handler::RequestHandler &requestHandler)
 		return ;
 	}
 	_bodyReceived = 0;
+	ERROR(_logger, "500: write() failed on fd=" + common::core::utils::toString(_fd.get()));
+	throw client::HTTPError(500);
+}
+
+/**
+ * @brief Writes at most one BUFFER_SIZE slice of the chunked request body
+ *        that RequestHandler has already decoded and made available, without
+ *        ever needing to know the total body size upfront. Completes once no
+ *        more decoded bytes are available and RequestHandler has signalled
+ *        the chunked body as fully received. Throws HTTPError(500) on write
+ *        error.
+ *
+ * @param requestHandler Request handler tracking the decoded chunked body
+ *                       bytes available for consumption.
+ */
+void ExecutionHandler::writeChunkChunked(handler::RequestHandler &requestHandler)
+{
+	std::size_t available = std::min(requestHandler.getChunkedAvailable(), config::DefaultConfig::BUFFER_SIZE);
+	if (available == 0)
+	{
+		if (requestHandler.getRequest().getFlags() & client::E_REQ_BODY_STARTED)
+		{
+			setFlags(getFlags() | E_EXEC_COMPLETE);
+			DEBUG(_logger, "E_EXEC_COMPLETE flag set in execution handler after chunked body fully consumed");
+			_fd.reset();
+		}
+		return ;
+	}
+
+	const t_raw	&buf = requestHandler.getBufferRequest();
+	ssize_t		wr = ::write(_fd.get(), &buf[0], available);
+
+	if (wr > 0)
+	{
+		requestHandler.eraseBufferRequestFront(wr);
+		requestHandler.shrinkChunkedAvailable(wr);
+		DEBUG(_logger, "wrote " + common::core::utils::toString(wr) + " bytes (chunked) to fd=" + common::core::utils::toString(_fd.get()));
+		return ;
+	}
 	ERROR(_logger, "500: write() failed on fd=" + common::core::utils::toString(_fd.get()));
 	throw client::HTTPError(500);
 }

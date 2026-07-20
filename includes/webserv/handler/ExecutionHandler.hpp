@@ -87,6 +87,8 @@ class ExecutionHandler
 		void							openFile(const RequestHandler &requestHandler, const config::LocationConfig &locationConfig);
 		void							readChunk(ResponseHandler &responseHandler);
 		void							writeChunk(RequestHandler &requestHandler);
+		void							writeChunkContentLength(RequestHandler &requestHandler);
+		void							writeChunkChunked(RequestHandler &requestHandler);
 		int								getFileSize(const std::string &path);
 		bool							isFile(const std::string& path);
 		bool							isExisting(const std::string& path);

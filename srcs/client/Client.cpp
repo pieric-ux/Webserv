@@ -453,11 +453,26 @@ bool Client::isCgiRoute() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Advances CGI execution I/O for the current request when it is a CGI route.
+ *
+ * Returns immediately for non-CGI routes. For a Transfer-Encoding: chunked
+ * request whose body has not yet been fully decoded, also returns immediately
+ * without spawning or feeding the CGI process, so it is only ever invoked
+ * once RequestHandler has synthesized a final Content-Length (mirroring
+ * nginx's default request buffering ahead of a CGI/FastCGI backend).
+ * Otherwise steps CGI execution until it completes, and once the CGI is
+ * complete and the response headers have been sent, pushes the CGI body into
+ * the response buffer. An HTTPError is stored and moves the client to the
+ * parsing-error state.
  */
 void Client::driveCgiIO()
 {
 	if (!isCgiRoute())
+		return ;
+
+	bool chunkedPending = (_requestHandler.getParser().getFlags() & parser::E_PARS_TRANSFER_ENCODING)
+		&& !(_requestHandler.getRequest().getFlags() & E_REQ_BODY_STARTED);
+	if (chunkedPending)
 		return ;
 
 	try

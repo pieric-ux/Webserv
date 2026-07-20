@@ -310,9 +310,20 @@ start
 						else (no)
 						endif
 						if (`Transfer-Encoding` header is present?) then (yes)
-								:Throw HTTPError(501);
+							if (Valid `Transfer-Encoding` header?) then (no)
+								:Throw HTTPError(400);
 								#red:(E)
 								detach
+							else (yes)
+								if (`transfer-coding` is `chunked`) then (yes)
+									:Extract `Transfer-Encoding` header;
+									:Call `setFlags(E_PARS_TRANSFER_ENCODING)`;
+								else (no)
+									:Throw HTTPError(501);
+									#red:(E)
+									detach
+								endif
+							endif
 						else (no)
 						endif
 						if (`Range` header is present?) then (yes)
@@ -349,11 +360,17 @@ start
 							else (yes)
 							endif
 							if (`method` is `POST` or 'PUT') then (yes)
-								if (`E_PARS_CONTENT_LENGTH` is set) then (no)
+								if (`E_PARS_CONTENT_LENGTH` is set OR `E_PARS_TRANSFER_ENCODING` is set) then (no)
 									:Throw HTTPError(411);
 									#red:(E)
 									detach
 								else (yes)
+									if (`E_PARS_CONTENT_LENGTH` is set AND `E_PARS_TRANSFER_ENCODING` is set) then (yes)
+										:Throw HTTPError(400);
+										#red:(E)
+										detach
+									else (no)
+									endif
 								endif
 								if (`E_PARS_CONTENT_TYPE` is set) then (yes)
 									if (`media-type` is `multipart/form-data`) then (yes)
@@ -374,15 +391,6 @@ start
 								else (no)
 									:Assume "application/octet-stream" as `Content-Type`;
 									:Set `E_PARS_CONTENT_TYPE` flag;
-								endif
-								if (`E_PARS_CONTENT_ENCODING` is set) then (yes)
-									if (`content-coding` is allowed in `LocationConfig`) then (no)
-										:Throw HTTPError(415);
-										#red:(E)
-										detach
-									else (yes)
-									endif
-								else (no)
 								endif
 							else (no)
 							endif

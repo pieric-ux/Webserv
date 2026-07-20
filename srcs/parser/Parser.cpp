@@ -422,8 +422,13 @@ void Parser::parseHeaders(const std::string &headersBlock, client::Request &requ
 				INFO(_logger, "400: invalid Transfer-Encoding header format: " + value);
 				throw client::HTTPError(400);
 			}
-			INFO(_logger, "501: Transfer-Encoding not supported");
-			throw client::HTTPError(501);
+			if (value != "chunked")
+			{
+				INFO(_logger, "501: Transfer-Encoding not supported: " + value);
+				throw client::HTTPError(501);
+			}
+			DEBUG(_logger, "Parsed Transfer-Encoding header: " + value);
+			setFlags(getFlags() | E_PARS_TRANSFER_ENCODING);
 		}
 			
 		if (name == "range")
