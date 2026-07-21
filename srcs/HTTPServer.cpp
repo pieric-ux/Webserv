@@ -251,6 +251,7 @@ void HTTPServer::connectClient(const t_SocketPairServer &socket, const config::S
 {
 	try {
 		t_SocketPairClient client = socket.first.accept<sockaddr_storage>();
+		client.first.setIsNonblock(true);
 			try{
 				t_AddrPortPair addr = common::core::net::getNameInfo(client.second);
 				INFO(_logger, "Accepted new client connection on " + addr.first + ":" + addr.second + " fd=" + common::core::utils::toString(client.first.getFd()));

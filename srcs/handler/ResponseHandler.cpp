@@ -156,7 +156,7 @@ void ResponseHandler::buildHeadersResponse(const client::Request &request, int e
 		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(204));
 	else if (parseFlags & parser::E_PARS_EXPECT)
 		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(100));
-	else
+	else if (_response.getStatusCode().getCode() == 0)
 		_response.setStatusCode(status::StatusCodeRegistry::getInstance().getStatusCode(200));
 	DEBUG(_logger, "status code set to " + common::core::utils::toString(_response.getStatusCode().getCode()));
 	

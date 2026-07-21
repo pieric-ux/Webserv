@@ -510,6 +510,7 @@ void Client::resetAll()
 	{
 		_requestHandler.getParser().setFlags(_requestHandler.getParser().getFlags() & ~parser::E_PARS_EXPECT);
 		_responseHandler.getResponse().setFlags(_responseHandler.getResponse().getFlags() & ~E_RESP_HEADERS_SENT);
+		_responseHandler.getResponse().setStatusCode(status::StatusCode());
 		return ;
 	}
 

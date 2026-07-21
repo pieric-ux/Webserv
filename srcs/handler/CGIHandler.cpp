@@ -288,18 +288,11 @@ void CGIHandler::driveIO(handler::RequestHandler &requestHandler, int execFlags)
 		}
 	}
 
-	if (!_reaped && !_eof)
-	{
+	if (!_reaped)
 		tryReap();
-		if (_reaped)
-			_eof = true;
-	}
 
-	if (_eof && !_reaped)
-	{
-		DEBUG(_logger, "driveIO: eof reached -> tryReap");
-		tryReap();
-	}
+	while (_reaped && _stdoutFd.valid())
+		readChunkFromCGI();
 }
 
 /**
@@ -540,6 +533,11 @@ bool CGIHandler::isSpawned() const
 bool CGIHandler::isReaped() const
 {
 	return _reaped;
+}
+
+bool CGIHandler::isEof() const
+{
+	return _eof;
 }
 
 /**
