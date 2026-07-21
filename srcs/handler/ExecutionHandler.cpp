@@ -195,7 +195,7 @@ void ExecutionHandler::executeCGI(RequestHandler &requestHandler, ResponseHandle
 
 	_cgiHandler.driveIO(requestHandler, getFlags());
 
-	if (_cgiHandler.isReaped() && !_cgiHandler.isParsed())
+	if (_cgiHandler.isEof() && _cgiHandler.isReaped() && !_cgiHandler.isParsed())
 	{
 		DEBUG(_logger, "executeCGI: child reaped, parsing response");
 		_cgiHandler.parse(responseHandler.getResponse());

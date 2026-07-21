@@ -51,6 +51,7 @@ class CGIHandler
 		int											getStdoutFd() const;
 		bool										isSpawned() const;
 		bool										isReaped() const;
+		bool										isEof() const;
 		bool										isParsed() const;
 		bool										isPushed() const;
 
