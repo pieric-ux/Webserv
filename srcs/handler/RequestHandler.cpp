@@ -333,49 +333,7 @@ void RequestHandler::validateHeaders()
 			throw client::HTTPError(400);
 		}
 
-		if (_parser.getFlags() & parser::E_PARS_CONTENT_TYPE)
-		{
-			if (!_request.findHeader("Content-Type", "multipart/form-data").getName().empty())
-			{
-				DEBUG(_logger, "multipart/form-data detected, checking CGI");
-				bool cgiMatch = false;
-				const t_CgiExtensions &cgiExt = locationConfig.getCgiExtensions();
-				t_CgiExtensions::const_iterator cit = cgiExt.begin();
-				for (; cit != cgiExt.end(); ++cit)
-				{
-					if (common::core::utils::hasExtension(_request.getPath(), cit->first))
-					{
-						cgiMatch = true;
-						break;
-					}
-				}
-				if (!locationConfig.isEnableCGI() || !cgiMatch)
-				{
-					INFO(_logger, "415: multipart/form-data requires CGI but CGI disabled or no extension match");
-					throw client::HTTPError(415);
-				}
-			}
-			else
-			{
-				bool found = false;
-				const t_MimeTypes &types = locationConfig.getTypes();
-				t_MimeTypes::const_iterator mit = types.begin();
-				for (; mit != types.end(); ++mit)
-				{
-					if (!_request.findHeader("Content-Type", mit->second).getName().empty())
-					{
-						found = true;
-						break;
-					}
-				}
-				if (!found)
-				{
-					INFO(_logger, "415: Content-Type not in allowed MIME types");
-					throw client::HTTPError(415);
-				}
-			}
-		}
-		else
+		if (!(_parser.getFlags() & parser::E_PARS_CONTENT_TYPE))
 		{
 			DEBUG(_logger, "no Content-Type, defaulting to application/octet-stream");
 			_request.addHeader("Content-Type", "application/octet-stream");
