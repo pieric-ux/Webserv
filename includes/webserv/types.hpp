@@ -1,4 +1,14 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   types.hpp                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_TYPES_HPP
 #define WEBSERV_TYPES_HPP

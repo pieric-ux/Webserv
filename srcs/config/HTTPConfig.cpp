@@ -1,8 +1,18 @@
-// TODO: don't forgot header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPConfig.cpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file HTTPConfig.cpp
- * @brief [TODO:description]
+ * @brief Implements the HTTPConfig singleton and its accessors for the global HTTP-level server configuration.
  */
 
 #include <webserv/config/HTTPConfig.hpp>
@@ -14,7 +24,7 @@ namespace config
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs the configuration with all fields initialized to their DefaultConfig values and sets up its logger.
  */
 HTTPConfig::HTTPConfig()
 	:	_ioMultiplexer(DefaultConfig::ioMultiplexer),
@@ -38,14 +48,14 @@ HTTPConfig::HTTPConfig()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the configuration instance.
  */
 HTTPConfig::~HTTPConfig() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Accesses the unique HTTPConfig instance, creating it lazily on first call.
  *
- * @return [TODO:return]
+ * @return Reference to the singleton HTTPConfig.
  */
 HTTPConfig &HTTPConfig::getInstance()
 {
@@ -54,9 +64,9 @@ HTTPConfig &HTTPConfig::getInstance()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the logger used by this configuration object.
  *
- * @return [TODO:return]
+ * @return Shared pointer to the HTTPConfig logger.
  */
 t_Logger	HTTPConfig::getLogger() const
 {
@@ -64,9 +74,9 @@ t_Logger	HTTPConfig::getLogger() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the name of the configured I/O multiplexer (e.g. poll or select).
  *
- * @return [TODO:return]
+ * @return The I/O multiplexer identifier.
  */
 std::string HTTPConfig::getIOMultiplexer() const
 {
@@ -74,9 +84,9 @@ std::string HTTPConfig::getIOMultiplexer() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the name of the I/O multiplexer to use.
  *
- * @param ioMultiplexer [TODO:parameter]
+ * @param ioMultiplexer The I/O multiplexer identifier to store.
  */
 void HTTPConfig::setIOMultiplexer(const std::string &ioMultiplexer)
 {
@@ -84,9 +94,9 @@ void HTTPConfig::setIOMultiplexer(const std::string &ioMultiplexer)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default maximum allowed client request body size in bytes.
  *
- * @return [TODO:return]
+ * @return Reference to the client max body size.
  */
 const t_clientMaxBodySize	&HTTPConfig::getClientMaxBodySize() const 
 {
@@ -94,9 +104,9 @@ const t_clientMaxBodySize	&HTTPConfig::getClientMaxBodySize() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default maximum allowed client request body size in bytes.
  *
- * @param clientMaxBodySize [TODO:parameter]
+ * @param clientMaxBodySize The maximum body size to store.
  */
 void	HTTPConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
 {
@@ -104,9 +114,9 @@ void	HTTPConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySi
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default filesystem path used as the target for WebDAV PUT uploads.
  *
- * @return [TODO:return]
+ * @return Reference to the DAV PUT path.
  */
 const std::string &HTTPConfig::getDavPutPath() const
 {
@@ -114,9 +124,9 @@ const std::string &HTTPConfig::getDavPutPath() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default filesystem path used as the target for WebDAV PUT uploads.
  *
- * @param davPutPath [TODO:parameter]
+ * @param davPutPath The DAV PUT path to store.
  */
 void	HTTPConfig::setDavPutPath(const std::string &davPutPath)
 {
@@ -124,9 +134,9 @@ void	HTTPConfig::setDavPutPath(const std::string &davPutPath)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default WebDAV access permission bits.
  *
- * @return [TODO:return]
+ * @return Reference to the DAV access permissions.
  */
 const t_Perms &HTTPConfig::getDavAccess() const
 {
@@ -134,9 +144,9 @@ const t_Perms &HTTPConfig::getDavAccess() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default WebDAV access permission bits.
  *
- * @param davAccess [TODO:parameter]
+ * @param davAccess The DAV access permissions to store.
  */
 void	HTTPConfig::setDavAccess(const t_Perms &davAccess)
 {
@@ -144,9 +154,9 @@ void	HTTPConfig::setDavAccess(const t_Perms &davAccess)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default set of HTTP methods enabled for WebDAV operations.
  *
- * @return [TODO:return]
+ * @return Reference to the set of allowed DAV methods.
  */
 const t_DavMethods &HTTPConfig::getDavMethods() const
 {
@@ -154,9 +164,9 @@ const t_DavMethods &HTTPConfig::getDavMethods() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default set of HTTP methods enabled for WebDAV operations.
  *
- * @param davMethods [TODO:parameter]
+ * @param davMethods The set of allowed DAV methods to store.
  */
 void	HTTPConfig::setDavMethods(const	t_DavMethods &davMethods)
 {
@@ -164,9 +174,9 @@ void	HTTPConfig::setDavMethods(const	t_DavMethods &davMethods)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default MIME type used when a response content type cannot be determined.
  *
- * @return [TODO:return]
+ * @return Reference to the default MIME type.
  */
 const std::string &HTTPConfig::getDefaultType() const
 {
@@ -174,9 +184,9 @@ const std::string &HTTPConfig::getDefaultType() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default MIME type used when a response content type cannot be determined.
  *
- * @param defaultType [TODO:parameter]
+ * @param defaultType The default MIME type to store.
  */
 void	HTTPConfig::setDefaultType(const std::string &defaultType)
 {
@@ -184,9 +194,9 @@ void	HTTPConfig::setDefaultType(const std::string &defaultType)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default list of error pages mapping status codes to custom error documents.
  *
- * @return [TODO:return]
+ * @return Reference to the vector of error page mappings.
  */
 const std::vector<ErrorPage> &HTTPConfig::getErrorPage() const
 {
@@ -194,9 +204,9 @@ const std::vector<ErrorPage> &HTTPConfig::getErrorPage() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default list of error pages mapping status codes to custom error documents.
  *
- * @param errorPage [TODO:parameter]
+ * @param errorPage The vector of error page mappings to store.
  */
 void	HTTPConfig::setErrorPage(const std::vector<ErrorPage> &errorPage)
 {
@@ -204,9 +214,9 @@ void	HTTPConfig::setErrorPage(const std::vector<ErrorPage> &errorPage)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default keep-alive timeout (in seconds) for persistent connections.
  *
- * @return [TODO:return]
+ * @return The keep-alive timeout value.
  */
 t_keepAliveTimeout HTTPConfig::getKeepAliveTimeout() const
 {
@@ -214,9 +224,9 @@ t_keepAliveTimeout HTTPConfig::getKeepAliveTimeout() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default keep-alive timeout (in seconds) for persistent connections.
  *
- * @param keepAliveTimeout [TODO:parameter]
+ * @param keepAliveTimeout The keep-alive timeout value to store.
  */
 void	HTTPConfig::setKeepAliveTimeout(const t_keepAliveTimeout keepAliveTimeout)
 {
@@ -224,9 +234,9 @@ void	HTTPConfig::setKeepAliveTimeout(const t_keepAliveTimeout keepAliveTimeout)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default session time-to-live (in seconds).
  *
- * @return [TODO:return]
+ * @return The session TTL value.
  */
 t_sessionTTL HTTPConfig::getSessionTTL() const
 {
@@ -234,9 +244,9 @@ t_sessionTTL HTTPConfig::getSessionTTL() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default session time-to-live (in seconds).
  *
- * @param sessionTTL [TODO:parameter]
+ * @param sessionTTL The session TTL value to store.
  */
 void HTTPConfig::setSessionTTL(const t_sessionTTL sessionTTL)
 {
@@ -244,9 +254,9 @@ void HTTPConfig::setSessionTTL(const t_sessionTTL sessionTTL)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default root directory from which files are served.
  *
- * @return [TODO:return]
+ * @return Reference to the root directory path.
  */
 const std::string &HTTPConfig::getRoot() const
 {
@@ -254,9 +264,9 @@ const std::string &HTTPConfig::getRoot() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default root directory from which files are served.
  *
- * @param root [TODO:parameter]
+ * @param root The root directory path to store.
  */
 void	HTTPConfig::setRoot(const std::string &root)
 {
@@ -264,9 +274,9 @@ void	HTTPConfig::setRoot(const std::string &root)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the list of parsed server blocks contained in the HTTP configuration.
  *
- * @return [TODO:return]
+ * @return Reference to the vector of server configurations.
  */
 const std::vector<ServerConfig> &HTTPConfig::getServerConfigs() const
 {
@@ -274,9 +284,9 @@ const std::vector<ServerConfig> &HTTPConfig::getServerConfigs() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the list of server blocks contained in the HTTP configuration.
  *
- * @param serverConfigs [TODO:parameter]
+ * @param serverConfigs The vector of server configurations to store.
  */
 void	HTTPConfig::setServerConfigs(const std::vector<ServerConfig> &serverConfigs)
 {
@@ -284,9 +294,9 @@ void	HTTPConfig::setServerConfigs(const std::vector<ServerConfig> &serverConfigs
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the MIME type table mapping file extensions to content types.
  *
- * @return [TODO:return]
+ * @return Reference to the MIME types map.
  */
 const t_MimeTypes &HTTPConfig::getTypes() const
 {
@@ -294,9 +304,9 @@ const t_MimeTypes &HTTPConfig::getTypes() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the MIME type table mapping file extensions to content types.
  *
- * @param types [TODO:parameter]
+ * @param types The MIME types map to store.
  */
 void	HTTPConfig::setTypes(const t_MimeTypes &types)
 {
@@ -304,9 +314,9 @@ void	HTTPConfig::setTypes(const t_MimeTypes &types)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Indicates whether CGI execution is enabled by default.
  *
- * @return [TODO:return]
+ * @return true if CGI is enabled, false otherwise.
  */
 bool HTTPConfig::isEnableCGI() const
 {
@@ -314,9 +324,9 @@ bool HTTPConfig::isEnableCGI() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Enables or disables CGI execution by default.
  *
- * @param enableCGI [TODO:parameter]
+ * @param enableCGI true to enable CGI, false to disable it.
  */
 void	HTTPConfig::setEnableCGI(const bool enableCGI)
 {
@@ -324,9 +334,9 @@ void	HTTPConfig::setEnableCGI(const bool enableCGI)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the table mapping CGI file extensions to their interpreter executables.
  *
- * @return [TODO:return]
+ * @return Reference to the CGI extensions map.
  */
 const t_CgiExtensions &HTTPConfig::getCgiExtensions() const
 {
@@ -334,9 +344,9 @@ const t_CgiExtensions &HTTPConfig::getCgiExtensions() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the table mapping CGI file extensions to their interpreter executables.
  *
- * @param cgiExtensions [TODO:parameter]
+ * @param cgiExtensions The CGI extensions map to store.
  */
 void	HTTPConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
 {

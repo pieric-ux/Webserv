@@ -1,11 +1,24 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPServer.hpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_HTTPSERVER_HPP
 #define WEBSERV_HTTPSERVER_HPP
 
 /**
  * @file HTTPServer.hpp
- * @brief [TODO:description]
+ * @brief Declares the HTTPServer singleton orchestrating the server lifecycle:
+ *        parsing the configuration, creating listening servers, registering
+ *        their sockets with an I/O multiplexer, and running the accept and
+ *        client-processing event loop.
  */
 
 #include <cstdlib>

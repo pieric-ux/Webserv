@@ -1,8 +1,18 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   StatusCode.cpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
 * @file StatusCode.cpp
-* @brief [TODO:description]
+* @brief Implements the StatusCode value object that bundles an HTTP status code with its reason phrase and description, providing constructors, copy semantics and read-only accessors.
 */
 
 #include <webserv/status/StatusCode.hpp>
@@ -13,7 +23,7 @@ namespace status
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Default-constructs a StatusCode with a zero code and empty message and description, and initializes the logger.
  */
 StatusCode::StatusCode() : _code(0), _msg(), _description()
 {
@@ -23,11 +33,11 @@ StatusCode::StatusCode() : _code(0), _msg(), _description()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a StatusCode from an explicit code, reason-phrase message and description, and initializes the logger.
  *
- * @param code [TODO:parameter]
- * @param msg [TODO:parameter]
- * @param description [TODO:parameter]
+ * @param code The numeric HTTP status code.
+ * @param msg The reason-phrase message associated with the status code.
+ * @param description A human-readable description of the status code.
  */
 StatusCode::StatusCode(const unsigned short code, const std::string msg, const std::string description) : _code(code), _msg(msg), _description(description)
 {
@@ -37,22 +47,22 @@ StatusCode::StatusCode(const unsigned short code, const std::string msg, const s
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the StatusCode instance.
  */
 StatusCode::~StatusCode() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a StatusCode by copying the code, message and description of another instance.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The StatusCode instance to copy from.
  */
 StatusCode::StatusCode(const StatusCode &rhs) : _code(rhs._code), _msg(rhs._msg), _description(rhs._description) {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns the code, message and description from another StatusCode, guarding against self-assignment.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The StatusCode instance to assign from.
+ * @return A reference to this StatusCode after assignment.
  */
 StatusCode &StatusCode::operator=(const StatusCode &rhs)
 {
@@ -66,9 +76,9 @@ StatusCode &StatusCode::operator=(const StatusCode &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Retrieves the logger associated with the StatusCode class from the logging manager.
  *
- * @return [TODO:return]
+ * @return The logger registered under "webserv.status.statuscode".
  */
 t_Logger	StatusCode::getLogger()
 {
@@ -76,9 +86,9 @@ t_Logger	StatusCode::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the numeric HTTP status code.
  *
- * @return [TODO:return]
+ * @return The stored status code value.
  */
 int StatusCode::getCode() const
 {
@@ -86,9 +96,9 @@ int StatusCode::getCode() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the reason-phrase message associated with the status code.
  *
- * @return [TODO:return]
+ * @return A const reference to the stored message string.
  */
 const std::string	&StatusCode::getMessage() const
 {
@@ -96,9 +106,9 @@ const std::string	&StatusCode::getMessage() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the human-readable description of the status code.
  *
- * @return [TODO:return]
+ * @return A const reference to the stored description string.
  */
 const std::string &StatusCode::getDescription() const
 {

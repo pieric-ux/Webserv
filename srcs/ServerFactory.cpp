@@ -1,8 +1,18 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerFactory.cpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
- * @file HTTPServer.hpp
- * @brief [TODO:description]
+ * @file ServerFactory.cpp
+ * @brief Implements ServerFactory, which builds Server instances from the server configurations held in an HTTPConfig.
  */
 
 #include "log42/Logger.hpp"
@@ -14,7 +24,7 @@ namespace webserv
 static std::string	formatServerInfo(const config::ServerConfig &config);
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a ServerFactory bound to the singleton HTTPConfig instance and sets up its logger.
  */
 ServerFactory::ServerFactory() : _httpConfig(config::HTTPConfig::getInstance())
 {
@@ -24,7 +34,7 @@ ServerFactory::ServerFactory() : _httpConfig(config::HTTPConfig::getInstance())
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a ServerFactory bound to the given HTTPConfig and sets up its logger.
  */
 ServerFactory::ServerFactory(const config::HTTPConfig &httpConfig) : _httpConfig(httpConfig)
 {
@@ -33,22 +43,22 @@ ServerFactory::ServerFactory(const config::HTTPConfig &httpConfig) : _httpConfig
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the ServerFactory; holds no owned resources to release.
  */
 ServerFactory::~ServerFactory() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a ServerFactory, sharing the source's logger and HTTPConfig reference.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The ServerFactory to copy from.
  */
 ServerFactory::ServerFactory(const ServerFactory &rhs) : _logger(rhs._logger), _httpConfig(rhs._httpConfig) {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns from another ServerFactory, copying its logger while leaving the bound HTTPConfig reference unchanged.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The ServerFactory to assign from.
+ * @return Reference to this ServerFactory.
  */
 ServerFactory &ServerFactory::operator=(const ServerFactory &rhs)
 {
@@ -60,9 +70,9 @@ ServerFactory &ServerFactory::operator=(const ServerFactory &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the logger associated with the ServerFactory module.
  *
- * @return [TODO:return]
+ * @return The "webserv.serverfactory" logger obtained from the logging manager.
  */
 t_Logger	ServerFactory::getLogger()
 {
@@ -71,9 +81,9 @@ t_Logger	ServerFactory::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Builds one Server per server configuration in the bound HTTPConfig, logging each created server and the total count.
  *
- * @return [TODO:return]
+ * @return The collection of Server instances created from the configuration.
  */
 t_Servers	ServerFactory::createServers() const
 {
@@ -94,10 +104,10 @@ t_Servers	ServerFactory::createServers() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Formats a server configuration's listen endpoints and server names into a human-readable summary string for logging.
  *
- * @param config [TODO:parameter]
- * @return [TODO:return]
+ * @param config The server configuration whose listen directives and server names are summarized.
+ * @return A string of the form "listen : [addr:port, ...] | server_name : [name, ...]".
  */
 static std::string	formatServerInfo(const config::ServerConfig &config)
 {

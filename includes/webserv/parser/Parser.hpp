@@ -1,11 +1,23 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Parser.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_PARSER_PARSER_HPP
 #define WEBSERV_PARSER_PARSER_HPP
 
 /**
  * @file Parser.hpp
- * @brief [TODO:description]
+ * @brief Declares the parser::Parser class that validates and parses the
+ *        server configuration (via the ABNF grammar) and HTTP request-lines
+ *        and header blocks into config and client::Request objects.
  */
 
 #include <cerrno>
@@ -128,11 +140,16 @@ class Parser
 };
 
 /**
- * @brief [TODO:description]
+ * @brief Parses a numeric string with an optional size suffix (K, M or G,
+ *        case-insensitive) into a byte count, multiplying by 1024, 1024^2 or
+ *        1024^3 respectively.
  *
- * @tparam ValueT [TODO:tparam]
- * @param val [TODO:parameter]
- * @return [TODO:return]
+ * @tparam ValueT Integral target type the parsed value is checked against and
+ *         cast to.
+ * @param val The string to parse (e.g. "10", "5M", "1G").
+ * @return The parsed value cast to ValueT.
+ * @throws std::runtime_error if the string is not a valid number or the result
+ *         overflows ValueT.
  */
 template <typename ValueT>
 ValueT Parser::parseMultiplier(const std::string &val)
@@ -172,13 +189,17 @@ ValueT Parser::parseMultiplier(const std::string &val)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Extracts and applies the directives shared across configuration scopes
+ *        (client-max-body-size, dav-*, default-type, error-page, keepalive and
+ *        session timeouts, root, types, CGI enable and extensions) onto the
+ *        given config object.
  *
- * @tparam ConfigT [TODO:tparam]
- * @param parentRule [TODO:parameter]
- * @param input [TODO:parameter]
- * @param depth [TODO:parameter]
- * @param config [TODO:parameter]
+ * @tparam ConfigT Configuration type exposing the matching setters/getters
+ *         (HTTPConfig, ServerConfig or LocationConfig).
+ * @param parentRule Name of the enclosing ABNF rule scope being parsed.
+ * @param input The raw text of the block to extract directives from.
+ * @param depth Nesting depth passed to the directive extraction helper.
+ * @param config The configuration object to populate.
  */
 template <typename ConfigT>
 void Parser::parseCommonDirectives(const std::string &parentRule,
@@ -315,12 +336,14 @@ void Parser::parseCommonDirectives(const std::string &parentRule,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Copies the inheritable directive values from a parent configuration
+ *        scope into a child scope, so the child starts with the parent's
+ *        defaults before its own directives are parsed.
  *
- * @tparam ParentT [TODO:tparam]
- * @tparam ChildT [TODO:tparam]
- * @param parent [TODO:parameter]
- * @param child [TODO:parameter]
+ * @tparam ParentT Configuration type of the enclosing scope.
+ * @tparam ChildT Configuration type of the nested scope.
+ * @param parent The configuration to read default values from.
+ * @param child The configuration to populate with the parent's values.
  */
 template <typename ParentT, typename ChildT>
 void Parser::applyParentDefaults(const ParentT &parent, ChildT &child)
@@ -340,12 +363,15 @@ void Parser::applyParentDefaults(const ParentT &parent, ChildT &child)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses a single location block into a LocationConfig (inheriting the
+ *        parent's defaults, then its URI, common, autoindex, index, allowed
+ *        methods and return directives), appends it to the list, and recurses
+ *        into any nested location blocks.
  *
- * @tparam ParentT [TODO:tparam]
- * @param locationBlockStr [TODO:parameter]
- * @param locationConfigs [TODO:parameter]
- * @param parent [TODO:parameter]
+ * @tparam ParentT Configuration type of the enclosing scope providing defaults.
+ * @param locationBlockStr The raw text of the location block to parse.
+ * @param locationConfigs The collection that parsed locations are appended to.
+ * @param parent The enclosing configuration whose defaults are inherited.
  */
 template <typename ParentT>
 void Parser::parseLocationBlock(const std::string &locationBlockStr,

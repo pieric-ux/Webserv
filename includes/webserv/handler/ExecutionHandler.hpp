@@ -1,11 +1,23 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ExecutionHandler.hpp                               :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_HANDLER_EXECUTIONHANDLER_HPP
 #define WEBSERV_HANDLER_EXECUTIONHANDLER_HPP
 
 /**
  * @file ExecutionHandler.hpp
- * @brief [TODO:description]
+ * @brief Declares ExecutionHandler, which performs the filesystem and CGI work
+ * for a resolved request (GET/HEAD, POST, PUT, DELETE), streaming file content
+ * in chunks, generating autoindex listings, and driving CGI execution.
  */
 
 #include <fcntl.h>

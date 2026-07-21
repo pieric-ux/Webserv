@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   StatusCode.hpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_STATUS_STATUSCODE_HPP
 #define WEBSERV_STATUS_STATUSCODE_HPP
 
 /**
 * @file StatusCode.hpp
-* @brief [TODO:description]
+* @brief Declares the StatusCode value object representing an HTTP status code, its reason phrase and a human-readable description.
 */
 
 #include <string>
@@ -18,7 +28,7 @@ namespace status
 
 /**
  * @class StatusCode
- * @brief [TODO:description]
+ * @brief Immutable value type bundling an HTTP status code with its reason-phrase message and description, exposing read-only accessors.
  */
 class StatusCode
 {

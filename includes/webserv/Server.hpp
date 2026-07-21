@@ -1,11 +1,22 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_SERVER_HPP
 #define WEBSERV_SERVER_HPP
 
 /**
  * @file Server.hpp
- * @brief [TODO:description]
+ * @brief Declares webserv::Server, which owns a ServerConfig and creates,
+ * binds and listens on the TCP sockets described by its listen directives.
  */
 
 #include <cstring>

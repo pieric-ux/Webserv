@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ErrorPage.hpp                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_CONFIG_ERRORPAGE_HPP
 #define WEBSERV_CONFIG_ERRORPAGE_HPP
 
 /**
  * @file ErrorPage.hpp
- * @brief [TODO:description]
+ * @brief Declares config::ErrorPage, mapping a set of HTTP status codes to a custom error page file path (nginx-style error_page directive).
  */
 
 #include <string>

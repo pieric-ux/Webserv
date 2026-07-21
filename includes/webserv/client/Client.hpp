@@ -1,11 +1,23 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Client.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_CLIENT_CLIENT_HPP
 #define WEBSERV_CLIENT_CLIENT_HPP
 
 /**
  * @file Client.hpp
- * @brief [TODO:description]
+ * @brief Declares the Client class, which represents a single connected HTTP
+ *        client and drives its request/response lifecycle (receiving data,
+ *        parsing, execution, CGI I/O and sending) over its TCP socket.
  */
 
 #include <ctime>

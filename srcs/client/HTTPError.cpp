@@ -1,8 +1,18 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPError.cpp                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file HTTPError.cpp
- * @brief [TODO:description]
+ * @brief Implementation of the HTTPError exception, an std::exception carrying an HTTP status code, a formatted message and an optional redirect location.
  */
 
 #include <webserv/client/HTTPError.hpp>
@@ -13,7 +23,7 @@ namespace client
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs an HTTPError with a default-initialized status code and acquires its logger.
  */
 HTTPError::HTTPError() : _statusCode() 
 {
@@ -23,9 +33,9 @@ HTTPError::HTTPError() : _statusCode()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs an HTTPError from a numeric HTTP status code, resolving it through the StatusCodeRegistry and building a "<code> <message>: <description>" what() string.
  *
- * @param statusCode [TODO:parameter]
+ * @param code The numeric HTTP status code (e.g. 404) used to look up the matching StatusCode.
  */
 HTTPError::HTTPError(unsigned short code)
 	:	_statusCode(status::StatusCodeRegistry::getInstance().getStatusCode(code)),
@@ -47,14 +57,14 @@ HTTPError::HTTPError(unsigned short code, const std::string &location)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the HTTPError; declared throw() to honor the std::exception no-throw contract.
  */
 HTTPError::~HTTPError() throw() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs an HTTPError, duplicating the base std::exception, status code, what() message and location.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The HTTPError instance to copy from.
  */
 HTTPError::HTTPError(const HTTPError &rhs)
 	:	std::exception(rhs),
@@ -64,10 +74,10 @@ HTTPError::HTTPError(const HTTPError &rhs)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns from another HTTPError, with a self-assignment guard, copying the base std::exception, status code, what() message and location.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The HTTPError instance to assign from.
+ * @return A reference to this HTTPError.
  */
 HTTPError &HTTPError::operator=(const HTTPError &rhs)
 {
@@ -82,9 +92,9 @@ HTTPError &HTTPError::operator=(const HTTPError &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger for the HTTPError class, retrieved from the log42 manager under "webserv.client.HTTPError".
  *
- * @return [TODO:return]
+ * @return The logger associated with the HTTPError class.
  */
 t_Logger	HTTPError::getLogger()
 {
@@ -92,9 +102,9 @@ t_Logger	HTTPError::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the HTTP status code carried by this error.
  *
- * @return [TODO:return]
+ * @return A copy of the StatusCode associated with this error.
  */
 status::StatusCode HTTPError::getStatusCode() const
 {
@@ -102,9 +112,9 @@ status::StatusCode HTTPError::getStatusCode() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Replaces the HTTP status code carried by this error.
  *
- * @param statusCode [TODO:parameter]
+ * @param statusCode The new StatusCode to store in this error.
  */
 void HTTPError::setStatusCode(const status::StatusCode &statusCode)
 {
@@ -112,9 +122,9 @@ void HTTPError::setStatusCode(const status::StatusCode &statusCode)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the optional redirect location associated with this error.
  *
- * @return [TODO:return]
+ * @return A const reference to the location string, empty when no location was provided.
  */
 const std::string &HTTPError::getLocation() const
 {
@@ -122,9 +132,9 @@ const std::string &HTTPError::getLocation() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the human-readable error message, overriding std::exception::what().
  *
- * @return [TODO:return]
+ * @return A C string of the form "<code> <message>: <description>" describing the error.
  */
 const char *HTTPError::what() const throw()
 {

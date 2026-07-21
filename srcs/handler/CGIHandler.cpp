@@ -1,8 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   CGIHandler.cpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file CGIHandler.cpp
- * @brief [TODO:description]
+ * @brief Implements CGIHandler: forking a CGI interpreter, building its
+ *        environment, streaming the request body to its stdin, reading its
+ *        stdout, reaping the child, and parsing its output into an HTTP
+ *        response.
  */
 
 #include <webserv/handler/CGIHandler.hpp>
@@ -34,7 +47,9 @@ namespace handler
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a CGIHandler bound to an I/O multiplexer and client
+ *        address, initializing all process state to its unspawned defaults and
+ *        acquiring the handler's logger.
  */
 CGIHandler::CGIHandler(const t_ioMultiplexer &ioMultiplexer, sockaddr_storage clientAddr)
 	:	_ioMultiplexer(ioMultiplexer),
@@ -62,7 +77,8 @@ CGIHandler::CGIHandler(const t_ioMultiplexer &ioMultiplexer, sockaddr_storage cl
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the handler, killing and reaping the child process if it was
+ *        spawned but not yet reaped to avoid leaving a zombie.
  */
 CGIHandler::~CGIHandler()
 {
@@ -74,9 +90,9 @@ CGIHandler::~CGIHandler()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger used by this handler.
  *
- * @return [TODO:return]
+ * @return The "webserv.handler.cgihandler" logger from the log42 manager.
  */
 t_Logger CGIHandler::getLogger()
 {
@@ -84,12 +100,16 @@ t_Logger CGIHandler::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Resolves the interpreter for the script's extension, validates that
+ *        the script is executable, builds the CGI environment, creates the
+ *        stdin/stdout pipes, forks and execs the interpreter, and registers the
+ *        pipe ends with the I/O multiplexer. Throws HTTPError on failure (500
+ *        for missing interpreter or syscall errors, 404/403 for access errors).
  *
- * @param request [TODO:parameter]
- * @param locationConfig [TODO:parameter]
- * @param client [TODO:parameter]
- * @param mux [TODO:parameter]
+ * @param request The client request whose absolute path, query and headers
+ *        drive the CGI invocation and environment.
+ * @param locationConfig The matched location configuration, queried for the
+ *        extension-to-interpreter mapping.
  */
 void CGIHandler::spawn(const client::Request &request,
 		const config::LocationConfig &locationConfig)
@@ -249,11 +269,16 @@ void CGIHandler::spawn(const client::Request &request,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Advances one I/O step of the CGI exchange: checks for timeout, writes
+ *        a chunk of the request body to the child's stdin and reads a chunk
+ *        from its stdout when the respective pipe is ready, and reaps the child
+ *        once end-of-file is reached. No-op if not spawned or execution is
+ *        already complete.
  *
- * @param requestHandler [TODO:parameter]
- * @param mux [TODO:parameter]
- * @param execFlags [TODO:parameter]
+ * @param requestHandler The request handler supplying the body bytes streamed
+ *        to the CGI's stdin.
+ * @param execFlags Execution flags; returns immediately if E_EXEC_COMPLETE is
+ *        set.
  */
 void CGIHandler::driveIO(handler::RequestHandler &requestHandler, int execFlags)
 {
@@ -296,9 +321,14 @@ void CGIHandler::driveIO(handler::RequestHandler &requestHandler, int execFlags)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Parses the buffered CGI output, splitting it at the header/body
+ *        separator, validating and applying each header line (handling Status,
+ *        Location and Content-Type), and defaulting Content-Length. The body is
+ *        retained for later push. Throws HTTPError(502) on malformed output or
+ *        when none of Content-Type, Location or Status is present.
  *
- * @param response [TODO:parameter]
+ * @param response The response object the parsed status code and headers are
+ *        written into.
  */
 void CGIHandler::parse(client::Response &response)
 {
@@ -408,9 +438,12 @@ void CGIHandler::parse(client::Response &response)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Appends the parsed CGI response body to the response handler's output
+ *        buffer once, then clears the body. Idempotent: subsequent calls are
+ *        no-ops.
  *
- * @param responseHandler [TODO:parameter]
+ * @param responseHandler The response handler whose output buffer the CGI body
+ *        is appended to.
  */
 void CGIHandler::pushBody(handler::ResponseHandler &responseHandler)
 {
@@ -429,9 +462,10 @@ void CGIHandler::pushBody(handler::ResponseHandler &responseHandler)
 }
 
 /**
- * @brief [TODO:description]
- *
- * @param mux [TODO:parameter]
+ * @brief Releases all CGI resources: unregisters and closes the pipe fds, kills
+ *        and reaps any surviving child, frees the environment, clears the
+ *        buffers, and restores every state flag to its unspawned default so the
+ *        handler can be reused.
  */
 void CGIHandler::reset()
 {
@@ -466,9 +500,9 @@ void CGIHandler::reset()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the I/O multiplexer this handler registers its pipes with.
  *
- * @return [TODO:return]
+ * @return The shared event multiplexer held by the handler.
  */
 t_ioMultiplexer CGIHandler::getIoMultiplexer() const
 {
@@ -476,9 +510,10 @@ t_ioMultiplexer CGIHandler::getIoMultiplexer() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the client's address used to populate the REMOTE_* CGI
+ *        variables.
  *
- * @return [TODO:return]
+ * @return The stored client socket address.
  */
 sockaddr_storage	CGIHandler::getClientAddr() const
 {
@@ -486,9 +521,9 @@ sockaddr_storage	CGIHandler::getClientAddr() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether either CGI pipe fd is still open.
  *
- * @return [TODO:return]
+ * @return True if the stdin or stdout pipe fd is still valid.
  */
 bool CGIHandler::hasFds() const
 {
@@ -496,9 +531,10 @@ bool CGIHandler::hasFds() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the write end of the pipe connected to the CGI process's
+ *        stdin.
  *
- * @return [TODO:return]
+ * @return The stdin pipe fd, or -1 if it has been closed.
  */
 int CGIHandler::getStdinFd() const
 {
@@ -506,9 +542,10 @@ int CGIHandler::getStdinFd() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the read end of the pipe connected to the CGI process's
+ *        stdout.
  *
- * @return [TODO:return]
+ * @return The stdout pipe fd, or -1 if it has been closed.
  */
 int CGIHandler::getStdoutFd() const
 {
@@ -516,9 +553,9 @@ int CGIHandler::getStdoutFd() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether the CGI process has been forked.
  *
- * @return [TODO:return]
+ * @return True once spawn() has successfully started the child.
  */
 bool CGIHandler::isSpawned() const
 {
@@ -526,9 +563,9 @@ bool CGIHandler::isSpawned() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether the CGI child has been waited on.
  *
- * @return [TODO:return]
+ * @return True once the child process has been reaped.
  */
 bool CGIHandler::isReaped() const
 {
@@ -541,9 +578,9 @@ bool CGIHandler::isEof() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether the CGI output has been parsed into the response.
  *
- * @return [TODO:return]
+ * @return True once parse() has processed the buffered CGI output.
  */
 bool CGIHandler::isParsed() const
 {
@@ -551,9 +588,9 @@ bool CGIHandler::isParsed() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether the CGI body has been pushed to the response handler.
  *
- * @return [TODO:return]
+ * @return True once pushBody() has appended the body to the response buffer.
  */
 bool CGIHandler::isPushed() const
 {
@@ -561,10 +598,12 @@ bool CGIHandler::isPushed() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Converts an HTTP header name to its CGI environment variable form by
+ *        prefixing "HTTP_", upper-casing the name, and replacing hyphens with
+ *        underscores.
  *
- * @param name [TODO:parameter]
- * @return [TODO:return]
+ * @param name The HTTP header field name to convert.
+ * @return The corresponding HTTP_* CGI variable name.
  */
 std::string CGIHandler::headerToCgiName(const std::string &name)
 {
@@ -578,9 +617,10 @@ std::string CGIHandler::headerToCgiName(const std::string &name)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the O_NONBLOCK flag on a file descriptor, throwing HTTPError(500)
+ *        if the fcntl call fails.
  *
- * @param fd [TODO:parameter]
+ * @param fd The file descriptor to switch to non-blocking mode.
  */
 void CGIHandler::setNonblock(int fd)
 {
@@ -592,10 +632,12 @@ void CGIHandler::setNonblock(int fd)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Locates the header/body separator in raw CGI output, accepting either
+ *        a CRLFCRLF or an LFLF sequence.
  *
- * @param v [TODO:parameter]
- * @return [TODO:return]
+ * @param v The raw CGI output bytes to scan.
+ * @return A pair of (offset of the separator, separator length); the offset is
+ *         std::string::npos with length 0 when no separator is found.
  */
 std::pair<std::size_t, std::size_t> CGIHandler::findHeaderEnd(const t_raw &v)
 {
@@ -611,13 +653,16 @@ std::pair<std::size_t, std::size_t> CGIHandler::findHeaderEnd(const t_raw &v)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Populates the environment builder with the CGI/1.1 meta-variables
+ *        (CONTENT_LENGTH, CONTENT_TYPE, GATEWAY_INTERFACE, QUERY_STRING,
+ *        REQUEST_METHOD, SCRIPT_*, SERVER_*, REMOTE_*, etc.) derived from the
+ *        request and client address, then adds every other request header as an
+ *        HTTP_* variable with multiple values comma-joined.
  *
- * @param request [TODO:parameter]
- * @param locationConfig [TODO:parameter]
- * @param client [TODO:parameter]
- * @param interpreter [TODO:parameter]
- * @param scriptPath [TODO:parameter]
+ * @param request The client request supplying the method, query, target,
+ *        path and headers.
+ * @param interpreter The resolved interpreter path (logged for diagnostics).
+ * @param scriptPath The absolute script path exported as SCRIPT_FILENAME.
  */
 void CGIHandler::buildEnv(const client::Request &request,
 		const std::string &interpreter,
@@ -691,10 +736,10 @@ void CGIHandler::buildEnv(const client::Request &request,
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Appends a "key=value" entry to the environment builder.
  *
- * @param key [TODO:parameter]
- * @param value [TODO:parameter]
+ * @param key The environment variable name.
+ * @param value The environment variable value.
  */
 void CGIHandler::addEnv(const std::string &key, const std::string &value)
 {
@@ -703,9 +748,11 @@ void CGIHandler::addEnv(const std::string &key, const std::string &value)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Builds the NULL-terminated char* array passed to execve from the
+ *        accumulated environment strings, with each pointer referencing the
+ *        builder's stored entries.
  *
- * @return [TODO:return]
+ * @return The NULL-terminated environment pointer array (also stored in _envp).
  */
 char **CGIHandler::finalizeEnvp()
 {
@@ -719,7 +766,9 @@ char **CGIHandler::finalizeEnvp()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Forcibly terminates the child with SIGKILL and blocks in waitpid to
+ *        reap it, recording the exit status and marking the handler as reaped.
+ *        No-op if there is no live, unreaped child.
  */
 void CGIHandler::killAndReap()
 {
@@ -735,7 +784,10 @@ void CGIHandler::killAndReap()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Non-blocking reap of the child via waitpid(WNOHANG). Returns silently
+ *        if the child is still running; on exit it records the status and
+ *        throws HTTPError(502) when the child was killed by a signal or exited
+ *        non-zero without producing any output.
  */
 void CGIHandler::tryReap()
 {
@@ -772,7 +824,9 @@ void CGIHandler::tryReap()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Enforces the CGI execution deadline: if the spawned, unreaped child
+ *        has run longer than CGI_TIMEOUT_S, kills and reaps it and throws
+ *        HTTPError(504).
  */
 void CGIHandler::checkTimeout()
 {
@@ -788,10 +842,14 @@ void CGIHandler::checkTimeout()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Writes one chunk of the request body to the child's stdin, bounded by
+ *        the declared Content-Length and the configured buffer size, advancing
+ *        the request buffer and the sent-byte counter. Closes stdin once the
+ *        full body has been sent (or when no Content-Length is present), and
+ *        throws HTTPError(502) on write failure.
  *
- * @param requestHandler [TODO:parameter]
- * @param mux [TODO:parameter]
+ * @param requestHandler The request handler providing the body buffer and
+ *        Content-Length, whose buffer front is erased as bytes are sent.
  */
 void CGIHandler::writeChunkToCGI(handler::RequestHandler &requestHandler)
 {
@@ -848,7 +906,9 @@ void CGIHandler::writeChunkToCGI(handler::RequestHandler &requestHandler)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reads one chunk from the child's stdout into the CGI buffer; sets the
+ *        EOF flag on a zero-length read and throws HTTPError(502) on read
+ *        failure.
  */
 void CGIHandler::readChunkFromCGI()
 {

@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   StatusCodeRegistry.hpp                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_STATUS_STATUSCODEREGISTRY_HPP
 #define WEBSERV_STATUS_STATUSCODEREGISTRY_HPP
 
 /**
 * @file StatusCodeRegistry.hpp
-* @brief [TODO:description]
+* @brief Declares the StatusCodeRegistry singleton that maps HTTP status codes to their StatusCode entries.
 */
 
 #include <map>
@@ -19,7 +29,7 @@ namespace status
 
 /**
  * @class StatusCodeRegistry
- * @brief [TODO:description]
+ * @brief Singleton registry holding the full set of HTTP status codes, each with its reason phrase and description, looked up by numeric code.
  *
  * @link https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
  */

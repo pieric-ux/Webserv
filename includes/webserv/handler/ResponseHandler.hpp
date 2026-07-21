@@ -1,11 +1,22 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ResponseHandler.hpp                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_HANDLER_RESPONSEHANDLER_HPP
 #define WEBSERV_HANDLER_RESPONSEHANDLER_HPP
 
 /**
  * @file ResponseHandler.hpp
- * @brief [TODO:description]
+ * @brief Builds and serializes HTTP responses, assembling the status line,
+ *        headers (and error bodies) into an outgoing byte buffer.
  */
 
 #include <sstream>

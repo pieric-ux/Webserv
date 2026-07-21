@@ -1,11 +1,23 @@
-	// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Response.hpp                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_CLIENT_RESPONSE_HPP
 #define WEBSERV_CLIENT_RESPONSE_HPP
 
 /**
  * @file Response.hpp
- * @brief [TODO:description]
+ * @brief Declares the client::Response class, an HTTP response model holding the
+ *        protocol version, status code, headers, processing flags, and the
+ *        connection-close indicator.
  */
 
 #include <string>

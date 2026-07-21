@@ -1,11 +1,22 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Session.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_SESSION_SESSION_HPP
 #define WEBSERV_SESSION_SESSION_HPP
 
 /**
  * @file Session.hpp
- * @brief [TODO:description]
+ * @brief Declares the Session class, an in-memory client session identified by a
+ *        UUID and holding string key/value data with an expiry time and TTL.
  */
 
 #include <ctime>

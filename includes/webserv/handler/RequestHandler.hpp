@@ -1,11 +1,22 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   RequestHandler.hpp                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_HANDLER_REQUESTHANDLER_HPP
 #define WEBSERV_HANDLER_REQUESTHANDLER_HPP
 
 /**
  * @file RequestHandler.hpp
- * @brief [TODO:description]
+ * @brief Declares the RequestHandler, which buffers raw request bytes and drives
+ * parsing, validation, and absolute-path resolution of a client HTTP request.
  */
 
 #include <algorithm>

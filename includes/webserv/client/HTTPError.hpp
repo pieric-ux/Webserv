@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPError.hpp                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_CLIENT_HTTPERROR_HPP
 #define WEBSERV_CLIENT_HTTPERROR_HPP
 
 /**
  * @file HTTPError.hpp
- * @brief [TODO:description]
+ * @brief Exception type representing an HTTP error response, carrying a status code and optional redirect location.
  */
 
 #include <string>

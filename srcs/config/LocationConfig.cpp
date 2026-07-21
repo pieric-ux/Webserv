@@ -1,8 +1,18 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   LocationConfig.cpp                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 /**
  * @file LocationConfig.cpp
- * @brief [TODO:description]
+ * @brief Implements the LocationConfig class, storing the per-location (nginx-style) request-handling directives and providing their accessors and mutators.
  */
 
 #include <webserv/config/LocationConfig.hpp>
@@ -13,7 +23,7 @@ namespace config
 {
 
 /**
- * @brief [TODO:description]
+ * @brief Constructs a LocationConfig with every directive initialized from DefaultConfig and the modifier set to PREFIX, then sets up the logger.
  */
 LocationConfig::LocationConfig()
 	:	_autoindex(DefaultConfig::autoindex),
@@ -39,14 +49,14 @@ LocationConfig::LocationConfig()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Destroys the LocationConfig instance.
  */
 LocationConfig::~LocationConfig() {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-constructs a LocationConfig by copying every directive member from another instance.
  *
- * @param rhs [TODO:parameter]
+ * @param rhs The LocationConfig to copy from.
  */
 LocationConfig::LocationConfig(const LocationConfig &rhs)
 	: _autoindex(rhs._autoindex),
@@ -70,10 +80,10 @@ LocationConfig::LocationConfig(const LocationConfig &rhs)
 {}
 
 /**
- * @brief [TODO:description]
+ * @brief Copy-assigns every directive member from another LocationConfig, guarding against self-assignment.
  *
- * @param rhs [TODO:parameter]
- * @return [TODO:return]
+ * @param rhs The LocationConfig to copy from.
+ * @return Reference to this instance after assignment.
  */
 LocationConfig &LocationConfig::operator=(const LocationConfig &rhs)
 {
@@ -102,9 +112,9 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &rhs)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the shared logger for the LocationConfig class.
  *
- * @return [TODO:return]
+ * @return The "webserv.config.locationconfig" logger instance.
  */
 t_Logger	LocationConfig::getLogger()
 {
@@ -112,9 +122,9 @@ t_Logger	LocationConfig::getLogger()
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether automatic directory listing is enabled for this location.
  *
- * @return [TODO:return]
+ * @return true if autoindex is enabled, false otherwise.
  */
 bool LocationConfig::getAutoindex() const
 {
@@ -122,9 +132,9 @@ bool LocationConfig::getAutoindex() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Enables or disables automatic directory listing for this location.
  *
- * @param autoindex [TODO:parameter]
+ * @param autoindex true to enable autoindex, false to disable it.
  */
 void LocationConfig::setAutoindex(const bool autoindex)
 {
@@ -132,9 +142,9 @@ void LocationConfig::setAutoindex(const bool autoindex)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the maximum allowed client request body size for this location.
  *
- * @return [TODO:return]
+ * @return Reference to the maximum body size in bytes.
  */
 const t_clientMaxBodySize	&LocationConfig::getClientMaxBodySize() const
 {
@@ -142,9 +152,9 @@ const t_clientMaxBodySize	&LocationConfig::getClientMaxBodySize() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the maximum allowed client request body size for this location.
  *
- * @param clientMaxBodySize [TODO:parameter]
+ * @param clientMaxBodySize The maximum body size in bytes to allow.
  */
 void LocationConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBodySize)
 {
@@ -152,9 +162,9 @@ void LocationConfig::setClientMaxBodySize(const t_clientMaxBodySize &clientMaxBo
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the filesystem path used as the destination for WebDAV PUT uploads.
  *
- * @return [TODO:return]
+ * @return Reference to the DAV PUT target path.
  */
 const std::string &LocationConfig::getDavPutPath() const
 {
@@ -162,9 +172,9 @@ const std::string &LocationConfig::getDavPutPath() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the filesystem path used as the destination for WebDAV PUT uploads.
  *
- * @param davPutPath [TODO:parameter]
+ * @param davPutPath The DAV PUT target path to store.
  */
 void LocationConfig::setDavPutPath(const std::string &davPutPath)
 {
@@ -172,9 +182,9 @@ void LocationConfig::setDavPutPath(const std::string &davPutPath)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the access permission bits applied to files created via WebDAV.
  *
- * @return [TODO:return]
+ * @return Reference to the DAV access permission mask.
  */
 const t_Perms	&LocationConfig::getDavAccess() const
 {
@@ -182,9 +192,9 @@ const t_Perms	&LocationConfig::getDavAccess() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the access permission bits applied to files created via WebDAV.
  *
- * @param davAccess [TODO:parameter]
+ * @param davAccess The DAV access permission mask to store.
  */
 void LocationConfig::setDavAccess(const t_Perms &davAccess)
 {
@@ -192,9 +202,9 @@ void LocationConfig::setDavAccess(const t_Perms &davAccess)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the set of HTTP methods enabled for WebDAV handling on this location.
  *
- * @return [TODO:return]
+ * @return Reference to the set of enabled DAV methods.
  */
 const t_DavMethods	&LocationConfig::getDavMethods() const
 {
@@ -202,9 +212,9 @@ const t_DavMethods	&LocationConfig::getDavMethods() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the set of HTTP methods enabled for WebDAV handling on this location.
  *
- * @param davMethods [TODO:parameter]
+ * @param davMethods The set of DAV methods to enable.
  */
 void LocationConfig::setDavMethods(const t_DavMethods &davMethods)
 {
@@ -212,9 +222,9 @@ void LocationConfig::setDavMethods(const t_DavMethods &davMethods)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the default MIME type used when a file's type cannot be resolved.
  *
- * @return [TODO:return]
+ * @return Reference to the default content type string.
  */
 const std::string &LocationConfig::getDefaultType() const
 {
@@ -222,9 +232,9 @@ const std::string &LocationConfig::getDefaultType() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the default MIME type used when a file's type cannot be resolved.
  *
- * @param defaultType [TODO:parameter]
+ * @param defaultType The default content type string to store.
  */
 void LocationConfig::setDefaultType(const std::string &defaultType)
 {
@@ -232,9 +242,9 @@ void LocationConfig::setDefaultType(const std::string &defaultType)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the collection of custom error-page mappings for this location.
  *
- * @return [TODO:return]
+ * @return Reference to the list of configured error pages.
  */
 const t_ErrorPages	&LocationConfig::getErrorPage() const
 {
@@ -242,9 +252,9 @@ const t_ErrorPages	&LocationConfig::getErrorPage() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the collection of custom error-page mappings for this location.
  *
- * @param errorPage [TODO:parameter]
+ * @param errorPage The list of error pages to store.
  */
 void LocationConfig::setErrorPage(const t_ErrorPages &errorPage)
 {
@@ -252,9 +262,9 @@ void LocationConfig::setErrorPage(const t_ErrorPages &errorPage)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the ordered list of index file names tried when a directory is requested.
  *
- * @return [TODO:return]
+ * @return Reference to the list of index file names.
  */
 const t_Index	&LocationConfig::getIndex() const
 {
@@ -262,9 +272,9 @@ const t_Index	&LocationConfig::getIndex() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the ordered list of index file names tried when a directory is requested.
  *
- * @param index [TODO:parameter]
+ * @param index The list of index file names to store.
  */
 void LocationConfig::setIndex(const t_Index &index)
 {
@@ -272,9 +282,9 @@ void LocationConfig::setIndex(const t_Index &index)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the keep-alive timeout applied to persistent connections for this location.
  *
- * @return [TODO:return]
+ * @return Reference to the keep-alive timeout in seconds.
  */
 const t_keepAliveTimeout	&LocationConfig::getKeepAliveTimeout() const
 {
@@ -282,9 +292,9 @@ const t_keepAliveTimeout	&LocationConfig::getKeepAliveTimeout() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the keep-alive timeout applied to persistent connections for this location.
  *
- * @param keepAliveTimeout [TODO:parameter]
+ * @param keepAliveTimeout The keep-alive timeout in seconds to store.
  */
 void LocationConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTimeout)
 {
@@ -292,9 +302,9 @@ void LocationConfig::setKeepAliveTimeout(const t_keepAliveTimeout &keepAliveTime
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the time-to-live applied to sessions for this location.
  *
- * @return [TODO:return]
+ * @return Reference to the session TTL in seconds.
  */
 const t_sessionTTL &LocationConfig::getSessionTTL() const
 {
@@ -302,9 +312,9 @@ const t_sessionTTL &LocationConfig::getSessionTTL() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the time-to-live applied to sessions for this location.
  *
- * @param sessionTTL [TODO:parameter]
+ * @param sessionTTL The session TTL in seconds to store.
  */
 void LocationConfig::setSessionTTL(const t_sessionTTL &sessionTTL)
 {
@@ -312,9 +322,9 @@ void LocationConfig::setSessionTTL(const t_sessionTTL &sessionTTL)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the set of HTTP methods accepted by this location.
  *
- * @return [TODO:return]
+ * @return Reference to the set of allowed methods.
  */
 const t_AllowedMethods	&LocationConfig::getAllowedMethods() const
 {
@@ -322,9 +332,9 @@ const t_AllowedMethods	&LocationConfig::getAllowedMethods() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the set of HTTP methods accepted by this location.
  *
- * @param allowedMethods [TODO:parameter]
+ * @param allowedMethods The set of allowed methods to store.
  */
 void LocationConfig::setAllowedMethods(const t_AllowedMethods &allowedMethods)
 {
@@ -332,9 +342,9 @@ void LocationConfig::setAllowedMethods(const t_AllowedMethods &allowedMethods)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the filesystem root directory against which request URIs are resolved.
  *
- * @return [TODO:return]
+ * @return Reference to the root path string.
  */
 const std::string &LocationConfig::getRoot() const
 {
@@ -342,9 +352,9 @@ const std::string &LocationConfig::getRoot() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the filesystem root directory against which request URIs are resolved.
  *
- * @param root [TODO:parameter]
+ * @param root The root path string to store.
  */
 void LocationConfig::setRoot(const std::string &root)
 {
@@ -352,9 +362,9 @@ void LocationConfig::setRoot(const std::string &root)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the map associating file extensions with their MIME types for this location.
  *
- * @return [TODO:return]
+ * @return Reference to the extension-to-MIME-type map.
  */
 const t_MimeTypes	&LocationConfig::getTypes() const
 {
@@ -362,9 +372,9 @@ const t_MimeTypes	&LocationConfig::getTypes() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the map associating file extensions with their MIME types for this location.
  *
- * @param types [TODO:parameter]
+ * @param types The extension-to-MIME-type map to store.
  */
 void LocationConfig::setTypes(const t_MimeTypes &types)
 {
@@ -372,9 +382,9 @@ void LocationConfig::setTypes(const t_MimeTypes &types)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the URI pattern that this location block matches against.
  *
- * @return [TODO:return]
+ * @return Reference to the location URI string.
  */
 const std::string &LocationConfig::getUri() const
 {
@@ -382,9 +392,9 @@ const std::string &LocationConfig::getUri() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the URI pattern that this location block matches against.
  *
- * @param uri [TODO:parameter]
+ * @param uri The location URI string to store.
  */
 void LocationConfig::setUri(const std::string &uri)
 {
@@ -392,9 +402,9 @@ void LocationConfig::setUri(const std::string &uri)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the URI matching modifier (PREFIX, EXACT or PREFIX_PRIORITY) for this location.
  *
- * @return [TODO:return]
+ * @return Reference to the location matching modifier.
  */
 const e_Modifier &LocationConfig::getModifier() const
 {
@@ -402,9 +412,9 @@ const e_Modifier &LocationConfig::getModifier() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the URI matching modifier (PREFIX, EXACT or PREFIX_PRIORITY) for this location.
  *
- * @param modifier [TODO:parameter]
+ * @param modifier The location matching modifier to store.
  */
 void LocationConfig::setModifier(const e_Modifier modifier)
 {
@@ -412,9 +422,9 @@ void LocationConfig::setModifier(const e_Modifier modifier)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the redirect (return) directive configured for this location.
  *
- * @return [TODO:return]
+ * @return Reference to the redirect descriptor.
  */
 const Return &LocationConfig::getRedirect() const
 {
@@ -422,9 +432,9 @@ const Return &LocationConfig::getRedirect() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the redirect (return) directive configured for this location.
  *
- * @param redirect [TODO:parameter]
+ * @param redirect The redirect descriptor to store.
  */
 void LocationConfig::setRedirect(const Return &redirect)
 {
@@ -432,9 +442,9 @@ void LocationConfig::setRedirect(const Return &redirect)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Reports whether CGI execution is enabled for this location.
  *
- * @return [TODO:return]
+ * @return true if CGI handling is enabled, false otherwise.
  */
 bool LocationConfig::isEnableCGI() const
 {
@@ -442,9 +452,9 @@ bool LocationConfig::isEnableCGI() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Enables or disables CGI execution for this location.
  *
- * @param enableCGI [TODO:parameter]
+ * @param enableCGI true to enable CGI handling, false to disable it.
  */
 void LocationConfig::setEnableCGI(const bool enableCGI)
 {
@@ -452,9 +462,9 @@ void LocationConfig::setEnableCGI(const bool enableCGI)
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Returns the map associating file extensions with their CGI interpreter paths.
  *
- * @return [TODO:return]
+ * @return Reference to the extension-to-CGI-interpreter map.
  */
 const t_CgiExtensions	&LocationConfig::getCgiExtensions() const
 {
@@ -462,9 +472,9 @@ const t_CgiExtensions	&LocationConfig::getCgiExtensions() const
 }
 
 /**
- * @brief [TODO:description]
+ * @brief Sets the map associating file extensions with their CGI interpreter paths.
  *
- * @param cgiExtensions [TODO:parameter]
+ * @param cgiExtensions The extension-to-CGI-interpreter map to store.
  */
 void LocationConfig::setCgiExtensions(const t_CgiExtensions &cgiExtensions)
 {

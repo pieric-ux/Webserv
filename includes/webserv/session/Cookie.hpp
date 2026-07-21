@@ -1,11 +1,23 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Cookie.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_SESSION_COOKIE_HPP
 #define WEBSERV_SESSION_COOKIE_HPP
 
 /**
  * @file Cookie.hpp
- * @brief [TODO:description]
+ * @brief Declares webserv::session::Cookie, an HTTP cookie holding a
+ *        name/value pair and its attributes (Expires, Path, Domain, Secure,
+ *        HttpOnly) and able to serialize itself into a Set-Cookie value.
  */
 
 #include <ctime>

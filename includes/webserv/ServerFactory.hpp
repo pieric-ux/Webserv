@@ -1,11 +1,21 @@
-// TODO: don't forget header
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerFactory.hpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pdemont <pdemont@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*   By: blucken <blucken@student.42lausanne.ch>  +#+#+#+#+#+   +#+           */
+/*                                                     #+#    #+#             */
+/*   Created: 2026/01/21                              ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef WEBSERV_SERVERFACTORY_HPP
 #define WEBSERV_SERVERFACTORY_HPP
 
 /**
  * @file ServerFactory.hpp
- * @brief [TODO:description]
+ * @brief Factory that builds Server instances from an HTTPConfig's server configurations.
  */
 
 #include <webserv/config/HTTPConfig.hpp>
