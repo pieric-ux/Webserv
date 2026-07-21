@@ -134,6 +134,16 @@ void	HTTPServer::setup()
 		throw std::runtime_error("No servers created. Check configuration.");
 	}
 
+	std::size_t totalSockets = 0;
+	t_Servers::const_iterator serverIt = _servers.begin();
+	for (; serverIt != _servers.end(); ++serverIt)
+		totalSockets += serverIt->getSockets().size();
+	if (totalSockets == 0)
+	{
+		CRITICAL(_logger, "No sockets could be bound for any configured server. Check if another instance is already running.");
+		throw std::runtime_error("No sockets could be bound for any configured server.");
+	}
+
 	_ioMultiplexer = t_ioMultiplexer(common::core::io::EventFactoryIO::create(_httpConfig.getIOMultiplexer()));
 	INFO(_logger, "I/O multiplexer initialized: " + _httpConfig.getIOMultiplexer());
 
