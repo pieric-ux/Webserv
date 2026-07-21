@@ -104,8 +104,13 @@ void RequestHandler::parseHeaders()
 				throw client::HTTPError(414);
 			}
 		}
-		INFO(_logger, "400: CRLFCRLF not found in buffer");
-		throw client::HTTPError(400);
+		if (bufferStr.size() >= config::DefaultConfig::BUFFER_SIZE)
+		{
+			INFO(_logger, "431: header block exceeds " + common::core::utils::toString(config::DefaultConfig::BUFFER_SIZE) + " bytes");
+			throw client::HTTPError(431);
+		}
+		DEBUG(_logger, "incomplete headers, waiting for more data");
+		return ;
 	}
 
 	std::string::iterator lineEnd = std::find(bufferStr.begin(), bufferStr.end(), '\n');
