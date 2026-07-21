@@ -19,7 +19,8 @@ Response::Response()
 	:	_httpVersion(),
 		_statusCode(),
 		_headers(),
-		_flags(static_cast<e_ResponseFlags>(0))
+		_flags(static_cast<e_ResponseFlags>(0)),
+		_shouldCloseConnection(false)
 {
 	_logger = log42::manager::Manager::getInstance().getLogger("webserv.client.response");
 	_logger->setLevel(log42::logRecord::DEBUG);
@@ -40,7 +41,8 @@ Response::Response(const Response &rhs)
 	:	_httpVersion(rhs._httpVersion),
 		_statusCode(rhs._statusCode),
 		_headers(rhs._headers),
-		_flags(rhs._flags)
+		_flags(rhs._flags),
+		_shouldCloseConnection(rhs._shouldCloseConnection)
 {}
 
 /**
@@ -57,6 +59,7 @@ Response &Response::operator=(const Response &rhs)
 		_statusCode = rhs._statusCode;
 		_headers = rhs._headers;
 		_flags = rhs._flags;
+		_shouldCloseConnection = rhs._shouldCloseConnection;
 	}
 	return (*this);
 }
